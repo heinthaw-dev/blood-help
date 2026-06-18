@@ -1,8 +1,7 @@
 import type { CSSProperties } from 'react'
 import { useState } from 'react'
 import { Button } from '../components/Button'
-
-type Lang = 'my' | 'en'
+import type { Lang } from '../i18n'
 
 const STRINGS: Record<Lang, { title: string; subtitle: string; cta: string; reassure: string }> = {
   my: {
@@ -22,6 +21,8 @@ const STRINGS: Record<Lang, { title: string; subtitle: string; cta: string; reas
 }
 
 interface PhoneEntryProps {
+  lang: Lang
+  onLangChange: (lang: Lang) => void
   /** Called with the normalized 9–13 digit national number when "Send code" is tapped. */
   onSend?: (digits: string) => void
 }
@@ -31,8 +32,7 @@ interface PhoneEntryProps {
  * Blood Help Claude Design project. Dummy phone-OTP entry: enter a number,
  * send code. Default language is Burmese (my); a pill toggle switches to English.
  */
-export function PhoneEntry({ onSend }: PhoneEntryProps) {
-  const [lang, setLang] = useState<Lang>('my')
+export function PhoneEntry({ lang, onLangChange, onSend }: PhoneEntryProps) {
   const [phone, setPhone] = useState('')
   const [focus, setFocus] = useState(false)
 
@@ -139,10 +139,10 @@ export function PhoneEntry({ onSend }: PhoneEntryProps) {
               gap: 2,
             }}
           >
-            <button type="button" onClick={() => setLang('my')} style={isMy ? activeTab : idleTab}>
+            <button type="button" onClick={() => onLangChange('my')} style={isMy ? activeTab : idleTab}>
               မြန်မာ
             </button>
-            <button type="button" onClick={() => setLang('en')} style={isMy ? idleTab : activeTab}>
+            <button type="button" onClick={() => onLangChange('en')} style={isMy ? idleTab : activeTab}>
               ENG
             </button>
           </div>
