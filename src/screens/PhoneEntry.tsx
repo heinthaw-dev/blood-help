@@ -154,7 +154,8 @@ export function PhoneEntry({ onSend }: PhoneEntryProps) {
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            padding: '40px 24px 28px',
+            justifyContent: 'center',
+            padding: '28px 24px',
           }}
         >
           <h1 style={titleStyle}>{copy.title}</h1>
