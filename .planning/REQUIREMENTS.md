@@ -135,17 +135,65 @@ Explicitly excluded. Documented to prevent scope creep.
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
+Which phases cover which requirements. Updated during roadmap revision 2026-06-19.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated during roadmap creation) | — | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| PWA-01 | Phase 1 | Pending |
+| PWA-02 | Phase 1 | Pending |
+| DON-06 | Phase 2 | Pending |
+| REQ-01 | Phase 3 | Pending |
+| REQ-02 | Phase 3 | Pending |
+| REQ-03 | Phase 3 | Pending |
+| REQ-04 | Phase 3 | Pending |
+| REQ-05 | Phase 3 | Pending |
+| REQ-06 | Phase 3 | Pending |
+| AUTH-04 | Phase 4 | Pending |
+| AUTH-05 | Phase 4 | Pending |
+| AUTH-06 | Phase 4 | Pending |
+| DON-01 | Phase 4 | Pending |
+| DON-05 | Phase 4 | Pending |
+| PUSH-02 | Phase 5 | Pending |
+| PUSH-05 | Phase 5 | Pending |
+| PWA-03 | Phase 5 | Pending |
+| PWA-04 | Phase 5 | Pending |
+| PWA-05 | Phase 5 | Pending |
+| DON-02 | Phase 6 | Pending |
+| DON-03 | Phase 6 | Pending |
+| DON-04 | Phase 6 | Pending |
+| DON-07 | Phase 6 | Pending |
+| MATCH-01 | Phase 6 | Pending |
+| MATCH-02 | Phase 6 | Pending |
+| MATCH-03 | Phase 6 | Pending |
+| MATCH-04 | Phase 6 | Pending |
+| PUSH-01 | Phase 7 | Pending |
+| PUSH-03 | Phase 7 | Pending |
+| PUSH-04 | Phase 7 | Pending |
+| RESP-01 | Phase 8 | Pending |
+| RESP-02 | Phase 8 | Pending |
+| RESP-03 | Phase 8 | Pending |
+| RESP-04 | Phase 8 | Pending |
+| RESP-05 | Phase 8 | Pending |
+| RESP-06 | Phase 8 | Pending |
+| DISC-01 | Phase 8 | Pending |
+| DISC-02 | Phase 8 | Pending |
+| DISC-03 | Phase 8 | Pending |
+| DISC-04 | Phase 8 | Pending |
+| DISC-05 | Phase 8 | Pending |
+| DISC-06 | Phase 8 | Pending |
+| DISC-07 | Phase 8 | Pending |
+| LOC-01 | Phase 9 | Pending |
+| LOC-02 | Phase 9 | Pending |
+| LOC-03 | Phase 9 | Pending |
 
 **Coverage:**
-- v1 requirements: 44 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 44 ⚠️
+- v1 requirements: 49 total
+- Mapped to phases: 49
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-19*
-*Last updated: 2026-06-19 after Live Donor Discovery feature + donation-handshake/privacy refinements*
+*Last updated: 2026-06-19 — traceability table revised for 9-phase screen-first restructure*
