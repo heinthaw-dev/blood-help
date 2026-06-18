@@ -1,0 +1,109 @@
+/* Webfonts — Inter (Latin + numbers) and Noto Sans Myanmar (Burmese).
+   Must come before the Tailwind import. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Myanmar:wght@400;500;600&display=swap');
+
+@import "tailwindcss";
+
+/* ============================================================================
+   Blood Help — Design system tokens
+   Imported from the "Mobile phone entry screen" Claude Design project.
+   Tailwind v4 @theme: each variable below also generates the matching utility
+   (e.g. --color-primary → bg-primary/text-primary, --radius-card → rounded-card).
+   Light theme only. Red is the single loud color; everything else stays quiet.
+   ============================================================================ */
+@theme {
+  /* ---- Colors ---- */
+  /* Brand / primary red */
+  --color-red-50:  #FDF4F2;
+  --color-red-100: #FBEAE7;
+  --color-red-500: #D13E2F;
+  --color-red-600: #B5362A;
+  --color-red-700: #9A2D22;
+
+  /* Success (confirmed / available) */
+  --color-green-100: #E7F4EE;
+  --color-green-500: #1E8E5A;
+
+  /* Semantic aliases */
+  --color-primary:       #D13E2F;
+  --color-primary-hover: #B5362A;
+  --color-primary-press: #9A2D22;
+  --color-primary-tint:  #FBEAE7;
+  --color-primary-wash:  #FDF4F2;
+
+  --color-bg:            #FAFAF9;
+  --color-surface:       #FFFFFF;
+
+  --color-ink-900: #1A1A1A;
+  --color-ink-500: #6E6E6E;
+  --color-ink-300: #A0A0A0;
+
+  --color-text-primary:    #1A1A1A;
+  --color-text-secondary:  #6E6E6E;
+  --color-text-hint:       #A0A0A0;
+  --color-text-on-primary: #FFFFFF;
+
+  --color-border:       #ECEAE7;
+  --color-border-input: #DEDCD8;
+
+  --color-success:      #1E8E5A;
+  --color-success-tint: #E7F4EE;
+
+  /* ---- Font families ---- */
+  --font-sans:    'Inter', 'Noto Sans Myanmar', system-ui, -apple-system, sans-serif;
+  --font-burmese: 'Noto Sans Myanmar', 'Inter', system-ui, sans-serif;
+
+  /* ---- Spacing (8px grid: 4 / 8 / 12 / 16 / 20 / 24 / 32 / 40) ---- */
+  --spacing-1:  4px;
+  --spacing-2:  8px;
+  --spacing-3:  12px;
+  --spacing-4:  16px;
+  --spacing-5:  20px;
+  --spacing-6:  24px;
+  --spacing-8:  32px;
+  --spacing-10: 40px;
+
+  /* Layout conventions */
+  --spacing-screen:  20px; /* edge padding of a mobile screen */
+  --spacing-card:    16px; /* inner padding of a card */
+  --spacing-card-gap: 12px; /* gap between cards */
+  --spacing-section: 28px; /* gap between sections (24–32px) */
+
+  /* ---- Border radius ---- */
+  --radius-button: 12px;
+  --radius-card:   16px;
+  --radius-input:  12px;
+  --radius-sheet:  20px;  /* bottom-sheet top corners */
+  --radius-pill:   999px; /* chips / tags */
+
+  /* ---- Shadows / elevation ----
+     Minimal. Cards prefer a 1px border to shadow. */
+  --shadow-soft:  0 1px 2px rgba(26, 26, 26, 0.04);
+  --shadow-card:  0 2px 8px rgba(26, 26, 26, 0.05);
+  --shadow-cta:   0 4px 12px rgba(209, 62, 47, 0.20); /* lifts the primary CTA */
+  --shadow-sheet: 0 -8px 32px rgba(26, 26, 26, 0.10);
+
+  /* ---- Font weights ---- */
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+
+  /* ---- Line heights ---- */
+  --leading-heading: 1.3;
+  --leading-body:    1.5;
+
+  /* ---- Type scale (size / line-height) ----
+     Sentence case. Pair each with a weight utility:
+     title 26/600 · section 18/600 · body 16/400 · body-strong 16/500 ·
+     caption 14/400 · hint 12/400 · button 16/600 */
+  --text-title:        26px;
+  --text-title--line-height: var(--leading-heading);
+  --text-section:      18px;
+  --text-section--line-height: var(--leading-heading);
+  --text-body:         16px;
+  --text-body--line-height: var(--leading-body);
+  --text-caption:      14px;
+  --text-caption--line-height: var(--leading-body);
+  --text-hint:         12px;
+  --text-hint--line-height: var(--leading-body);
+}
