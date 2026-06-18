@@ -99,30 +99,8 @@ export function PhoneEntry({ onSend }: PhoneEntryProps) {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#E7E5DF',
-        padding: 32,
-        fontFamily: 'var(--font-sans)',
-      }}
-    >
-      <div
-        style={{
-          width: 390,
-          minHeight: 780,
-          background: 'var(--color-bg)',
-          borderRadius: 36,
-          boxShadow: '0 12px 40px rgba(26,26,26,.14)',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'relative',
-        }}
-      >
+    <div className="phone-entry-stage">
+      <div className="phone-entry-card">
         {/* top bar: wordmark + language toggle */}
         <div
           style={{

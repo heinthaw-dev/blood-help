@@ -107,3 +107,55 @@
   --text-hint:         12px;
   --text-hint--line-height: var(--leading-body);
 }
+
+/* ============================================================================
+   Screen layout — mobile-first, full-bleed.
+   Mobile (default): the screen fills the device viewport edge-to-edge, no
+   backdrop or frame. Desktop (>=480px): show the centered phone-style frame
+   from the design canvas so it doesn't stretch awkwardly on wide screens.
+   ============================================================================ */
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-entry-stage {
+  flex: 1;
+  min-height: 100dvh;
+  display: flex;
+  font-family: var(--font-sans);
+}
+
+.phone-entry-card {
+  flex: 1;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+@media (min-width: 480px) {
+  .phone-entry-stage {
+    align-items: center;
+    justify-content: center;
+    background: #e7e5df;
+    padding: 32px;
+  }
+
+  .phone-entry-card {
+    flex: none;
+    width: 390px;
+    min-height: 780px;
+    border-radius: 36px;
+    box-shadow: 0 12px 40px rgba(26, 26, 26, 0.14);
+  }
+}
