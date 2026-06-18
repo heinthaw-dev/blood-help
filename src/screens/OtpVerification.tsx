@@ -196,7 +196,15 @@ export function OtpVerification({
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '36px 24px 28px' }}>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            padding: '28px 24px',
+          }}
+        >
           <h1
             style={{
               margin: 0,
@@ -244,8 +252,10 @@ export function OtpVerification({
             <div style={{ display: 'flex', gap: 10 }}>
               {Array.from({ length: OTP_LENGTH }, (_, i) => {
                 const filled = !!code[i]
+                // Empty/idle boxes keep a visible muted border while waiting for
+                // the code; filled or error boxes go primary red.
                 const borderColor =
-                  error || filled ? 'var(--color-primary)' : 'var(--border-field)'
+                  error || filled ? 'var(--color-primary)' : 'var(--ink-300)'
                 return (
                   <input
                     key={i}
@@ -341,11 +351,12 @@ export function OtpVerification({
             </p>
           )}
 
-          {/* Verify button pinned toward bottom */}
-          <div style={{ flex: 1, minHeight: 32 }} />
-          <Button fullWidth height={54} disabled={verifyDisabled} onClick={handleVerify}>
-            {copy.cta}
-          </Button>
+          {/* Verify button */}
+          <div style={{ marginTop: 32 }}>
+            <Button fullWidth height={54} disabled={verifyDisabled} onClick={handleVerify}>
+              {copy.cta}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
