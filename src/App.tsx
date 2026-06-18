@@ -3,10 +3,13 @@ import { PhoneEntry } from './screens/PhoneEntry'
 import { OtpVerification } from './screens/OtpVerification'
 import { IntentChoice } from './screens/IntentChoice'
 import type { Intent } from './screens/IntentChoice'
+import { CreateRequest } from './screens/CreateRequest'
+import type { RequestDraft } from './screens/CreateRequest'
+import { Button } from './components/Button'
 import { hasLoggedInBefore, markLoggedIn } from './auth'
 import type { Lang } from './i18n'
 
-type Screen = 'phone' | 'otp' | 'intent' | 'home'
+type Screen = 'phone' | 'otp' | 'intent' | 'home' | 'create-request'
 
 /** Format a national number for display under the +95 country code. */
 function formatPhone(digits: string): string {
@@ -27,8 +30,17 @@ function App() {
   }
 
   const handleChooseIntent = (intent: Intent) => {
-    // Next phase: route to the request flow ('need') or donor flow ('donate').
-    console.log('intent (dummy)', intent)
+    if (intent === 'need') {
+      setScreen('create-request')
+    } else {
+      // Donor flow lands in a later phase; home for now.
+      setScreen('home')
+    }
+  }
+
+  const handlePosted = (draft: RequestDraft) => {
+    // Next phase: persist to Supabase + fan out push. For now, log and go home.
+    console.log('request posted (dummy)', draft)
     setScreen('home')
   }
 
@@ -48,6 +60,18 @@ function App() {
     return <IntentChoice lang={lang} onLangChange={setLang} onChoose={handleChooseIntent} />
   }
 
+  if (screen === 'create-request') {
+    return (
+      <CreateRequest
+        lang={lang}
+        onLangChange={setLang}
+        onBack={() => setScreen('home')}
+        defaultPhone={phone}
+        onPosted={handlePosted}
+      />
+    )
+  }
+
   if (screen === 'home') {
     // Placeholder until the Home Screen phase. Lets returning-user and
     // post-intent navigation land somewhere real.
@@ -55,11 +79,12 @@ function App() {
       <div className="phone-entry-stage">
         <div
           className="phone-entry-card"
-          style={{ alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          style={{ alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 }}
         >
-          <p style={{ fontFamily: 'var(--font-sans)', color: 'var(--text-secondary)' }}>
+          <p style={{ fontFamily: 'var(--font-sans)', color: 'var(--text-secondary)', margin: 0 }}>
             Home screen — coming next.
           </p>
+          <Button onClick={() => setScreen('create-request')}>Request blood</Button>
         </div>
       </div>
     )

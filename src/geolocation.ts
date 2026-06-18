@@ -1,0 +1,38 @@
+/** Result of a geolocation request. */
+export type GeoResult =
+  | { ok: true; lat: number; lng: number; accuracy: number }
+  | { ok: false; reason: 'denied' | 'unavailable' | 'timeout' | 'unsupported' }
+
+/**
+ * Request the device's current position via the browser geolocation API.
+ * Triggers the native permission prompt if not yet granted. The caller should
+ * warn the user beforehand (pre-permission dialog) so they know it's coming.
+ */
+export function getCurrentPosition(): Promise<GeoResult> {
+  return new Promise((resolve) => {
+    if (!('geolocation' in navigator)) {
+      resolve({ ok: false, reason: 'unsupported' })
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) =>
+        resolve({
+          ok: true,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        }),
+      (err) => {
+        const reason =
+          err.code === err.PERMISSION_DENIED
+            ? 'denied'
+            : err.code === err.TIMEOUT
+              ? 'timeout'
+              : 'unavailable'
+        resolve({ ok: false, reason })
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    )
+  })
+}
