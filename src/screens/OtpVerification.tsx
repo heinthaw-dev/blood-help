@@ -269,8 +269,11 @@ export function OtpVerification({
                     onChange={(e) => handleChange(i, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(i, e.key)}
                     style={{
-                      flex: 1,
+                      flexGrow: 1,
+                      flexShrink: 1,
+                      flexBasis: 0,
                       minWidth: 0,
+                      width: '100%',
                       height: 64,
                       textAlign: 'center',
                       fontFamily: 'var(--font-sans)',
