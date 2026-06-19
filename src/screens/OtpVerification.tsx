@@ -252,10 +252,10 @@ export function OtpVerification({
             <div style={{ display: 'flex', gap: 10 }}>
               {Array.from({ length: OTP_LENGTH }, (_, i) => {
                 const filled = !!code[i]
-                // Empty/idle boxes keep a visible muted border while waiting for
-                // the code; filled or error boxes go primary red.
+                // Empty/idle boxes show a black border while waiting for the
+                // code; filled or error boxes go primary red.
                 const borderColor =
-                  error || filled ? 'var(--color-primary)' : 'var(--ink-300)'
+                  error || filled ? 'var(--color-primary)' : 'var(--ink-900)'
                 return (
                   <input
                     key={i}
