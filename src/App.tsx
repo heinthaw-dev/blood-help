@@ -8,12 +8,20 @@ import type { RequestDraft } from './screens/CreateRequest'
 import { DonorProfileSetup } from './screens/DonorProfileSetup'
 import type { DonorProfile } from './screens/DonorProfileSetup'
 import { Profile } from './screens/Profile'
+import { Leaderboard } from './screens/Leaderboard'
 import type { Tab } from './components/BottomNav'
 import { hasLoggedInBefore, markLoggedIn } from './auth'
 import type { BloodType } from './blood'
 import type { Lang } from './i18n'
 
-type Screen = 'phone' | 'otp' | 'intent' | 'home' | 'create-request' | 'donor-setup'
+type Screen =
+  | 'phone'
+  | 'otp'
+  | 'intent'
+  | 'profile'
+  | 'leaderboard'
+  | 'create-request'
+  | 'donor-setup'
 
 /** Dummy user profile state until Supabase persistence lands. */
 interface UserState {
@@ -50,7 +58,7 @@ function App() {
     // returning numbers skip straight to home.
     const returning = hasLoggedInBefore(phone)
     markLoggedIn(phone)
-    setScreen(returning ? 'home' : 'intent')
+    setScreen(returning ? 'profile' : 'intent')
   }
 
   const handleChooseIntent = (intent: Intent) => {
@@ -60,7 +68,7 @@ function App() {
   const handlePosted = (draft: RequestDraft) => {
     // Next phase: persist to Supabase + fan out push. For now, log and go home.
     console.log('request posted (dummy)', draft)
-    setScreen('home')
+    setScreen('profile')
   }
 
   const handleSaveDonor = (profile: DonorProfile) => {
@@ -73,12 +81,13 @@ function App() {
       available: profile.available,
       showNumber: profile.showNumber,
     }))
-    setScreen('home')
+    setScreen('profile')
   }
 
   const handleNavigate = (tab: Tab) => {
-    // Only Profile exists for now; Home/Leaderboard are later phases.
-    if (tab === 'profile') setScreen('home')
+    // The Home (feed) tab is a later phase; Profile and Leaderboard exist.
+    if (tab === 'profile') setScreen('profile')
+    else if (tab === 'leaderboard') setScreen('leaderboard')
   }
 
   const handleLogout = () => {
@@ -108,7 +117,7 @@ function App() {
       <CreateRequest
         lang={lang}
         onLangChange={setLang}
-        onBack={() => setScreen('home')}
+        onBack={() => setScreen('profile')}
         defaultPhone={phone}
         onPosted={handlePosted}
       />
@@ -120,14 +129,14 @@ function App() {
       <DonorProfileSetup
         lang={lang}
         onLangChange={setLang}
-        onBack={() => setScreen('home')}
+        onBack={() => setScreen('profile')}
         defaultPhone={phone}
         onSave={handleSaveDonor}
       />
     )
   }
 
-  if (screen === 'home') {
+  if (screen === 'profile') {
     return (
       <Profile
         lang={lang}
@@ -143,6 +152,17 @@ function App() {
         onEditProfile={() => setScreen('donor-setup')}
         onLogout={handleLogout}
         onNavigate={handleNavigate}
+      />
+    )
+  }
+
+  if (screen === 'leaderboard') {
+    return (
+      <Leaderboard
+        lang={lang}
+        onNavigate={handleNavigate}
+        userName={user.name}
+        userBloodType={user.bloodType}
       />
     )
   }
