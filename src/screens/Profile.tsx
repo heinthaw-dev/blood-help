@@ -1,10 +1,12 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { useState } from 'react'
 import { Switch } from '../components/Switch'
 import { Badge } from '../components/Badge'
 import { BottomNav } from '../components/BottomNav'
 import type { Tab } from '../components/BottomNav'
 import type { BloodType } from '../blood'
 import type { Lang } from '../i18n'
+import { formatNumber } from '../i18n'
 
 interface ProfileProps {
   lang: Lang
@@ -39,132 +41,106 @@ export function Profile({
   onLogout,
   onNavigate,
 }: ProfileProps) {
+  const [logoutHover, setLogoutHover] = useState(false)
+
   const isMy = lang === 'my'
-  const bodyFont = isMy ? 'var(--font-burmese)' : 'var(--font-sans)'
-  const lh = isMy ? 1.7 : 1.45
+  const langFont = isMy ? 'var(--font-burmese)' : 'var(--font-sans)'
+  const count = formatNumber(donationCount, lang)
 
   const t = {
     my: {
-      title: 'ပရိုဖိုင်',
-      donated: (n: number) => `လှူဒါန်းမှု ${n} ကြိမ်`,
-      lastDonation: (d: string) => `နောက်ဆုံး လှူဒါန်းသည့်ရက် — ${d}`,
-      lastDonationNone: 'နောက်ဆုံး လှူဒါန်းသည့်ရက် — မရှိသေးပါ',
-      available: 'သွေးလှူရန် အသင့်ရှိသည်',
-      showNumber: 'ကျွန်ုပ်၏ နံပါတ်ကို တောင်းခံသူများအား ပြသမည်',
-      language: 'ဘာသာစကား',
-      editProfile: 'ပရိုဖိုင် ပြင်ဆင်ရန်',
-      logout: 'ထွက်ရန်',
+      donatedLabel: `လှူဒါန်းမှု ${count} ကြိမ်`,
+      lastLabel: 'နောက်ဆုံး လှူဒါန်းသည့်ရက်',
+      settingsHeader: 'ဆက်တင်များ',
+      availLabel: 'သွေးလှူရန် အသင့်ရှိသည်',
+      showNumLabel: 'ကျွန်ုပ်၏ နံပါတ်ကို တောင်းခံသူများအား ပြသမည်',
+      languageLabel: 'ဘာသာစကား',
+      editLabel: 'ပရိုဖိုင် ပြင်ဆင်ရန်',
+      editSub: 'အမည်၊ မြို့နယ်၊ သွေးအုပ်စုနှင့် ဖုန်းနံပါတ်',
+      logoutLabel: 'ထွက်ရန်',
+      none: 'မရှိသေးပါ',
     },
     en: {
-      title: 'Profile',
-      donated: (n: number) => `Donated ${n} times`,
-      lastDonation: (d: string) => `Last donation — ${d}`,
-      lastDonationNone: 'Last donation — none yet',
-      available: 'Available to donate',
-      showNumber: 'Show my number to requesters',
-      language: 'Language',
-      editProfile: 'Edit profile',
-      logout: 'Log out',
+      donatedLabel: `Donated ${count} times`,
+      lastLabel: 'Last donation',
+      settingsHeader: 'Settings',
+      availLabel: 'Available to donate',
+      showNumLabel: 'Show my number to requesters',
+      languageLabel: 'Language',
+      editLabel: 'Edit profile',
+      editSub: 'Name, township, blood type and phone',
+      logoutLabel: 'Log out',
+      none: 'None yet',
     },
   }[lang]
 
   const initial = (name.trim()[0] || '?').toUpperCase()
 
-  const rowLabelStyle: CSSProperties = {
-    flex: 1,
-    margin: 0,
-    fontFamily: bodyFont,
-    fontSize: 15,
-    fontWeight: 500,
-    lineHeight: lh,
-    color: 'var(--text-primary)',
-  }
-
-  const segBase: CSSProperties = {
+  const tabBase: CSSProperties = {
     fontFamily: 'var(--font-sans)',
     fontSize: 13,
     fontWeight: 600,
     lineHeight: 1,
     border: 'none',
     borderRadius: 'var(--radius-pill)',
-    padding: '7px 14px',
+    padding: '7px 13px',
     cursor: 'pointer',
     transition: 'background 120ms ease, color 120ms ease',
   }
-  const segActive: CSSProperties = { ...segBase, background: 'var(--color-primary)', color: '#fff' }
-  const segIdle: CSSProperties = { ...segBase, background: 'transparent', color: 'var(--text-secondary)' }
+  const activeTab: CSSProperties = { ...tabBase, background: 'var(--color-primary)', color: '#fff' }
+  const idleTab: CSSProperties = { ...tabBase, background: 'transparent', color: 'var(--text-secondary)' }
 
-  // A settings row container (white surface, padded).
-  const row = (children: ReactNode, onClick?: () => void) => (
-    <div
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16,
-        padding: '16px',
-        background: 'var(--surface-card)',
-        cursor: onClick ? 'pointer' : 'default',
-      }}
-    >
-      {children}
-    </div>
+  const rowLabel: CSSProperties = {
+    flex: 1,
+    minWidth: 0,
+    fontFamily: langFont,
+    fontSize: 16,
+    lineHeight: 1.4,
+    color: 'var(--text-primary)',
+  }
+  const settingRow = (children: ReactNode): ReactNode => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16 }}>{children}</div>
   )
-
-  const divider = <div style={{ height: 1, background: 'var(--border-card)', marginLeft: 16 }} />
+  const divider = <div style={{ height: 1, background: 'var(--border-card)', margin: '0 16px' }} />
 
   return (
     <div className="phone-entry-stage">
       <div className="phone-entry-card" style={{ height: '100dvh' }}>
-        {/* Header bar */}
+        {/* Scrollable content */}
         <div
           style={{
-            flex: 'none',
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            scrollbarWidth: 'none',
+            padding: '30px 20px 24px',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px 20px 16px',
-            borderBottom: '1px solid var(--border-card)',
+            flexDirection: 'column',
+            gap: 24,
           }}
         >
-          <h2
-            style={{
-              margin: 0,
-              fontFamily: bodyFont,
-              fontSize: 18,
-              fontWeight: 600,
-              lineHeight: isMy ? 1.55 : 1.3,
-              color: 'var(--text-primary)',
-            }}
-          >
-            {t.title}
-          </h2>
-        </div>
+          {/* App title */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <svg width="22" height="26" viewBox="0 0 24 28" fill="none" style={{ display: 'block' }}>
+              <path d="M12 1.5s9 9 9 15.5a9 9 0 0 1-18 0C3 10.5 12 1.5 12 1.5z" fill="var(--color-primary)" />
+            </svg>
+            <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+              Blood Help
+            </span>
+          </div>
 
-        {/* Scrollable content */}
-        <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'none' }}>
-          {/* Identity header */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 12,
-              padding: '28px 24px 24px',
-            }}
-          >
+          {/* Header: avatar + name + blood badge */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
             <div
               style={{
                 width: 84,
                 height: 84,
-                borderRadius: '50%',
+                borderRadius: 999,
                 background: 'var(--color-primary-tint)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontFamily: 'var(--font-sans)',
+                fontFamily: 'var(--font-burmese)',
                 fontSize: 34,
                 fontWeight: 600,
                 color: 'var(--color-primary)',
@@ -172,20 +148,19 @@ export function Profile({
             >
               {initial}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-              <p
-                style={{
-                  margin: 0,
-                  fontFamily: bodyFont,
-                  fontSize: 22,
-                  fontWeight: 600,
-                  lineHeight: 1.3,
-                  color: 'var(--text-primary)',
-                  textAlign: 'center',
-                }}
-              >
-                {name}
-              </p>
+            <div
+              style={{
+                marginTop: 14,
+                fontFamily: langFont,
+                fontSize: 22,
+                fontWeight: 600,
+                lineHeight: 1.3,
+                color: 'var(--text-primary)',
+              }}
+            >
+              {name}
+            </div>
+            <div style={{ marginTop: 10 }}>
               <Badge>{bloodType}</Badge>
             </div>
           </div>
@@ -194,121 +169,118 @@ export function Profile({
           <div
             style={{
               display: 'flex',
-              margin: '0 16px',
               background: 'var(--surface-card)',
               border: '1px solid var(--border-card)',
               borderRadius: 'var(--radius-card)',
-              boxShadow: 'var(--shadow-soft)',
               overflow: 'hidden',
             }}
           >
-            <div style={{ flex: 1, padding: '16px 12px', textAlign: 'center' }}>
-              <p
-                style={{
-                  margin: 0,
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: 24,
-                  fontWeight: 600,
-                  color: 'var(--color-primary)',
-                  lineHeight: 1.2,
-                }}
-              >
-                {donationCount}
-              </p>
-              <p
-                style={{
-                  margin: '4px 0 0',
-                  fontFamily: bodyFont,
-                  fontSize: 13,
-                  fontWeight: 400,
-                  lineHeight: lh,
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                {t.donated(donationCount)}
-              </p>
+            <div style={{ flex: 1, padding: 16, textAlign: 'center' }}>
+              <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 24, fontWeight: 600, lineHeight: 1.2, color: 'var(--color-primary)' }}>
+                {count}
+              </div>
+              <div style={{ marginTop: 4, fontFamily: langFont, fontSize: 13, lineHeight: 1.4, color: 'var(--text-secondary)' }}>
+                {t.donatedLabel}
+              </div>
             </div>
             <div style={{ width: 1, background: 'var(--border-card)' }} />
-            <div
-              style={{
-                flex: 1,
-                padding: '16px 12px',
-                textAlign: 'center',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <p
-                style={{
-                  margin: 0,
-                  fontFamily: bodyFont,
-                  fontSize: 13,
-                  fontWeight: 400,
-                  lineHeight: lh,
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                {lastDonation ? t.lastDonation(lastDonation) : t.lastDonationNone}
-              </p>
+            <div style={{ flex: 1, padding: 16, textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 600, lineHeight: 1.3, color: 'var(--text-primary)' }}>
+                {lastDonation ?? t.none}
+              </div>
+              <div style={{ marginTop: 4, fontFamily: langFont, fontSize: 13, lineHeight: 1.4, color: 'var(--text-secondary)' }}>
+                {t.lastLabel}
+              </div>
             </div>
           </div>
 
-          {/* Settings list */}
-          <div
-            style={{
-              margin: '20px 16px 0',
-              background: 'var(--surface-card)',
-              border: '1px solid var(--border-card)',
-              borderRadius: 'var(--radius-card)',
-              boxShadow: 'var(--shadow-soft)',
-              overflow: 'hidden',
-            }}
-          >
-            {row(
-              <>
-                <p style={rowLabelStyle}>{t.available}</p>
-                <Switch checked={available} onChange={onAvailableChange} ariaLabel={t.available} />
-              </>,
-            )}
-            {divider}
-            {row(
-              <>
-                <p style={rowLabelStyle}>{t.showNumber}</p>
-                <Switch checked={showNumber} onChange={onShowNumberChange} ariaLabel={t.showNumber} />
-              </>,
-            )}
-            {divider}
-            {row(
-              <>
-                <p style={rowLabelStyle}>{t.language}</p>
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    background: 'var(--color-bg)',
-                    border: '1px solid var(--border-card)',
-                    borderRadius: 'var(--radius-pill)',
-                    padding: 3,
-                    gap: 2,
-                    flex: 'none',
-                  }}
-                >
-                  <button type="button" onClick={() => onLangChange('my')} style={isMy ? segActive : segIdle}>
-                    မြန်မာ
-                  </button>
-                  <button type="button" onClick={() => onLangChange('en')} style={isMy ? segIdle : segActive}>
-                    ENG
-                  </button>
+          {/* Settings */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div
+              style={{
+                fontFamily: langFont,
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: '.02em',
+                color: 'var(--text-hint)',
+                padding: '0 4px',
+                textTransform: 'uppercase',
+              }}
+            >
+              {t.settingsHeader}
+            </div>
+            <div
+              style={{
+                background: 'var(--surface-card)',
+                border: '1px solid var(--border-card)',
+                borderRadius: 'var(--radius-card)',
+                overflow: 'hidden',
+              }}
+            >
+              {settingRow(
+                <>
+                  <span style={rowLabel}>{t.availLabel}</span>
+                  <Switch checked={available} onChange={onAvailableChange} ariaLabel={t.availLabel} />
+                </>,
+              )}
+              {divider}
+              {settingRow(
+                <>
+                  <span style={rowLabel}>{t.showNumLabel}</span>
+                  <Switch checked={showNumber} onChange={onShowNumberChange} ariaLabel={t.showNumLabel} />
+                </>,
+              )}
+              {divider}
+              {settingRow(
+                <>
+                  <span style={rowLabel}>{t.languageLabel}</span>
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      flex: 'none',
+                      background: 'var(--color-bg)',
+                      border: '1px solid var(--border-card)',
+                      borderRadius: 'var(--radius-pill)',
+                      padding: 3,
+                      gap: 2,
+                    }}
+                  >
+                    <button type="button" onClick={() => onLangChange('my')} style={isMy ? activeTab : idleTab}>
+                      မြန်မာ
+                    </button>
+                    <button type="button" onClick={() => onLangChange('en')} style={isMy ? idleTab : activeTab}>
+                      ENG
+                    </button>
+                  </div>
+                </>,
+              )}
+              {divider}
+              <button
+                type="button"
+                onClick={onEditProfile}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  width: '100%',
+                  textAlign: 'left',
+                  background: 'none',
+                  border: 'none',
+                  padding: 16,
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: langFont, fontSize: 16, lineHeight: 1.4, color: 'var(--text-primary)' }}>
+                    {t.editLabel}
+                  </div>
+                  <div style={{ fontFamily: langFont, fontSize: 13, lineHeight: 1.4, color: 'var(--text-secondary)', marginTop: 2 }}>
+                    {t.editSub}
+                  </div>
                 </div>
-              </>,
-            )}
-            {divider}
-            {row(
-              <>
-                <p style={rowLabelStyle}>{t.editProfile}</p>
                 <svg
-                  width="18"
-                  height="18"
+                  width="20"
+                  height="20"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="var(--text-hint)"
@@ -319,32 +291,32 @@ export function Profile({
                 >
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
-              </>,
-              onEditProfile,
-            )}
+              </button>
+            </div>
           </div>
 
           {/* Log out */}
-          <div style={{ padding: '24px 16px 28px' }}>
-            <button
-              type="button"
-              onClick={onLogout}
-              style={{
-                width: '100%',
-                height: 50,
-                background: 'var(--surface-card)',
-                border: '1px solid var(--border-card)',
-                borderRadius: 'var(--radius-button)',
-                cursor: 'pointer',
-                fontFamily: bodyFont,
-                fontSize: 15,
-                fontWeight: 600,
-                color: 'var(--color-primary)',
-              }}
-            >
-              {t.logout}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onLogout}
+            onMouseEnter={() => setLogoutHover(true)}
+            onMouseLeave={() => setLogoutHover(false)}
+            style={{
+              width: '100%',
+              height: 54,
+              background: logoutHover ? 'var(--color-primary-wash)' : 'var(--surface-card)',
+              border: '1px solid var(--border-field)',
+              borderRadius: 'var(--radius-button)',
+              fontFamily: langFont,
+              fontSize: 16,
+              fontWeight: 600,
+              color: logoutHover ? 'var(--color-primary)' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              transition: 'background 120ms ease, color 120ms ease',
+            }}
+          >
+            {t.logoutLabel}
+          </button>
         </div>
 
         {/* Bottom nav */}
