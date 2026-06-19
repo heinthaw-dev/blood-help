@@ -109,6 +109,36 @@
 }
 
 /* ============================================================================
+   Raw design-system token aliases.
+   The screens are ported verbatim from Claude Design and reference the original
+   token names (--ink-300, --surface-card, --text-primary, --border-field, …),
+   while the @theme block above exposes them as --color-* for Tailwind utilities.
+   These aliases make the raw var(--…) references resolve so borders, surfaces,
+   and text colors render. (Note: --text-* color names intentionally override the
+   @theme type-scale sizes at runtime; the font-size utilities are still built.)
+   ============================================================================ */
+:root {
+  --ink-900: var(--color-ink-900);
+  --ink-500: var(--color-ink-500);
+  --ink-300: var(--color-ink-300);
+
+  --surface-card: var(--color-surface);
+
+  --text-primary:    var(--color-text-primary);
+  --text-secondary:  var(--color-text-secondary);
+  --text-hint:       var(--color-text-hint);
+  --text-on-primary: var(--color-text-on-primary);
+
+  --border-card:  var(--color-border);
+  --border-field: var(--color-border-input);
+
+  --focus-ring: var(--color-primary);
+
+  /* Type-scale size token used by the ported Button (design name). */
+  --type-button-size: var(--text-body); /* 16px */
+}
+
+/* ============================================================================
    Screen layout — mobile-first, full-bleed.
    Mobile (default): the screen fills the device viewport edge-to-edge, no
    backdrop or frame. Desktop (>=480px): show the centered phone-style frame
