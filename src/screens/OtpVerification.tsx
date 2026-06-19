@@ -288,11 +288,11 @@ export function OtpVerification({
                         <div style={{ display: "flex", gap: 10 }}>
                             {Array.from({ length: OTP_LENGTH }, (_, i) => {
                                 // Border tracks whether the code has arrived:
-                                // empty box → black, filled → primary red.
+                                // empty box → muted grey, filled → primary red.
                                 const filled = !!code[i];
                                 const borderColor = filled
                                     ? "var(--color-primary)"
-                                    : "var(--ink-900)";
+                                    : "var(--ink-300)";
                                 return (
                                     <input
                                         key={i}
