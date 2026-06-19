@@ -5,11 +5,13 @@ import { IntentChoice } from './screens/IntentChoice'
 import type { Intent } from './screens/IntentChoice'
 import { CreateRequest } from './screens/CreateRequest'
 import type { RequestDraft } from './screens/CreateRequest'
+import { DonorProfileSetup } from './screens/DonorProfileSetup'
+import type { DonorProfile } from './screens/DonorProfileSetup'
 import { Button } from './components/Button'
 import { hasLoggedInBefore, markLoggedIn } from './auth'
 import type { Lang } from './i18n'
 
-type Screen = 'phone' | 'otp' | 'intent' | 'home' | 'create-request'
+type Screen = 'phone' | 'otp' | 'intent' | 'home' | 'create-request' | 'donor-setup'
 
 /** Format a national number for display under the +95 country code. */
 function formatPhone(digits: string): string {
@@ -30,17 +32,18 @@ function App() {
   }
 
   const handleChooseIntent = (intent: Intent) => {
-    if (intent === 'need') {
-      setScreen('create-request')
-    } else {
-      // Donor flow lands in a later phase; home for now.
-      setScreen('home')
-    }
+    setScreen(intent === 'need' ? 'create-request' : 'donor-setup')
   }
 
   const handlePosted = (draft: RequestDraft) => {
     // Next phase: persist to Supabase + fan out push. For now, log and go home.
     console.log('request posted (dummy)', draft)
+    setScreen('home')
+  }
+
+  const handleSaveDonor = (profile: DonorProfile) => {
+    // Next phase: persist to Supabase profile. For now, log and go home.
+    console.log('donor profile saved (dummy)', profile)
     setScreen('home')
   }
 
@@ -72,6 +75,18 @@ function App() {
     )
   }
 
+  if (screen === 'donor-setup') {
+    return (
+      <DonorProfileSetup
+        lang={lang}
+        onLangChange={setLang}
+        onBack={() => setScreen('home')}
+        defaultPhone={phone}
+        onSave={handleSaveDonor}
+      />
+    )
+  }
+
   if (screen === 'home') {
     // Placeholder until the Home Screen phase. Lets returning-user and
     // post-intent navigation land somewhere real.
@@ -85,6 +100,9 @@ function App() {
             Home screen — coming next.
           </p>
           <Button onClick={() => setScreen('create-request')}>Request blood</Button>
+          <Button variant="secondary" onClick={() => setScreen('donor-setup')}>
+            Set up donor profile
+          </Button>
         </div>
       </div>
     )
