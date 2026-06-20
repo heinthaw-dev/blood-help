@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-06-20)
 
 **Core value:** A person can post a blood request and have nearby, blood-compatible donors actually receive a push alert and call them back — turning an hours-long search into help within minutes.
-**Current focus:** Phase 1 — Celebration Screens
+**Current focus:** v2.0 Backend Core — Phase 6: Foundation (ready to plan)
 
 ## Current Position
 
-Phase: 1 of 5 (Celebration Screens)
-Plan: 0 of TBD in current phase
+Phase: 6 of 9 (Foundation)
+Plan: — (not yet planned)
 Status: Ready to plan
-Last activity: 2026-06-20 — Roadmap created, milestone scoped to UI-only screens
+Last activity: 2026-06-20 — v2.0 roadmap created; Phases 6-9 defined
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [░░░░░░░░░░] 0% (v2.0)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
+- Total plans completed: 0 (v2.0 milestone)
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -42,9 +42,11 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- [Milestone init]: UI-first milestone — all 5 phases are React + Tailwind v4, no backend wiring
-- [Milestone init]: Screen designs come from Claude Design HTML prompts provided by user per phase
-- [Milestone init]: Defer donor response flow, FCM push, and backend integration to next milestone
+- [v2.0 init]: Anonymous Supabase session behind dummy OTP — profiles FK requires auth.users
+- [v2.0 init]: Data model is fixed from blood-help-spec.md — deviations require user sign-off
+- [v2.0 init]: Use Supabase MCP tools for all migrations and dummy data seeding
+- [v2.0 init]: FCM push is deferred to v3.0 — not in scope for this milestone
+- [v2.0 init]: Coarsened GPS only for privacy this milestone; purge and phone reveal deferred to v3
 
 ### Pending Todos
 
@@ -52,18 +54,21 @@ None yet.
 
 ### Blockers/Concerns
 
-- Claude Design HTML prompts must be provided by user before each phase can be executed (Phase 1 can start with existing design context)
+- Data model deviations from blood-help-spec.md §4 must be discussed with user before implementation
+- Supabase project URL and anon key needed before Phase 6 can wire the React client
 
 ## Deferred Items
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| Backend | Supabase schema, RLS, Edge Functions | Deferred to next milestone | 2026-06-20 |
-| Push | FCM / service worker integration | Deferred to next milestone | 2026-06-20 |
-| Donor flow | "I'll help" response flow + real-time updates | Deferred to next milestone | 2026-06-20 |
+| Push | FCM push (PUSH-01 through PUSH-04, DNOR-03) | Deferred to v3.0 | 2026-06-20 |
+| Privacy | Personal data purge on request close (PRIV-01) | Deferred to v3 | 2026-06-20 |
+| Privacy | Gated, logged, rate-limited phone reveal (PRIV-02) | Deferred to v3 | 2026-06-20 |
+| Auth | Real SMS OTP via Twilio | Deferred to v4 | 2026-06-20 |
+| i18n | react-i18next library | Not blocking backend | 2026-06-20 |
 
 ## Session Continuity
 
 Last session: 2026-06-20
-Stopped at: Roadmap and STATE.md created; no plans written yet
+Stopped at: v2.0 roadmap created (Phases 6-9); ready to run /gsd:plan-phase 6
 Resume file: None

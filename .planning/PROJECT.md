@@ -1,5 +1,21 @@
 # Blood Help
 
+## Current Milestone: v2.0 Backend Core
+
+**Goal:** Wire the full blood request loop end-to-end on Supabase — schema, anonymous auth, geo-matching, FCM push, donor responses, real-time updates, QR/code confirmation, and request close.
+
+**Target features:**
+- Supabase schema deployed (PostGIS, 5 tables, RLS) per blood-help-spec.md §4
+- Anonymous Supabase session behind existing dummy OTP screen
+- Donor profiles and blood requests persisted to DB
+- FCM service worker, device token registration, push to nearby compatible donors
+- PostGIS geo-matching + blood type compatibility matching
+- Donor response flow wired ("I'll help" → request_responses → FCM to requester)
+- Supabase Realtime on request-live screen (live donor list)
+- QR/5-char code confirmation → donations, donation_count++, auto-fulfill
+- Request close + resolution FCM; pg_cron 24h auto-expiry
+- Coarsened GPS storage (never raw lat/lng)
+
 ## What This Is
 
 A free, non-profit Progressive Web App that connects people who urgently need blood with nearby compatible donors, so a donor can be reached within minutes. Built for Myanmar / Southeast Asia, Burmese-first (Noto Sans Myanmar), privacy-conscious. One unified user profile — "requesting blood" and "being available to donate" are actions a single user takes, not separate account types.
@@ -14,41 +30,51 @@ A person can post a blood request and have nearby, blood-compatible donors actua
 
 <!-- Shipped and confirmed valuable. Inferred from existing codebase. -->
 
-- ✓ Phone number entry screen with E.164 formatting — existing
-- ✓ OTP verification screen (dummy auto-fill flow) — existing
-- ✓ Intent choice screen ("I need blood" / "I want to donate") — existing
-- ✓ Donor profile setup screen (name, blood type, township, availability, emergency-callable) — existing
-- ✓ Blood request creation screen (blood type, location, contact, units, urgency) — existing
-- ✓ Profile screen with bottom navigation — existing
-- ✓ Leaderboard screen with donation rankings — existing
-- ✓ Bilingual support (English + Burmese) with language toggle — existing
-- ✓ Shared component library (Button, Input, Switch, Badge, BottomNav, BloodTypeSelector, AlertDialog) — existing
-- ✓ Domain utilities (blood type enum, i18n formatting, auth localStorage, geolocation wrapper) — existing
+- ✓ Phone number entry screen with E.164 formatting — v1.0 UI milestone
+- ✓ OTP verification screen (dummy auto-fill flow) — v1.0 UI milestone
+- ✓ Intent choice screen ("I need blood" / "I want to donate") — v1.0 UI milestone
+- ✓ Donor profile setup screen (name, blood type, township, availability, emergency-callable) — v1.0 UI milestone
+- ✓ Blood request creation screen (blood type, location, contact, units, urgency) — v1.0 UI milestone
+- ✓ Profile screen with bottom navigation — v1.0 UI milestone
+- ✓ Leaderboard screen with donation rankings — v1.0 UI milestone
+- ✓ Home/dashboard screen (donor view: nearby requests feed) — v1.0 UI milestone
+- ✓ Request-live screen (requester session view) — v1.0 UI milestone
+- ✓ QR + 5-char code confirmation screen — v1.0 UI milestone
+- ✓ Donor thank-you and congratulations celebration screens — v1.0 UI milestone
+- ✓ Bilingual support (English + Burmese) with language toggle — v1.0 UI milestone
+- ✓ Shared component library (Button, Input, Switch, Badge, BottomNav, BloodTypeSelector, AlertDialog) — v1.0 UI milestone
+- ✓ Domain utilities (blood type enum, i18n formatting, auth localStorage, geolocation wrapper) — v1.0 UI milestone
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] Thank-you screen after donor registration (heart-warming confirmation)
-- [ ] Home / Dashboard screen (donor view: nearby requests feed, navigation)
-- [ ] Request-live screen (requester session view — UI layout only, no live donor data)
-- [ ] QR + 5-char code confirmation screen (scan or manual entry)
-- [ ] Congratulations screen (donor post-confirmation celebration)
-- [ ] Close/resolve flow ("Did you get blood from the app or outside?")
-- [ ] Update Profile screen to new design (from Claude Design prompt)
-- [ ] Update CreateRequest screen to new design (from Claude Design prompt)
+- [ ] Supabase schema + RLS deployed via MCP migrations (profiles, device_tokens, blood_requests, request_responses, donations)
+- [ ] PostGIS ST_DWithin RPC for geo-distance matching
+- [ ] Blood type compatibility matching (directional, per spec §3.1)
+- [ ] Supabase JS client wired into React app
+- [ ] Anonymous session via signInAnonymously() behind dummy OTP screen
+- [ ] Donor profile and blood request forms write to DB
+- [ ] FCM service worker (vite-plugin-pwa) + device token registration
+- [ ] FCM push on new request → nearby compatible available donors
+- [ ] "I'll help" donor response → request_responses row + FCM to requester
+- [ ] Supabase Realtime subscription on request-live donor list
+- [ ] QR / 5-char code confirmation → donations row → donation_count++, auto-fulfill
+- [ ] Request close → resolution FCM to responding donors
+- [ ] pg_cron Edge Function: auto-expire after 24h + notify responders
+- [ ] Coarsened GPS: location snapped to ~1km grid before storage
 
 ### Out of Scope
 
 <!-- Explicit boundaries. Includes reasoning to prevent re-adding. -->
 
-- Donor response flow ("I'll help") — deferred; requires backend wiring and real-time data
-- FCM push notifications — deferred; requires Firebase setup and service worker integration
-- Real-time donor interaction on request-live screen — deferred; requires Supabase Realtime
-- Backend wiring (Supabase schema, RLS, Edge Functions) — deferred to next milestone
-- Real SMS OTP — v2; dummy OTP sufficient for v1 demo
-- Call masking / telephony proxy — v2
-- One-time request-scoped QR codes — v2; static QR + participant-only crediting for v1
+- Real SMS OTP via Twilio — v3; anonymous session sufficient for backend milestone
+- Personal data purge on request close — deferred to v3 privacy milestone
+- Gated, logged, rate-limited phone number reveal — deferred to v3 privacy milestone
+- Call masking / telephony proxy — v3+; direct call sufficient for v1
+- One-time request-scoped QR codes — v3; participant-only crediting via 5-char code for v2
+- SMS fallback for FCM push — v3; FCM-only for now
+- i18n library (react-i18next) — not blocking backend; inline strings continue for now
 
 ## Context
 
@@ -70,10 +96,13 @@ A person can post a blood request and have nearby, blood-compatible donors actua
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Screens-first, backend later | User wants full UI layer complete before wiring Supabase/FCM | — Pending |
-| Defer donor response flow | Requires real-time backend; not meaningful as static UI | — Pending |
-| Defer FCM push | Service worker + Firebase setup is backend work | — Pending |
-| Update existing Profile + CreateRequest | New designs available; existing screens need refresh | — Pending |
+| Screens-first, backend later | User wants full UI layer complete before wiring Supabase/FCM | ✓ Good — UI milestone shipped |
+| Defer donor response flow | Requires real-time backend; not meaningful as static UI | ✓ Good — now implementing in v2.0 |
+| Defer FCM push | Service worker + Firebase setup is backend work | ✓ Good — now implementing in v2.0 |
+| Anonymous Supabase session behind dummy OTP | Profiles table FK requires auth.users; anonymous auth gives real session without real SMS | — Pending |
+| Data model fixed from blood-help-spec.md | Spec is the source of truth; schema deviations must be discussed before implementation | — Pending |
+| Use Supabase MCP for migrations and seeding | MCP tools apply migrations directly; dummy data seeded via MCP for dev/testing | — Pending |
+| Defer data purge and gated phone reveal | Privacy features deferred to v3; coarsened GPS only for v2.0 | — Pending |
 
 ## Evolution
 
@@ -93,4 +122,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-20 after initialization*
+*Last updated: 2026-06-20 after v2.0 milestone start — backend core*

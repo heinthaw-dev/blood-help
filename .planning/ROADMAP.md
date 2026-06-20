@@ -1,28 +1,17 @@
-# Roadmap: Blood Help — UI Milestone
+# Roadmap: Blood Help
 
-## Overview
+## Milestones
 
-This milestone completes the full UI layer for Blood Help. Nine screens remain: two celebration/confirmation screens to close the emotional loop after donor registration and donation, a home dashboard that gives donors a feed of nearby requests, the requester's live request session with a resolve flow, a QR/code confirmation screen, and refreshes of the existing Profile and CreateRequest screens to match new Claude Design prompts. Every phase is React + Tailwind v4, UI-only — no backend wiring. When this milestone ships, every user flow has a screen.
+- ✅ **v1.0 UI Milestone** - Phases 1-5 (shipped 2026-06-20)
+- 🚧 **v2.0 Backend Core** - Phases 6-9 (in progress)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
-
-Decimal phases appear between their surrounding integers in numeric order.
-
-- [ ] **Phase 1: Celebration Screens** - Thank-you and congrats screens close the emotional loop after donor registration and donation confirmation
-- [ ] **Phase 2: Home Dashboard** - Donors see a feed of nearby blood requests with bottom navigation
-- [ ] **Phase 3: Request Session** - Requesters see their live request screen and can resolve/close the request
-- [ ] **Phase 4: Confirmation Flow** - Requester confirms donation via QR scan or 5-char code entry
-- [ ] **Phase 5: Screen Refreshes** - Profile and CreateRequest screens updated to match new Claude Design prompts
-
-## Phase Details
+<details>
+<summary>✅ v1.0 UI Milestone (Phases 1-5) - SHIPPED 2026-06-20</summary>
 
 ### Phase 1: Celebration Screens
 **Goal**: Users see emotionally resonant confirmation screens after completing donor registration and after a donation is confirmed
-**Mode:** mvp
 **Depends on**: Nothing (first phase)
 **Requirements**: CELE-01, CELE-02
 **Success Criteria** (what must be TRUE):
@@ -35,7 +24,6 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### Phase 2: Home Dashboard
 **Goal**: Donors can view a home/dashboard screen with a feed of nearby blood requests and navigate the app via bottom navigation
-**Mode:** mvp
 **Depends on**: Phase 1
 **Requirements**: HOME-01, HOME-02
 **Success Criteria** (what must be TRUE):
@@ -48,7 +36,6 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### Phase 3: Request Session
 **Goal**: Requesters can view their live request session screen and close/resolve a request with an outcome choice
-**Mode:** mvp
 **Depends on**: Phase 2
 **Requirements**: SESS-01, SESS-02
 **Success Criteria** (what must be TRUE):
@@ -62,7 +49,6 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### Phase 4: Confirmation Flow
 **Goal**: Requesters can confirm a donation by scanning a donor's QR code or typing a 5-character code
-**Mode:** mvp
 **Depends on**: Phase 3
 **Requirements**: CONF-01
 **Success Criteria** (what must be TRUE):
@@ -74,7 +60,6 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### Phase 5: Screen Refreshes
 **Goal**: Existing Profile and CreateRequest screens are updated to match the new Claude Design prompts
-**Mode:** mvp
 **Depends on**: Phase 4
 **Requirements**: UPDT-01, UPDT-02
 **Success Criteria** (what must be TRUE):
@@ -85,15 +70,84 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 **UI hint**: yes
 
+</details>
+
+---
+
+### 🚧 v2.0 Backend Core (In Progress)
+
+**Milestone Goal:** Wire the full blood request loop end-to-end on Supabase — schema, anonymous auth, geo-matching, donor responses, real-time updates, QR/code confirmation, and request lifecycle. FCM push deferred to v3.0.
+
+**Phase Numbering (continuing from v1.0):**
+- Integer phases (6, 7, 8, 9): Planned milestone work
+- Decimal phases (6.1, 7.1): Urgent insertions if needed (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [ ] **Phase 6: Foundation** - Supabase schema, PostGIS, RLS, anonymous auth, and React client wiring — the full infrastructure layer before any user-facing data flows
+- [ ] **Phase 7: Data Persistence + Geo-Matching** - Profile and request forms write real data; home feed queries real requests from DB using blood-type compatibility matching and PostGIS proximity
+- [ ] **Phase 8: Donor Response + Realtime** - "I'll help" creates a DB row; request-live screen subscribes to Supabase Realtime and updates donor list live
+- [ ] **Phase 9: Confirmation + Lifecycle** - QR/5-char code confirms donations, auto-fulfills on units target, requester close writes to DB, and a scheduled Edge Function expires stale requests
+
+## Phase Details
+
+### Phase 6: Foundation
+**Goal**: The Supabase infrastructure is deployed and wired into the React app — schema, RLS, PostGIS RPC, anonymous session, and coarsened GPS utility are all in place so that every subsequent phase can write real data
+**Depends on**: Phase 5 (UI milestone)
+**Requirements**: BACK-01, BACK-02, BACK-03, BACK-04, PRIV-03
+**Success Criteria** (what must be TRUE):
+  1. All 5 tables (profiles, device_tokens, blood_requests, request_responses, donations), 5 enums, and PostGIS extension exist in the Supabase project (verifiable via Supabase dashboard or MCP list_tables)
+  2. RLS is enabled on all tables; an anonymous user cannot read another user's profile phone number or contact_phone from blood_requests
+  3. Submitting the OTP screen calls signInAnonymously() silently — the user gets a real Supabase session UUID (visible in Supabase Auth dashboard) without any UI change
+  4. The ST_DWithin RPC function is deployed and callable from the React client without a Postgres error
+  5. Any lat/lng value written through the app's coarsening utility rounds to 4 decimal places — raw GPS coordinates from navigator.geolocation are never sent to the DB
+**Plans**: TBD
+
+### Phase 7: Data Persistence + Geo-Matching
+**Goal**: Completing the donor profile form and posting a blood request both write real rows to the DB; the home feed shows real active requests within proximity, filtered by directional blood-type compatibility
+**Depends on**: Phase 6
+**Requirements**: BACK-05, BACK-06, GEO-01, GEO-02
+**Success Criteria** (what must be TRUE):
+  1. After a donor saves their profile, a row exists in the profiles table with the correct blood_type, township, is_donor=true, and coarsened lat/lng (verifiable in Supabase dashboard)
+  2. After a requester posts a blood request, a row exists in blood_requests with status='active' and expires_at = now()+24h; attempting to post a second active request shows an error rather than creating a duplicate row
+  3. The home feed shows real blood_requests from the DB — not static placeholder data — filtered to within 10km of the donor's location
+  4. A donor with blood type O+ sees requests needing O+, A+, B+, and AB+ (directional compatibility), not only exact O+ matches
+**Plans**: TBD
+
+### Phase 8: Donor Response + Realtime
+**Goal**: A donor can tap "I'll help" to commit to a request and that action immediately appears on the requester's live screen without a page refresh
+**Depends on**: Phase 7
+**Requirements**: DNOR-01, DNOR-02
+**Success Criteria** (what must be TRUE):
+  1. Tapping "I'll help" on a request card creates a request_responses row with status='responding' for that donor; tapping again is a no-op (button is disabled/hidden)
+  2. The request-live screen (requester view) shows a new donor in the "Will Help" section within seconds of that donor tapping "I'll help" — no page refresh required
+  3. A donor who has already responded to a request cannot submit a duplicate response row (unique constraint enforced at DB level)
+**Plans**: TBD
+
+### Phase 9: Confirmation + Lifecycle
+**Goal**: The full request lifecycle is wired end-to-end — a confirmed donation credits the donor, fulfills the request when units are met, the requester can manually close a request, and stale requests auto-expire after 24 hours
+**Depends on**: Phase 8
+**Requirements**: CONF-02, CONF-03, LIFE-01, LIFE-02
+**Success Criteria** (what must be TRUE):
+  1. Entering a valid 5-char code on the confirmation screen (for a donor who is a 'responding' participant) creates a donations row and increments donation_count and units_collected on the request; an invalid code or non-participant code shows an error
+  2. When units_collected reaches units_needed after a confirmation, the request status is set to 'fulfilled' and closed_at is set; the donor sees the congrats screen triggered by a Realtime event on their new donations row
+  3. The requester tapping "Mark as fulfilled" (outside path) writes status='cancelled' and closed_at to blood_requests
+  4. The scheduled Edge Function (or pg_cron) sets status='expired' for any blood_requests where expires_at < now() and status='active'; dummy seed data exists to verify this behavior without waiting 24 hours
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+v1.0 phases complete. v2.0 executes: 6 → 7 → 8 → 9
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Celebration Screens | 0/TBD | Not started | - |
-| 2. Home Dashboard | 0/TBD | Not started | - |
-| 3. Request Session | 0/TBD | Not started | - |
-| 4. Confirmation Flow | 0/TBD | Not started | - |
-| 5. Screen Refreshes | 0/TBD | Not started | - |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Celebration Screens | v1.0 | TBD | Complete | 2026-06-20 |
+| 2. Home Dashboard | v1.0 | TBD | Complete | 2026-06-20 |
+| 3. Request Session | v1.0 | TBD | Complete | 2026-06-20 |
+| 4. Confirmation Flow | v1.0 | TBD | Complete | 2026-06-20 |
+| 5. Screen Refreshes | v1.0 | TBD | Complete | 2026-06-20 |
+| 6. Foundation | v2.0 | 0/TBD | Not started | - |
+| 7. Data Persistence + Geo-Matching | v2.0 | 0/TBD | Not started | - |
+| 8. Donor Response + Realtime | v2.0 | 0/TBD | Not started | - |
+| 9. Confirmation + Lifecycle | v2.0 | 0/TBD | Not started | - |
