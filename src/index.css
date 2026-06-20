@@ -139,6 +139,27 @@
 }
 
 /* ============================================================================
+   DonorCongrats animations.
+   Keyframes are defined here rather than in a <style> tag inside the component
+   so they live in a single stylesheet and are not re-injected on every render.
+   ============================================================================ */
+@keyframes bh-pop {
+  0%   { transform: scale(.7); }
+  55%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+@keyframes bh-spark {
+  0%   { transform: scale(.2); opacity: 0; }
+  40%  { opacity: .9; }
+  100% { transform: scale(1); opacity: 0; }
+}
+.bh-motif { animation: bh-pop 600ms cubic-bezier(.34,1.4,.5,1); }
+.bh-spark { opacity: 0; animation: bh-spark 1000ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .bh-motif, .bh-spark { animation: none !important; }
+}
+
+/* ============================================================================
    Screen layout — mobile-first, full-bleed.
    Mobile (default): the screen fills the device viewport edge-to-edge, no
    backdrop or frame. Desktop (>=480px): show the centered phone-style frame

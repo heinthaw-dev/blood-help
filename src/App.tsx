@@ -9,6 +9,8 @@ import { DonorProfileSetup } from './screens/DonorProfileSetup'
 import type { DonorProfile } from './screens/DonorProfileSetup'
 import { Profile } from './screens/Profile'
 import { Leaderboard } from './screens/Leaderboard'
+import { DonorCongrats } from './screens/DonorCongrats'
+import { DonorThankYou } from './screens/DonorThankYou'
 import type { Tab } from './components/BottomNav'
 import { hasLoggedInBefore, markLoggedIn } from './auth'
 import type { BloodType } from './blood'
@@ -22,6 +24,8 @@ type Screen =
   | 'leaderboard'
   | 'create-request'
   | 'donor-setup'
+  | 'donor-congrats'
+  | 'donor-thankyou'
 
 /** Dummy user profile state until Supabase persistence lands. */
 interface UserState {
@@ -81,7 +85,7 @@ function App() {
       available: profile.available,
       showNumber: profile.showNumber,
     }))
-    setScreen('profile')
+    setScreen('donor-thankyou')
   }
 
   const handleNavigate = (tab: Tab) => {
@@ -132,6 +136,27 @@ function App() {
         onBack={() => setScreen('profile')}
         defaultPhone={phone}
         onSave={handleSaveDonor}
+      />
+    )
+  }
+
+  if (screen === 'donor-thankyou') {
+    return (
+      <DonorThankYou
+        lang={lang}
+        bloodType={user.bloodType}
+        onContinue={() => setScreen('profile')}
+      />
+    )
+  }
+
+  if (screen === 'donor-congrats') {
+    return (
+      <DonorCongrats
+        lang={lang}
+        donationCount={user.donationCount}
+        onDone={() => setScreen('profile')}
+        onLeaderboard={() => setScreen('leaderboard')}
       />
     )
   }
