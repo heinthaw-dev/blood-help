@@ -21,9 +21,9 @@ Three modes:
 </objective>
 
 <execution_context>
-@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/workflows/undo.md
-@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/references/ui-brand.md
-@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/references/gate-prompts.md
+@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/workflows/undo.md
+@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/references/ui-brand.md
+@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/references/gate-prompts.md
 </execution_context>
 
 <context>

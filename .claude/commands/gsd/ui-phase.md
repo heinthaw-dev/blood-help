@@ -21,8 +21,8 @@ Flow: Validate → Research UI → Verify UI-SPEC → Done
 </objective>
 
 <execution_context>
-@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/workflows/ui-phase.md
-@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/references/ui-brand.md
+@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/workflows/ui-phase.md
+@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>

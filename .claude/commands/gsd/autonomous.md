@@ -26,8 +26,8 @@ Uses ROADMAP.md phase discovery and Skill() flat invocations for each phase comm
 </objective>
 
 <execution_context>
-@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/workflows/autonomous.md
-@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/references/ui-brand.md
+@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/workflows/autonomous.md
+@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>

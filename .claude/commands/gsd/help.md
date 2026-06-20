@@ -15,7 +15,7 @@ Output ONLY the reference content below. Do NOT add:
 </objective>
 
 <execution_context>
-@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/workflows/help.md
+@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/workflows/help.md
 </execution_context>
 
 <process>

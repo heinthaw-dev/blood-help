@@ -20,8 +20,8 @@ Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tag
 <execution_context>
 **Load these files NOW (before proceeding):**
 
-- @/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/workflows/complete-milestone.md (main workflow)
-- @/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/templates/milestone-archive.md (archive template)
+- @/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/workflows/complete-milestone.md (main workflow)
+- @/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/templates/milestone-archive.md (archive template)
   </execution_context>
 
 <context>

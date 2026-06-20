@@ -20,7 +20,7 @@ planning via /gsd:plan-phase --reviews.
 </objective>
 
 <execution_context>
-@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/workflows/review.md
+@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/workflows/review.md
 </execution_context>
 
 <context>

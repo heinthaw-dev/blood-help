@@ -208,13 +208,13 @@ When `--repair` is active, detect and clean up:
 
 ```bash
 # Check for stale task directories (older than 24 hours)
-TASKS_DIR="/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/tasks"
+TASKS_DIR="/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/tasks"
 if [ -d "$TASKS_DIR" ]; then
   STALE_COUNT=$( (find "$TASKS_DIR" -maxdepth 1 -type d -mtime +1 2>/dev/null || true) | wc -l )
   if [ "$STALE_COUNT" -gt 0 ]; then
-    echo "⚠️  Found $STALE_COUNT stale task directories in /Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/tasks/"
+    echo "⚠️  Found $STALE_COUNT stale task directories in /Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/tasks/"
     echo "   These are leftover from crashed subagent sessions."
-    echo "   Run: rm -rf /Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/tasks/*  (safe — only affects dead sessions)"
+    echo "   Run: rm -rf /Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/tasks/*  (safe — only affects dead sessions)"
   fi
 fi
 ```

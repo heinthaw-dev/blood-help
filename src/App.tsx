@@ -12,6 +12,7 @@ import { Leaderboard } from './screens/Leaderboard'
 import { DonorCongrats } from './screens/DonorCongrats'
 import { DonorThankYou } from './screens/DonorThankYou'
 import { Home } from './screens/Home'
+import { RequestLive } from './screens/RequestLive'
 import type { Tab } from './components/BottomNav'
 import { hasLoggedInBefore, markLoggedIn } from './auth'
 import type { BloodType } from './blood'
@@ -28,6 +29,7 @@ type Screen =
   | 'donor-setup'
   | 'donor-congrats'
   | 'donor-thankyou'
+  | 'request-live'
 
 /** Dummy user profile state until Supabase persistence lands. */
 interface UserState {
@@ -35,9 +37,11 @@ interface UserState {
   bloodType: BloodType
   available: boolean
   showNumber: boolean
+  emergencyCallable: boolean
   donationCount: number
   lastDonation: string | null
   donorSetupComplete: boolean
+  donorCode: string
 }
 
 const DEFAULT_USER: UserState = {
@@ -45,9 +49,11 @@ const DEFAULT_USER: UserState = {
   bloodType: 'O+',
   available: true,
   showNumber: false,
+  emergencyCallable: false,
   donationCount: 0,
   lastDonation: null,
   donorSetupComplete: false,
+  donorCode: 'K7M2Q',
 }
 
 /** Format a national number for display under the +95 country code. */
@@ -60,6 +66,7 @@ function App() {
   const [screen, setScreen] = useState<Screen>('phone')
   const [phone, setPhone] = useState('')
   const [user, setUser] = useState<UserState>(DEFAULT_USER)
+  const [requestDraft, setRequestDraft] = useState<RequestDraft | null>(null)
 
   const handleVerified = () => {
     // Dummy flow: no real verification. First-time numbers see Intent Choice;
@@ -74,9 +81,10 @@ function App() {
   }
 
   const handlePosted = (draft: RequestDraft) => {
-    // Next phase: persist to Supabase + fan out push. For now, log and go home.
+    // Next phase: persist to Supabase + fan out push. For now, open request session.
     console.log('request posted (dummy)', draft)
-    setScreen('home')
+    setRequestDraft(draft)
+    setScreen('request-live')
   }
 
   const handleSaveDonor = (profile: DonorProfile) => {
@@ -166,6 +174,18 @@ function App() {
     )
   }
 
+  if (screen === 'request-live') {
+    return (
+      <RequestLive
+        lang={lang}
+        bloodType={requestDraft?.bloodType}
+        unitsNeeded={requestDraft?.units}
+        onBack={() => setScreen('home')}
+        onGoHome={() => { setRequestDraft(null); setScreen('home') }}
+      />
+    )
+  }
+
   if (screen === 'home') {
     return (
       <Home
@@ -173,7 +193,9 @@ function App() {
         donorReady={user.donorSetupComplete}
         available={user.available}
         onAvailableChange={(v) => setUser((u) => ({ ...u, available: v }))}
+        hasOpenRequest={requestDraft !== null}
         onRequestBlood={() => setScreen('create-request')}
+        onViewRequest={() => setScreen('request-live')}
         onFinishSetup={() => setScreen('donor-setup')}
         onNavigate={handleNavigate}
       />
@@ -189,11 +211,15 @@ function App() {
         bloodType={user.bloodType}
         donationCount={user.donationCount}
         lastDonation={user.lastDonation}
+        isDonor={user.donorSetupComplete}
+        donorCode={user.donorCode}
+        showCooldown={user.donationCount > 0}
         available={user.available}
         onAvailableChange={(v) => setUser((u) => ({ ...u, available: v }))}
-        showNumber={user.showNumber}
-        onShowNumberChange={(v) => setUser((u) => ({ ...u, showNumber: v }))}
+        emergencyCallable={user.emergencyCallable}
+        onEmergencyChange={(v) => setUser((u) => ({ ...u, emergencyCallable: v }))}
         onEditProfile={() => setScreen('donor-setup')}
+        onRegisterDonor={() => setScreen('donor-setup')}
         onLogout={handleLogout}
         onNavigate={handleNavigate}
       />

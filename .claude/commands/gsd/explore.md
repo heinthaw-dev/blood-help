@@ -19,7 +19,7 @@ Accepts an optional topic argument: `/gsd:explore authentication strategy`
 </objective>
 
 <execution_context>
-@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/workflows/explore.md
+@/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/workflows/explore.md
 </execution_context>
 
 <process>

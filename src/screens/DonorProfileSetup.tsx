@@ -214,6 +214,7 @@ export function DonorProfileSetup({
                 placeholder={copy.namePlaceholder}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                style={{ width: '100%' }}
               />
             </div>
             <p style={hintStyle}>{copy.nameHint}</p>

@@ -10,7 +10,7 @@ requires: [config, update]
 ---
 
 <objective>
-Manage the runtime skill surface without reinstall. Reads/writes `/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/skills/.gsd-surface.json`
+Manage the runtime skill surface without reinstall. Reads/writes `/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/skills/.gsd-surface.json`
 (sibling to `.gsd-profile`) and re-stages the active commands/gsd directory in place.
 
 Sub-commands: list · status · profile · disable · enable · reset
@@ -104,11 +104,11 @@ Valid cluster names: `core_loop`, `audit_review`, `milestone`, `research_ideate`
 
 ```bash
 # Claude Code
-RUNTIME_CONFIG_DIR=/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/skills
+RUNTIME_CONFIG_DIR=/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/skills
 
 # Resolve commandsDir and agentsDir
-COMMANDS_DIR=/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/commands/gsd
-AGENTS_DIR=/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/agents
+COMMANDS_DIR=/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/commands/gsd
+AGENTS_DIR=/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/agents
 ```
 
 All paths can be overridden by reading the `CLAUDE_CONFIG_DIR` env var if set.
@@ -122,8 +122,8 @@ All paths can be overridden by reading the `CLAUDE_CONFIG_DIR` env var if set.
 - Missing `surface.cjs` → prompt: "Run `npm i -g get-shit-done` to reinstall GSD."
 
 <execution_context>
-Surface state file: `/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/skills/.gsd-surface.json`
-Install profile marker: `/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/skills/.gsd-profile`
-Engine module: `/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/bin/lib/surface.cjs`
-Cluster definitions: `/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help/.claude/get-shit-done/bin/lib/clusters.cjs`
+Surface state file: `/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/skills/.gsd-surface.json`
+Install profile marker: `/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/skills/.gsd-profile`
+Engine module: `/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/bin/lib/surface.cjs`
+Cluster definitions: `/Users/bhoneak/Desktop/Learning/VibeCodeTour/blood-help-old/.claude/get-shit-done/bin/lib/clusters.cjs`
 </execution_context>

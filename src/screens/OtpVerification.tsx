@@ -6,7 +6,7 @@ import type { Lang } from "../i18n";
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 30;
 /** Dummy flow: the "SMS" code auto-fills this many ms after the screen opens. */
-const AUTOFILL_MS = 3000;
+const AUTOFILL_MS = 2000;
 
 interface OtpVerificationProps {
     /** Phone number to show in the subtitle, formatted for display (e.g. "+95 9 7XX XXX XXX"). */

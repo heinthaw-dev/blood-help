@@ -14,6 +14,7 @@ type Urgency = 'urgent' | 'today'
 export interface RequestDraft {
   bloodType: BloodType
   phone: string
+  address: string
   units: number
   urgency: Urgency
   lat: number
@@ -40,6 +41,7 @@ export function CreateRequest({
 }: CreateRequestProps) {
   const [bloodType, setBloodType] = useState<BloodType | null>(null)
   const [phone, setPhone] = useState(defaultPhone)
+  const [address, setAddress] = useState('')
   const [units, setUnits] = useState(1)
   const [urgency, setUrgency] = useState<Urgency>('urgent')
   const [geoPhase, setGeoPhase] = useState<GeoPhase>('idle')
@@ -56,6 +58,8 @@ export function CreateRequest({
       bloodTypeLabel: 'လိုအပ်သော သွေးအုပ်စု',
       phoneLabel: 'ဆက်သွယ်ရန် ဖုန်းနံပါတ်',
       phoneHint: 'သွေးလှူရှင်များက ဤနံပါတ်သို့ ဖုန်းဆက်ပါမည်။',
+      addressLabel: 'လက်ရှိ တည်နေရာ',
+      addressExample: 'ဥပမာ — ရန်ကုန် ဆေးရုံကြီး (သို့) ဆင်ချောင်းမြို့နယ်',
       optional: 'ချန်လှပ်နိုင်သည်',
       unitsLabel: 'လိုအပ်သော သွေးအိတ် အရေအတွက်',
       urgencyLabel: 'အရေးပေါ်ဆန်မှု',
@@ -76,6 +80,8 @@ export function CreateRequest({
       bloodTypeLabel: 'Blood type needed',
       phoneLabel: 'Contact number',
       phoneHint: 'Donors will call you on this number.',
+      addressLabel: 'Current address',
+      addressExample: 'E.g: Yangon Hospital (or) Sanchaung Township',
       optional: 'Optional',
       unitsLabel: 'Units needed',
       urgencyLabel: 'Urgency',
@@ -167,7 +173,7 @@ export function CreateRequest({
     const res = await getCurrentPosition()
     if (res.ok && bloodType) {
       setGeoPhase('idle')
-      onPosted({ bloodType, phone, units, urgency, lat: res.lat, lng: res.lng })
+      onPosted({ bloodType, phone, address, units, urgency, lat: res.lat, lng: res.lng })
     } else {
       setGeoPhase('denied')
     }
@@ -300,6 +306,20 @@ export function CreateRequest({
               />
             </div>
             <p style={hintStyle}>{copy.phoneHint}</p>
+          </div>
+
+          {/* Current address */}
+          <div style={{ marginTop: 24 }}>
+            <p style={fieldLabelStyle}>{copy.addressLabel}</p>
+            <div style={{ marginTop: 10 }}>
+              <Input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                style={{ width: '100%' }}
+              />
+            </div>
+            <p style={hintStyle}>{copy.addressExample}</p>
           </div>
 
           {/* Optional divider */}

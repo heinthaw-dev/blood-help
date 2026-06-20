@@ -160,6 +160,38 @@
 }
 
 /* ============================================================================
+   RequestLive animations — pulse dot, spinner, sheet slide-up, fade, toast.
+   ============================================================================ */
+@keyframes bh-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .35; transform: scale(1.6); }
+}
+@keyframes bh-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes bh-sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes bh-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes bh-toast-up {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.bh-pulse-dot  { animation: bh-pulse 1.5s ease-in-out infinite; }
+.bh-spinner    { display: block; width: 34px; height: 34px; border-radius: 999px; border: 3px solid var(--border-card); border-top-color: var(--color-primary); animation: bh-spin 0.9s linear infinite; }
+.bh-sheet-up   { animation: bh-sheet-up 260ms cubic-bezier(.32,.72,0,1); }
+.bh-fade       { animation: bh-fade 180ms ease; }
+.bh-toast-anim { animation: bh-toast-up 220ms ease; }
+.bh-scroll::-webkit-scrollbar { width: 0; height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .bh-pulse-dot, .bh-spinner, .bh-sheet-up, .bh-fade, .bh-toast-anim { animation: none !important; }
+}
+
+/* ============================================================================
    Screen layout — mobile-first, full-bleed.
    Mobile (default): the screen fills the device viewport edge-to-edge, no
    backdrop or frame. Desktop (>=480px): show the centered phone-style frame
