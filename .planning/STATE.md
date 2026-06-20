@@ -5,33 +5,34 @@
 See: .planning/PROJECT.md (updated 2026-06-20)
 
 **Core value:** A person can post a blood request and have nearby, blood-compatible donors actually receive a push alert and call them back — turning an hours-long search into help within minutes.
-**Current focus:** v2.0 Backend Core — Phase 6: Foundation (planned — ready to execute)
+**Current focus:** v2.0 Backend Core — Phase 7: Data Persistence + Geo-Matching (ready to plan)
 
 ## Current Position
 
-Phase: 6 of 9 (Foundation)
-Plan: 5 plans in 4 waves
-Status: Ready to execute
-Last activity: 2026-06-21 — Phase 6 planned; 5 plans verified and committed
+Phase: 7 of 9 (Data Persistence + Geo-Matching)
+Plan: TBD (not yet planned)
+Status: Ready to discuss/plan
+Last activity: 2026-06-21 — Phase 6 complete (6 plans, human-approved); advancing to Phase 7
 
-Progress: [░░░░░░░░░░] 0% (v2.0)
+Progress: [██░░░░░░░░] 25% (v2.0 — Phase 6/4 phases done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0 (v2.0 milestone)
-- Average duration: —
-- Total execution time: 0 hours
+- Total plans completed: 6 (v2.0 milestone)
+- Average duration: ~1 session/phase
+- Total execution time: 1 session
 
 **By Phase:**
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| - | - | - | - |
+| Phase | Plans | Status | Completed |
+|-------|-------|--------|-----------|
+| 6 — Foundation | 6 (5+1 gap) | ✓ Complete | 2026-06-21 |
+| 7 — Data Persistence + Geo-Matching | TBD | ○ Next | — |
 
 **Recent Trend:**
-- Last 5 plans: —
-- Trend: —
+- Last 6 plans: Phase 6 foundation (schema, RLS, RPC, auth wiring, gap closure)
+- Trend: On track
 
 *Updated after each plan completion*
 
@@ -54,8 +55,8 @@ None yet.
 
 ### Blockers/Concerns
 
-- Data model deviations from blood-help-spec.md §4 must be discussed with user before implementation
-- Supabase project URL and anon key needed before Phase 6 can wire the React client
+- Phase 6 human UAT items (4 items in 06-HUMAN-UAT.md) are pending — non-blocking for Phase 7 but should be confirmed before Phase 8 (they involve live Supabase auth and session behavior)
+- handleSaveDonor and handlePosted in App.tsx still use local state — Phase 7 will wire these to real DB writes
 
 ## Deferred Items
 
@@ -70,5 +71,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-06-21
-Stopped at: Phase 6 planned (5 plans, 4 waves); ready to run /gsd:execute-phase 6
-Resume file: .planning/phases/06-foundation/
+Stopped at: Phase 6 complete (6 plans, human-approved). Phase 7 not yet planned.
+Resume with: /gsd:discuss-phase 7 (recommended) or /gsd:plan-phase 7

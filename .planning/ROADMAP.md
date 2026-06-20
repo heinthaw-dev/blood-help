@@ -84,7 +84,7 @@
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [~] **Phase 6: Foundation** - Supabase schema, PostGIS, RLS, anonymous auth, and React client wiring — the full infrastructure layer before any user-facing data flows *(planned: 5 plans, 4 waves)*
+- [x] **Phase 6: Foundation** - Supabase schema, PostGIS, RLS, anonymous auth, and React client wiring — the full infrastructure layer before any user-facing data flows *(completed: 6 plans, 2026-06-21)*
 - [ ] **Phase 7: Data Persistence + Geo-Matching** - Profile and request forms write real data; home feed queries real requests from DB using blood-type compatibility matching and PostGIS proximity
 - [ ] **Phase 8: Donor Response + Realtime** - "I'll help" creates a DB row; request-live screen subscribes to Supabase Realtime and updates donor list live
 - [ ] **Phase 9: Confirmation + Lifecycle** - QR/5-char code confirms donations, auto-fulfills on units target, requester close writes to DB, and a scheduled Edge Function expires stale requests
@@ -101,13 +101,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Submitting the OTP screen calls signInAnonymously() silently — the user gets a real Supabase session UUID (visible in Supabase Auth dashboard) without any UI change
   4. The ST_DWithin RPC function is deployed and callable from the React client without a Postgres error
   5. Any lat/lng value written through the app's coarsening utility rounds to 2 decimal places (~1.1km grid) — raw GPS coordinates from navigator.geolocation are never sent to the DB (D-10)
-**Plans**: 5 plans
+**Plans**: 6 plans (5 original + 1 gap closure)
+**Completed**: 2026-06-21
 Plans:
-- [ ] 06-01-PLAN.md — PostGIS extension + 5 enums + 5 tables with all constraints (BACK-01)
-- [ ] 06-02-PLAN.md — RLS policies on all 5 tables (BACK-02)
-- [ ] 06-03-PLAN.md — donors_within_radius RPC function + seed data (BACK-04)
-- [ ] 06-04-PLAN.md — @supabase/supabase-js install + .env.local + vite-env.d.ts + src/lib/supabase.ts + src/types/database.ts (BACK-03)
-- [ ] 06-05-PLAN.md — Replace src/auth.ts + add coarsenCoordinates to src/geolocation.ts + wire App.tsx mount auth (BACK-03, PRIV-03)
+- [x] 06-01-PLAN.md — PostGIS extension + 5 enums + 5 tables with all constraints (BACK-01)
+- [x] 06-02-PLAN.md — RLS policies on all 5 tables (BACK-02)
+- [x] 06-03-PLAN.md — donors_within_radius RPC function + seed data (BACK-04)
+- [x] 06-04-PLAN.md — @supabase/supabase-js install + .env.local + vite-env.d.ts + src/lib/supabase.ts + src/types/database.ts (BACK-03)
+- [x] 06-05-PLAN.md — Replace src/auth.ts + add coarsenCoordinates to src/geolocation.ts + wire App.tsx mount auth (BACK-03, PRIV-03)
+- [x] 06-06-PLAN.md — Gap closure: wire coarsenCoordinates call site in CreateRequest.tsx (PRIV-03)
 
 ### Phase 7: Data Persistence + Geo-Matching
 **Goal**: Completing the donor profile form and posting a blood request both write real rows to the DB; the home feed shows real active requests within proximity, filtered by directional blood-type compatibility

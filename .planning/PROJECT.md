@@ -49,11 +49,12 @@ A person can post a blood request and have nearby, blood-compatible donors actua
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] Supabase schema + RLS deployed via MCP migrations (profiles, device_tokens, blood_requests, request_responses, donations)
-- [ ] PostGIS ST_DWithin RPC for geo-distance matching
+- [x] Supabase schema + RLS deployed via MCP migrations (profiles, device_tokens, blood_requests, request_responses, donations) — Phase 6 ✓
+- [x] PostGIS ST_DWithin RPC for geo-distance matching — Phase 6 ✓
+- [x] Supabase JS client wired into React app — Phase 6 ✓
+- [x] Anonymous session via signInAnonymously() behind dummy OTP screen — Phase 6 ✓
+- [x] Coarsened GPS: location snapped to ~1km grid before storage — Phase 6 ✓
 - [ ] Blood type compatibility matching (directional, per spec §3.1)
-- [ ] Supabase JS client wired into React app
-- [ ] Anonymous session via signInAnonymously() behind dummy OTP screen
 - [ ] Donor profile and blood request forms write to DB
 - [ ] FCM service worker (vite-plugin-pwa) + device token registration
 - [ ] FCM push on new request → nearby compatible available donors
@@ -62,7 +63,6 @@ A person can post a blood request and have nearby, blood-compatible donors actua
 - [ ] QR / 5-char code confirmation → donations row → donation_count++, auto-fulfill
 - [ ] Request close → resolution FCM to responding donors
 - [ ] pg_cron Edge Function: auto-expire after 24h + notify responders
-- [ ] Coarsened GPS: location snapped to ~1km grid before storage
 
 ### Out of Scope
 
