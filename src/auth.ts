@@ -1,37 +1,26 @@
 /**
- * Dummy auth helpers. Tracks which phone numbers have completed login before,
- * so the Intent Choice screen only appears on a user's first login.
- *
- * This is local-only placeholder state for the prototype; a later phase replaces
- * it with the real Supabase profile (whether a profile row already exists).
+ * Supabase session helpers. Replaces the dummy localStorage auth.
  */
+import { supabase } from './lib/supabase'
+import type { Session, AuthError } from '@supabase/supabase-js'
 
-const SEEN_KEY = 'bloodhelp.seenPhones'
+export type SessionResult =
+  | { ok: true; session: Session }
+  | { ok: false; error: AuthError | null }
 
-function readSeen(): string[] {
-  try {
-    const raw = localStorage.getItem(SEEN_KEY)
-    return raw ? (JSON.parse(raw) as string[]) : []
-  } catch {
-    return []
+/** Get the current Supabase session, if one exists. */
+export async function getSession(): Promise<SessionResult> {
+  const { data, error } = await supabase.auth.getSession()
+  if (error || !data.session) {
+    return { ok: false, error: error ?? null }
   }
+  return { ok: true, session: data.session }
 }
 
-/** True if this phone number has logged in before (returning user). */
-export function hasLoggedInBefore(phone: string): boolean {
-  return readSeen().includes(phone)
-}
-
-/** Record that this phone number has now completed login at least once. */
-export function markLoggedIn(phone: string): void {
-  try {
-    const seen = readSeen()
-    if (!seen.includes(phone)) {
-      seen.push(phone)
-      localStorage.setItem(SEEN_KEY, JSON.stringify(seen))
-    }
-  } catch {
-    // localStorage unavailable (private mode etc.) — first-time gate just
-    // defaults to showing Intent Choice, which is the safe fallback.
-  }
+/** Subscribe to auth state changes. Returns an unsubscribe function. */
+export function onAuthStateChange(callback: (session: Session | null) => void): () => void {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    callback(session)
+  })
+  return () => subscription.unsubscribe()
 }

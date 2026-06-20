@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PhoneEntry } from './screens/PhoneEntry'
 import { OtpVerification } from './screens/OtpVerification'
 import { IntentChoice } from './screens/IntentChoice'
@@ -14,7 +14,8 @@ import { DonorThankYou } from './screens/DonorThankYou'
 import { Home } from './screens/Home'
 import { RequestLive } from './screens/RequestLive'
 import type { Tab } from './components/BottomNav'
-import { hasLoggedInBefore, markLoggedIn } from './auth'
+import { getSession } from './auth'
+import { supabase } from './lib/supabase'
 import type { BloodType } from './blood'
 import type { Lang } from './i18n'
 
@@ -42,6 +43,7 @@ interface UserState {
   lastDonation: string | null
   donorSetupComplete: boolean
   donorCode: string
+  supabaseId: string | null
 }
 
 const DEFAULT_USER: UserState = {
@@ -54,6 +56,7 @@ const DEFAULT_USER: UserState = {
   lastDonation: null,
   donorSetupComplete: false,
   donorCode: 'K7M2Q',
+  supabaseId: null,
 }
 
 /** Format a national number for display under the +95 country code. */
@@ -67,13 +70,52 @@ function App() {
   const [phone, setPhone] = useState('')
   const [user, setUser] = useState<UserState>(DEFAULT_USER)
   const [requestDraft, setRequestDraft] = useState<RequestDraft | null>(null)
+  const [sessionLoading, setSessionLoading] = useState(true)
 
-  const handleVerified = () => {
-    // Dummy flow: no real verification. First-time numbers see Intent Choice;
-    // returning numbers go to the Home feed.
-    const returning = hasLoggedInBefore(phone)
-    markLoggedIn(phone)
-    setScreen(returning ? 'home' : 'intent')
+  useEffect(() => {
+    async function initAuth() {
+      // Check for existing session FIRST — only sign in anonymously when there is none (D-03, Pitfall 1)
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session) {
+        const { error } = await supabase.auth.signInAnonymously()
+        if (error) {
+          console.error('Anonymous sign-in failed:', error.message)
+          setSessionLoading(false)
+          return
+        }
+      }
+
+      // Get the confirmed session (existing or just created)
+      const result = await getSession()
+      if (result.ok) {
+        const { session: confirmedSession } = result
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, is_donor')
+          .eq('id', confirmedSession.user.id)
+          .maybeSingle()
+        if (profile) {
+          setUser((u) => ({ ...u, supabaseId: confirmedSession.user.id }))
+          setScreen('home')
+        }
+      }
+
+      setSessionLoading(false)
+    }
+    void initAuth()
+  }, [])
+
+  if (sessionLoading) return null
+
+  const handleVerified = async () => {
+    // Returning user if phone matches an existing profile; new user routes to intent choice (D-04)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('phone', phone)
+      .maybeSingle()
+    setScreen(profile ? 'home' : 'intent')
   }
 
   const handleChooseIntent = (intent: Intent) => {
@@ -108,6 +150,9 @@ function App() {
   }
 
   const handleLogout = () => {
+    // signOut errors are intentionally ignored — the local session is cleared regardless of
+    // server response, so the user is effectively logged out from the app's perspective
+    void supabase.auth.signOut()
     setUser(DEFAULT_USER)
     setPhone('')
     setScreen('phone')

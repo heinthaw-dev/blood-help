@@ -66,7 +66,7 @@ export interface RequestLiveProps {
  * Port of Request Live v2.dc.html.
  */
 export function RequestLive({
-  lang: _lang,
+  lang: _lang, // eslint-disable-line @typescript-eslint/no-unused-vars
   bloodType = 'B+',
   township = 'ရန်ကုန် ဆေးရုံကြီး',
   alerting = false,

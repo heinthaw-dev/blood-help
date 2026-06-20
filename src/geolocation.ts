@@ -36,3 +36,15 @@ export function getCurrentPosition(): Promise<GeoResult> {
     )
   })
 }
+
+/**
+ * Coarsen GPS coordinates to ~1km grid (~2 decimal places) for privacy.
+ * MUST be called before writing any lat/lng to the database.
+ * Raw GeoResult coordinates are never written to Supabase directly.
+ */
+export function coarsenCoordinates(lat: number, lng: number): { lat: number; lng: number } {
+  return {
+    lat: Math.round(lat * 100) / 100,
+    lng: Math.round(lng * 100) / 100,
+  }
+}
