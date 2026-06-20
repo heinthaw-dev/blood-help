@@ -46,8 +46,10 @@
   --color-border:       #ECEAE7;
   --color-border-input: #DEDCD8;
 
-  --color-success:      #1E8E5A;
-  --color-success-tint: #E7F4EE;
+  --color-success:       #1E8E5A;
+  --color-success-hover: #1A7C4E;
+  --color-success-press: #166B43;
+  --color-success-tint:  #E7F4EE;
 
   /* ---- Font families ---- */
   --font-sans:    'Inter', 'Noto Sans Myanmar', system-ui, -apple-system, sans-serif;
@@ -81,6 +83,7 @@
   --shadow-soft:  0 1px 2px rgba(26, 26, 26, 0.04);
   --shadow-card:  0 2px 8px rgba(26, 26, 26, 0.05);
   --shadow-cta:   0 4px 12px rgba(209, 62, 47, 0.20); /* lifts the primary CTA */
+  --shadow-cta-success: 0 4px 12px rgba(30, 142, 90, 0.20); /* lifts the success CTA */
   --shadow-sheet: 0 -8px 32px rgba(26, 26, 26, 0.10);
 
   /* ---- Font weights ---- */

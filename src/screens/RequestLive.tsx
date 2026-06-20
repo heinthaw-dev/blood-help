@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import { Badge } from '../components/Badge'
+import { Button } from '../components/Button'
 import type { Lang } from '../i18n'
 
 // ---- types ----
@@ -43,6 +44,33 @@ function PhoneIcon() {
   )
 }
 
+/** Round red call button (tel link) with hover/press states. */
+function CallButton({ href, onClick }: { href: string; onClick?: () => void }) {
+  const [hover, setHover] = useState(false)
+  const [active, setActive] = useState(false)
+  const bg = active ? 'var(--color-primary-press)' : hover ? 'var(--color-primary-hover)' : 'var(--color-primary)'
+  return (
+    <a
+      href={href}
+      aria-label="ဖုန်းခေါ်ရန်"
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => { setHover(false); setActive(false) }}
+      onMouseDown={() => setActive(true)}
+      onMouseUp={() => setActive(false)}
+      style={{
+        flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 48, height: 48, borderRadius: '999px', background: bg,
+        textDecoration: 'none', cursor: 'pointer', boxShadow: 'var(--shadow-cta)',
+        transition: 'background 120ms ease, transform 80ms ease',
+        transform: active ? 'scale(0.97)' : 'none',
+      }}
+    >
+      <PhoneIcon />
+    </a>
+  )
+}
+
 // ---- props ----
 
 export interface RequestLiveProps {
@@ -61,9 +89,9 @@ export interface RequestLiveProps {
 
 /**
  * RequestLive — live blood request session screen.
- * Shows donor list, resolve bottom sheet, QR/code confirmation sub-sheet,
- * and closed success overlay.
- * Port of Request Live v2.dc.html.
+ * Shows donor list, a pinned "blood received" action bar, the resolve bottom
+ * sheet, the QR/code confirmation sub-sheet, and the closed success overlay.
+ * Port of Request Live v3.dc.html.
  */
 export function RequestLive({
   lang: _lang, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -121,8 +149,6 @@ export function RequestLive({
   const transparencyLine =
     'အနီးနားရှိ သွေးလှူရှင် ' + toMyanmarDigits(alertedCount) +
     ' ဦးကို အကြောင်းကြားထားသည်။ "ကူညီပါမည်" နှိပ်သူတိုင်း ဤနေရာတွင် ဖုန်းခေါ်ရန်ခလုတ်နှင့်အတူ ပေါ်လာပါမည်။'
-  const transparencyLineEn =
-    "We've alerted " + alertedCount + " nearby donors. Anyone who taps “I’ll help” appears here with a call button."
 
   const moreLine = '+ နောက်ထပ် သွေးလှူရှင် ' + toMyanmarDigits(moreCount) + ' ဦးကို အကြောင်းကြားထားသည်'
   const moreLineEn = '+ ' + moreCount + ' more nearby donors notified'
@@ -151,20 +177,6 @@ export function RequestLive({
     },
   }
   const cl = closedData[closed ?? 'fulfilled']
-
-  const callBtn: CSSProperties = {
-    flexShrink: 0,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 48,
-    height: 48,
-    borderRadius: '999px',
-    background: '#D13E2F',
-    textDecoration: 'none',
-    cursor: 'pointer',
-    boxShadow: 'var(--shadow-cta)',
-  }
 
   const confirmBtnStyle: CSSProperties = {
     display: 'flex',
@@ -215,33 +227,20 @@ export function RequestLive({
                   <span style={{ fontFamily: 'var(--font-burmese)', fontSize: 12, fontWeight: 600, color: 'var(--color-primary)' }}>
                     {toMyanmarDigits(collected)} / {toMyanmarDigits(unitsNeeded)} unit ရရှိပြီး
                   </span>
-                  <span style={{ fontSize: 11, color: 'var(--text-hint)' }}>
-                    {collected} / {unitsNeeded} units
-                  </span>
                 </div>
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={() => setSheet('resolve')}
-              style={{
-                flexShrink: 0, padding: '8px 12px', borderRadius: 'var(--radius-pill)',
-                background: 'var(--color-success-tint)', border: 'none', cursor: 'pointer',
-                fontFamily: 'var(--font-burmese)', fontSize: 12, fontWeight: 600,
-                lineHeight: 1, color: 'var(--color-success)', whiteSpace: 'nowrap',
-              }}
-            >
-              သွေး ရရှိပြီးပါပြီ
-            </button>
+            {/* Spacer balancing the back button */}
+            <span style={{ flexShrink: 0, width: 36, height: 36 }} aria-hidden="true" />
           </div>
 
           {/* Blood type + township row */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
             marginTop: 14, paddingBottom: 14, borderBottom: '0.5px solid var(--border-card)',
           }}>
-            <Badge>{bloodType}</Badge>
+            <Badge size="lg">{bloodType}</Badge>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 14, color: 'var(--text-secondary)' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-hint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
                 <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
@@ -255,7 +254,7 @@ export function RequestLive({
         {/* ── Scrollable body ── */}
         <div className="bh-scroll" style={{
           flex: 1, minHeight: 0, overflowY: 'auto',
-          padding: '16px 20px 28px', display: 'flex', flexDirection: 'column', gap: 14,
+          padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: 14,
         }}>
 
           {/* Sending banner */}
@@ -278,9 +277,6 @@ export function RequestLive({
             <div style={{ background: 'var(--surface-card)', border: '0.5px solid var(--border-card)', borderRadius: 'var(--radius-card)', padding: '13px 14px' }}>
               <p style={{ margin: 0, fontFamily: 'var(--font-burmese)', fontSize: 13, lineHeight: 1.65, color: 'var(--text-secondary)' }}>
                 {transparencyLine}
-              </p>
-              <p style={{ margin: '6px 0 0', fontSize: 12, lineHeight: 1.55, color: 'var(--text-hint)' }}>
-                {transparencyLineEn}
               </p>
             </div>
           )}
@@ -333,9 +329,7 @@ export function RequestLive({
                         <span style={{ whiteSpace: 'nowrap' }}>{donor.phone}</span>
                       </div>
                     </div>
-                    <a href={donor.tel} aria-label="ဖုန်းခေါ်ရန်" style={callBtn}>
-                      <PhoneIcon />
-                    </a>
+                    <CallButton href={donor.tel} />
                   </div>
                 </div>
               ))}
@@ -376,14 +370,10 @@ export function RequestLive({
                         )}
                       </div>
                     </div>
-                    <a
+                    <CallButton
                       href={donor.tel}
-                      aria-label="ဖုန်းခေါ်ရန်"
                       onClick={() => setRevealed((r) => ({ ...r, [donor.id]: true }))}
-                      style={callBtn}
-                    >
-                      <PhoneIcon />
-                    </a>
+                    />
                   </div>
                 </div>
               ))}
@@ -399,10 +389,21 @@ export function RequestLive({
           )}
         </div>
 
+        {/* ── Pinned bottom action bar ── */}
+        <div style={{
+          flex: 'none',
+          padding: '12px 20px calc(16px + env(safe-area-inset-bottom))',
+          background: 'var(--surface-card)',
+          borderTop: '1px solid var(--border-card)',
+          boxShadow: '0 -4px 16px rgba(26,26,26,.05)',
+        }}>
+          <ResolveBarButton onClick={() => setSheet('resolve')} />
+        </div>
+
         {/* ── Toast ── */}
         {toast && (
           <div className="bh-toast-anim" style={{
-            position: 'absolute', left: '50%', bottom: 24,
+            position: 'absolute', left: '50%', bottom: 104,
             transform: 'translateX(-50%)',
             width: 340, maxWidth: 'calc(100% - 32px)',
             background: 'var(--text-primary)', color: '#fff',
@@ -650,26 +651,46 @@ export function RequestLive({
             </div>
 
             <div style={{ width: '100%', maxWidth: 320, marginTop: 26 }}>
-              <button
-                type="button"
-                onClick={() => { setClosed(null); setSheet(null); onGoHome() }}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '100%', height: 54, border: 'none',
-                  borderRadius: 'var(--radius-button)',
-                  background: 'var(--color-primary)', color: '#fff',
-                  fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 600,
-                  cursor: 'pointer', boxShadow: 'var(--shadow-cta)',
-                }}
-              >
+              <Button fullWidth onClick={() => { setClosed(null); setSheet(null); onGoHome() }}>
                 ပင်မသို့ ပြန်သွားရန်
-              </button>
+              </Button>
             </div>
           </div>
         )}
 
       </div>
     </div>
+  )
+}
+
+/** Full-width green "blood received → close request" CTA with hover/press states. */
+function ResolveBarButton({ onClick }: { onClick: () => void }) {
+  const [hover, setHover] = useState(false)
+  const [active, setActive] = useState(false)
+  const bg = active ? 'var(--color-success-press)' : hover ? 'var(--color-success-hover)' : 'var(--color-success)'
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => { setHover(false); setActive(false) }}
+      onMouseDown={() => setActive(true)}
+      onMouseUp={() => setActive(false)}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+        width: '100%', height: 54, border: 'none', borderRadius: 'var(--radius-button)',
+        background: bg, color: '#fff',
+        fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 600, lineHeight: 1.2,
+        cursor: 'pointer', boxShadow: 'var(--shadow-cta-success)',
+        transition: 'background 120ms ease, transform 80ms ease',
+        transform: active ? 'scale(0.985)' : 'none',
+      }}
+    >
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+      သွေး ရရှိပြီး — တောင်းခံချက် ပိတ်ရန်
+    </button>
   )
 }
 
