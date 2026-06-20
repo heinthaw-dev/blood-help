@@ -80,21 +80,21 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CELE-01 | TBD | Pending |
-| CELE-02 | TBD | Pending |
-| HOME-01 | TBD | Pending |
-| HOME-02 | TBD | Pending |
-| SESS-01 | TBD | Pending |
-| SESS-02 | TBD | Pending |
-| CONF-01 | TBD | Pending |
-| UPDT-01 | TBD | Pending |
-| UPDT-02 | TBD | Pending |
+| CELE-01 | Phase 1 | Pending |
+| CELE-02 | Phase 1 | Pending |
+| HOME-01 | Phase 2 | Pending |
+| HOME-02 | Phase 2 | Pending |
+| SESS-01 | Phase 3 | Pending |
+| SESS-02 | Phase 3 | Pending |
+| CONF-01 | Phase 4 | Pending |
+| UPDT-01 | Phase 5 | Pending |
+| UPDT-02 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 9 total
-- Mapped to phases: 0
-- Unmapped: 9
+- Mapped to phases: 9
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-06-20*
-*Last updated: 2026-06-20 after initial definition*
+*Last updated: 2026-06-20 — traceability filled after roadmap creation*
