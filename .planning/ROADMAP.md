@@ -84,7 +84,7 @@
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 6: Foundation** - Supabase schema, PostGIS, RLS, anonymous auth, and React client wiring — the full infrastructure layer before any user-facing data flows
+- [~] **Phase 6: Foundation** - Supabase schema, PostGIS, RLS, anonymous auth, and React client wiring — the full infrastructure layer before any user-facing data flows *(planned: 5 plans, 4 waves)*
 - [ ] **Phase 7: Data Persistence + Geo-Matching** - Profile and request forms write real data; home feed queries real requests from DB using blood-type compatibility matching and PostGIS proximity
 - [ ] **Phase 8: Donor Response + Realtime** - "I'll help" creates a DB row; request-live screen subscribes to Supabase Realtime and updates donor list live
 - [ ] **Phase 9: Confirmation + Lifecycle** - QR/5-char code confirms donations, auto-fulfills on units target, requester close writes to DB, and a scheduled Edge Function expires stale requests
@@ -153,7 +153,7 @@ v1.0 phases complete. v2.0 executes: 6 → 7 → 8 → 9
 | 3. Request Session | v1.0 | TBD | Complete | 2026-06-20 |
 | 4. Confirmation Flow | v1.0 | TBD | Complete | 2026-06-20 |
 | 5. Screen Refreshes | v1.0 | TBD | Complete | 2026-06-20 |
-| 6. Foundation | v2.0 | 0/5 | Not started | - |
+| 6. Foundation | v2.0 | 0/5 | Ready to execute | - |
 | 7. Data Persistence + Geo-Matching | v2.0 | 0/TBD | Not started | - |
 | 8. Donor Response + Realtime | v2.0 | 0/TBD | Not started | - |
 | 9. Confirmation + Lifecycle | v2.0 | 0/TBD | Not started | - |
