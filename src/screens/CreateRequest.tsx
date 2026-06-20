@@ -5,7 +5,7 @@ import { Input } from '../components/Input'
 import { BloodTypeSelector } from '../components/BloodTypeSelector'
 import type { BloodType } from '../blood'
 import { AlertDialog } from '../components/AlertDialog'
-import { getCurrentPosition } from '../geolocation'
+import { getCurrentPosition, coarsenCoordinates } from '../geolocation'
 import type { Lang } from '../i18n'
 
 type Urgency = 'urgent' | 'today'
@@ -173,7 +173,8 @@ export function CreateRequest({
     const res = await getCurrentPosition()
     if (res.ok && bloodType) {
       setGeoPhase('idle')
-      onPosted({ bloodType, phone, address, units, urgency, lat: res.lat, lng: res.lng })
+      const { lat, lng } = coarsenCoordinates(res.lat, res.lng)
+      onPosted({ bloodType, phone, address, units, urgency, lat, lng })
     } else {
       setGeoPhase('denied')
     }
