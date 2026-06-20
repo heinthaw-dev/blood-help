@@ -11,6 +11,7 @@ import { Profile } from './screens/Profile'
 import { Leaderboard } from './screens/Leaderboard'
 import { DonorCongrats } from './screens/DonorCongrats'
 import { DonorThankYou } from './screens/DonorThankYou'
+import { Home } from './screens/Home'
 import type { Tab } from './components/BottomNav'
 import { hasLoggedInBefore, markLoggedIn } from './auth'
 import type { BloodType } from './blood'
@@ -20,6 +21,7 @@ type Screen =
   | 'phone'
   | 'otp'
   | 'intent'
+  | 'home'
   | 'profile'
   | 'leaderboard'
   | 'create-request'
@@ -35,6 +37,7 @@ interface UserState {
   showNumber: boolean
   donationCount: number
   lastDonation: string | null
+  donorSetupComplete: boolean
 }
 
 const DEFAULT_USER: UserState = {
@@ -44,6 +47,7 @@ const DEFAULT_USER: UserState = {
   showNumber: false,
   donationCount: 0,
   lastDonation: null,
+  donorSetupComplete: false,
 }
 
 /** Format a national number for display under the +95 country code. */
@@ -59,10 +63,10 @@ function App() {
 
   const handleVerified = () => {
     // Dummy flow: no real verification. First-time numbers see Intent Choice;
-    // returning numbers skip straight to home.
+    // returning numbers go to the Home feed.
     const returning = hasLoggedInBefore(phone)
     markLoggedIn(phone)
-    setScreen(returning ? 'profile' : 'intent')
+    setScreen(returning ? 'home' : 'intent')
   }
 
   const handleChooseIntent = (intent: Intent) => {
@@ -72,7 +76,7 @@ function App() {
   const handlePosted = (draft: RequestDraft) => {
     // Next phase: persist to Supabase + fan out push. For now, log and go home.
     console.log('request posted (dummy)', draft)
-    setScreen('profile')
+    setScreen('home')
   }
 
   const handleSaveDonor = (profile: DonorProfile) => {
@@ -84,13 +88,14 @@ function App() {
       bloodType: profile.bloodType,
       available: profile.available,
       showNumber: profile.showNumber,
+      donorSetupComplete: true,
     }))
     setScreen('donor-thankyou')
   }
 
   const handleNavigate = (tab: Tab) => {
-    // The Home (feed) tab is a later phase; Profile and Leaderboard exist.
-    if (tab === 'profile') setScreen('profile')
+    if (tab === 'home') setScreen('home')
+    else if (tab === 'profile') setScreen('profile')
     else if (tab === 'leaderboard') setScreen('leaderboard')
   }
 
@@ -157,6 +162,20 @@ function App() {
         donationCount={user.donationCount}
         onDone={() => setScreen('profile')}
         onLeaderboard={() => setScreen('leaderboard')}
+      />
+    )
+  }
+
+  if (screen === 'home') {
+    return (
+      <Home
+        lang={lang}
+        donorReady={user.donorSetupComplete}
+        available={user.available}
+        onAvailableChange={(v) => setUser((u) => ({ ...u, available: v }))}
+        onRequestBlood={() => setScreen('create-request')}
+        onFinishSetup={() => setScreen('donor-setup')}
+        onNavigate={handleNavigate}
       />
     )
   }
