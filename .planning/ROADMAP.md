@@ -116,11 +116,16 @@ Plans:
 **Depends on**: Phase 6
 **Requirements**: BACK-05, BACK-06, GEO-01, GEO-02
 **Success Criteria** (what must be TRUE):
-  1. After a donor saves their profile, a row exists in the profiles table with the correct blood_type, township, is_donor=true, and coarsened lat/lng (verifiable in Supabase dashboard)
+  1. After a donor saves their profile, an identity row exists in `profiles` and a donor row exists in the new `donors` table (the profiles/donors split signed off per D-01–D-07) with the correct blood_type, emergency_callable, and coarsened lat/lng (verifiable in Supabase dashboard)
   2. After a requester posts a blood request, a row exists in blood_requests with status='active' and expires_at = now()+24h; attempting to post a second active request shows an error rather than creating a duplicate row
   3. The home feed shows real blood_requests from the DB — not static placeholder data — filtered to within 10km of the donor's location
   4. A donor with blood type O+ sees requests needing O+, A+, B+, and AB+ (directional compatibility), not only exact O+ matches
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 07-01-PLAN.md — [BLOCKING] Schema migration (profiles/donors split, current_address rename, donors RLS, donors_within_radius recreate, requests_within_radius RPC) applied via Supabase MCP + type regen + donor re-seed (BACK-05, BACK-06, GEO-02)
+- [ ] 07-02-PLAN.md — COMPATIBLE_REQUEST_TYPES directional compatibility map in blood.ts (GEO-01)
+- [ ] 07-03-PLAN.md — App handlers (donor dual-upsert, request insert, hydration, write-error dialog, E.164) + DonorProfileSetup GPS pre-permission flow (BACK-05, BACK-06)
+- [ ] 07-04-PLAN.md — CreateRequest required current_address + Home live feed via requests_within_radius with compatibility + proximity + own-request filters (BACK-06, GEO-01, GEO-02)
 
 ### Phase 8: Donor Response + Realtime
 **Goal**: A donor can tap "I'll help" to commit to a request and that action immediately appears on the requester's live screen without a page refresh
@@ -155,7 +160,7 @@ v1.0 phases complete. v2.0 executes: 6 → 7 → 8 → 9
 | 3. Request Session | v1.0 | TBD | Complete | 2026-06-20 |
 | 4. Confirmation Flow | v1.0 | TBD | Complete | 2026-06-20 |
 | 5. Screen Refreshes | v1.0 | TBD | Complete | 2026-06-20 |
-| 6. Foundation | v2.0 | 0/5 | Ready to execute | - |
-| 7. Data Persistence + Geo-Matching | v2.0 | 0/TBD | Not started | - |
+| 6. Foundation | v2.0 | 6/6 | Complete | 2026-06-21 |
+| 7. Data Persistence + Geo-Matching | v2.0 | 0/4 | Ready to execute | - |
 | 8. Donor Response + Realtime | v2.0 | 0/TBD | Not started | - |
 | 9. Confirmation + Lifecycle | v2.0 | 0/TBD | Not started | - |
