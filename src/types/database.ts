@@ -21,6 +21,7 @@ export type Database = {
           closed_at: string | null
           contact_phone: string
           created_at: string | null
+          current_address: string
           expires_at: string
           hospital_name: string | null
           id: string
@@ -29,7 +30,6 @@ export type Database = {
           note: string | null
           requester_id: string
           status: Database["public"]["Enums"]["request_status"] | null
-          township: string
           units_collected: number
           units_needed: number
           urgency: Database["public"]["Enums"]["urgency"] | null
@@ -40,6 +40,7 @@ export type Database = {
           closed_at?: string | null
           contact_phone: string
           created_at?: string | null
+          current_address: string
           expires_at: string
           hospital_name?: string | null
           id?: string
@@ -48,7 +49,6 @@ export type Database = {
           note?: string | null
           requester_id: string
           status?: Database["public"]["Enums"]["request_status"] | null
-          township: string
           units_collected?: number
           units_needed?: number
           urgency?: Database["public"]["Enums"]["urgency"] | null
@@ -59,6 +59,7 @@ export type Database = {
           closed_at?: string | null
           contact_phone?: string
           created_at?: string | null
+          current_address?: string
           expires_at?: string
           hospital_name?: string | null
           id?: string
@@ -67,7 +68,6 @@ export type Database = {
           note?: string | null
           requester_id?: string
           status?: Database["public"]["Enums"]["request_status"] | null
-          township?: string
           units_collected?: number
           units_needed?: number
           urgency?: Database["public"]["Enums"]["urgency"] | null
@@ -169,65 +169,88 @@ export type Database = {
           },
         ]
       }
-      profiles: {
+      donors: {
         Row: {
           available_after: string | null
-          blood_type: Database["public"]["Enums"]["blood_type"] | null
-          created_at: string | null
-          donation_count: number | null
+          blood_type: Database["public"]["Enums"]["blood_type"]
+          created_at: string
+          donation_count: number
           donor_code: string | null
-          emergency_callable: boolean | null
+          emergency_callable: boolean
           id: string
-          is_available: boolean | null
-          is_donor: boolean | null
-          language: Database["public"]["Enums"]["lang"] | null
+          is_available: boolean
           last_donation_date: string | null
           lat: number | null
           lng: number | null
           location_updated_at: string | null
-          name: string | null
-          phone: string | null
-          township: string | null
-          updated_at: string | null
+          profile_id: string
+          updated_at: string
         }
         Insert: {
           available_after?: string | null
-          blood_type?: Database["public"]["Enums"]["blood_type"] | null
-          created_at?: string | null
-          donation_count?: number | null
+          blood_type: Database["public"]["Enums"]["blood_type"]
+          created_at?: string
+          donation_count?: number
           donor_code?: string | null
-          emergency_callable?: boolean | null
-          id: string
-          is_available?: boolean | null
-          is_donor?: boolean | null
-          language?: Database["public"]["Enums"]["lang"] | null
+          emergency_callable?: boolean
+          id?: string
+          is_available?: boolean
           last_donation_date?: string | null
           lat?: number | null
           lng?: number | null
           location_updated_at?: string | null
-          name?: string | null
-          phone?: string | null
-          township?: string | null
-          updated_at?: string | null
+          profile_id: string
+          updated_at?: string
         }
         Update: {
           available_after?: string | null
-          blood_type?: Database["public"]["Enums"]["blood_type"] | null
-          created_at?: string | null
-          donation_count?: number | null
+          blood_type?: Database["public"]["Enums"]["blood_type"]
+          created_at?: string
+          donation_count?: number
           donor_code?: string | null
-          emergency_callable?: boolean | null
+          emergency_callable?: boolean
           id?: string
-          is_available?: boolean | null
-          is_donor?: boolean | null
-          language?: Database["public"]["Enums"]["lang"] | null
+          is_available?: boolean
           last_donation_date?: string | null
           lat?: number | null
           lng?: number | null
           location_updated_at?: string | null
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donors_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          language: Database["public"]["Enums"]["lang"] | null
+          name: string | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          language?: Database["public"]["Enums"]["lang"] | null
           name?: string | null
           phone?: string | null
-          township?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          language?: Database["public"]["Enums"]["lang"] | null
+          name?: string | null
+          phone?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -285,7 +308,25 @@ export type Database = {
           id: string
           lat: number
           lng: number
-          name: string
+          profile_id: string
+        }[]
+      }
+      generate_donor_code: { Args: never; Returns: string }
+      requests_within_radius: {
+        Args: { lat: number; lng: number; radius_km: number }
+        Returns: {
+          blood_type: Database["public"]["Enums"]["blood_type"]
+          contact_phone: string
+          created_at: string
+          current_address: string
+          dist_meters: number
+          expires_at: string
+          id: string
+          requester_id: string
+          status: Database["public"]["Enums"]["request_status"]
+          units_collected: number
+          units_needed: number
+          urgency: Database["public"]["Enums"]["urgency"]
         }[]
       }
     }
