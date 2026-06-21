@@ -101,7 +101,7 @@
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 6: Foundation** - Supabase schema, PostGIS, RLS, anonymous auth, and React client wiring — the full infrastructure layer before any user-facing data flows *(completed: 6 plans, 2026-06-21)*
-- [ ] **Phase 7: Data Persistence + Geo-Matching** - Profile and request forms write real data; home feed queries real requests from DB using blood-type compatibility matching and PostGIS proximity
+- [x] **Phase 7: Data Persistence + Geo-Matching** - Profile and request forms write real data; home feed queries real requests from DB using blood-type compatibility matching and PostGIS proximity (completed 2026-06-21)
 - [ ] **Phase 8: Donor Response + Realtime** - "I'll help" creates a DB row; request-live screen subscribes to Supabase Realtime and updates donor list live
 - [ ] **Phase 9: Confirmation + Lifecycle** - QR/5-char code confirms donations, auto-fulfills on units target, requester close writes to DB, and a scheduled Edge Function expires stale requests
 
@@ -147,16 +147,16 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 07-01-PLAN.md — [BLOCKING] Schema migration (profiles/donors split, current_address rename, donors RLS, donors_within_radius recreate, requests_within_radius RPC) applied via Supabase MCP + type regen + donor re-seed (BACK-05, BACK-06, GEO-02)
-- [ ] 07-02-PLAN.md — COMPATIBLE_REQUEST_TYPES directional compatibility map in blood.ts (GEO-01)
+- [x] 07-01-PLAN.md — [BLOCKING] Schema migration (profiles/donors split, current_address rename, donors RLS, donors_within_radius recreate, requests_within_radius RPC) applied via Supabase MCP + type regen + donor re-seed (BACK-05, BACK-06, GEO-02)
+- [x] 07-02-PLAN.md — COMPATIBLE_REQUEST_TYPES directional compatibility map in blood.ts (GEO-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 07-03-PLAN.md — App handlers (donor dual-upsert, request insert, hydration, write-error dialog, E.164) + DonorProfileSetup GPS pre-permission flow (BACK-05, BACK-06)
+- [x] 07-03-PLAN.md — App handlers (donor dual-upsert, request insert, hydration, write-error dialog, E.164) + DonorProfileSetup GPS pre-permission flow (BACK-05, BACK-06)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 07-04-PLAN.md — CreateRequest required current_address + Home live feed via requests_within_radius with compatibility + proximity + own-request filters (BACK-06, GEO-01, GEO-02)
+- [x] 07-04-PLAN.md — CreateRequest required current_address + Home live feed via requests_within_radius with compatibility + proximity + own-request filters (BACK-06, GEO-01, GEO-02)
 
 ### Phase 8: Donor Response + Realtime
 
@@ -198,6 +198,6 @@ v1.0 phases complete. v2.0 executes: 6 → 7 → 8 → 9
 | 4. Confirmation Flow | v1.0 | TBD | Complete | 2026-06-20 |
 | 5. Screen Refreshes | v1.0 | TBD | Complete | 2026-06-20 |
 | 6. Foundation | v2.0 | 6/6 | Complete | 2026-06-21 |
-| 7. Data Persistence + Geo-Matching | v2.0 | 0/4 | Ready to execute | - |
+| 7. Data Persistence + Geo-Matching | v2.0 | 4/4 | Complete   | 2026-06-21 |
 | 8. Donor Response + Realtime | v2.0 | 0/TBD | Not started | - |
 | 9. Confirmation + Lifecycle | v2.0 | 0/TBD | Not started | - |
