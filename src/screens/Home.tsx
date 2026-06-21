@@ -32,10 +32,12 @@ interface NearbyRequest {
 function formatPhone(e164: string): string {
   const m = e164.match(/^\+95(9\d{9,10})$/)
   if (!m) return e164
-  const local = '0' + m[1]
-  return local.length === 11
-    ? local.replace(/^(\d{2})(\d{3})(\d{3})(\d{3})$/, '$1-$2-$3-$4')
-    : local.replace(/^(\d{2})(\d{3})(\d{2})(\d{3})$/, '$1-$2-$3-$4')
+  const local = '0' + m[1]                           // 11 or 12 chars
+  if (local.length === 11) {
+    return local.replace(/^(\d{2})(\d{3})(\d{3})(\d{3})$/, '$1-$2-$3-$4')
+  }
+  // 12 chars: 09-XXXX-XXX-XXX  (2+4+3+3) (WR-02)
+  return local.replace(/^(\d{2})(\d{4})(\d{3})(\d{3})$/, '$1-$2-$3-$4')
 }
 
 /** Format distance from meters to a human-readable label with Burmese numerals. */
@@ -48,7 +50,8 @@ function formatDistanceLabel(distMeters: number, lang: Lang): string {
 
 /** Format ISO timestamp to a "X min ago" / "X hr ago" label with Burmese numerals. */
 function formatTimeAgo(createdAt: string, lang: Lang): string {
-  const diffMs = Date.now() - new Date(createdAt).getTime()
+  // Clamp to 0 to guard against server clock skew producing negative values (WR-03)
+  const diffMs = Math.max(0, Date.now() - new Date(createdAt).getTime())
   const diffMin = Math.floor(diffMs / 60000)
   if (diffMin < 60) {
     return lang === 'my'
@@ -218,7 +221,10 @@ export function Home({
 
   useEffect(() => {
     // Pitfall 6: guard on null coords — render empty state without calling RPC
-    if (!donorLat || !donorLng || !donorBloodType) {
+    // Use explicit null/undefined checks to avoid silently suppressing feed if coords are 0 (WR-04)
+    if (donorLat === null || donorLat === undefined ||
+        donorLng === null || donorLng === undefined ||
+        !donorBloodType) {
       setRequests([])
       return
     }

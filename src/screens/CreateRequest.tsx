@@ -69,6 +69,7 @@ export function CreateRequest({
       geoMsg: 'အနီးနားရှိ သွေးလှူရှင်များကို ရှာရန် သင့်တည်နေရာ လိုအပ်ပါသည်။ နောက်တွင် ဘရောက်ဇာက မေးပါက “Allow / ခွင့်ပြုသည်” ကို နှိပ်ပါ။',
       geoConfirm: 'ဆက်လုပ်ရန်',
       geoCancel: 'မလုပ်တော့ပါ',
+      geoLoading: 'သင့်တည်နေရာကို ရှာဖွေနေသည်...',
       deniedTitle: 'တည်နေရာ ပိတ်ထားသည်',
       deniedMsg: 'တည်နေရာ ခွင့်ပြုချက် မရှိဘဲ တောင်းခံချက် မတင်နိုင်ပါ။ ဘရောက်ဇာ ဆက်တင်တွင် တည်နေရာကို ဖွင့်ပြီး ထပ်ကြိုးစားပါ။',
       deniedConfirm: 'ရပါပြီ',
@@ -90,6 +91,7 @@ export function CreateRequest({
       geoMsg: 'To find donors near you, we need your location. When the browser asks next, tap “Allow”.',
       geoConfirm: 'Continue',
       geoCancel: 'Not now',
+      geoLoading: 'Getting your location…',
       deniedTitle: 'Location is off',
       deniedMsg: "We can't post the request without location permission. Enable location in your browser settings and try again.",
       deniedConfirm: 'OK',
@@ -400,9 +402,45 @@ export function CreateRequest({
           </Button>
         </div>
 
+        {/* Loading overlay while GPS is pending — gives feedback during 'requesting'
+            and has no button, so it cannot be double-tapped (preserves CR-03 intent) */}
+        {geoPhase === 'requesting' && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 50,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 16,
+              padding: 24,
+              background: 'rgba(26, 26, 26, 0.45)',
+            }}
+          >
+            <div className="bh-spinner" />
+            <p
+              style={{
+                margin: 0,
+                fontFamily: bodyFont,
+                fontSize: 15,
+                fontWeight: 500,
+                color: '#fff',
+                textAlign: 'center',
+              }}
+            >
+              {copy.geoLoading}
+            </p>
+          </div>
+        )}
+
         {/* Pre-permission warning before the native location prompt */}
+        {/* open only for 'prealert' — closes immediately when GPS request starts (CR-03) */}
         <AlertDialog
-          open={geoPhase === 'prealert' || geoPhase === 'requesting'}
+          open={geoPhase === 'prealert'}
           bodyFont={bodyFont}
           title={copy.geoTitle}
           message={copy.geoMsg}

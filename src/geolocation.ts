@@ -32,7 +32,10 @@ export function getCurrentPosition(): Promise<GeoResult> {
               : 'unavailable'
         resolve({ ok: false, reason })
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+      // enableHighAccuracy:false uses fast WiFi/network positioning — laptops have no GPS
+      // chip and we coarsen to ~1km anyway, so GPS-level precision would be discarded.
+      // maximumAge accepts a recent cached fix (≤1min) to return instantly on repeat calls.
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
     )
   })
 }
