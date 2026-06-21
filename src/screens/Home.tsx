@@ -1,54 +1,32 @@
 import type { CSSProperties } from 'react'
+import { useState, useEffect } from 'react'
 import { Badge } from '../components/Badge'
 import { Switch } from '../components/Switch'
 import { BottomNav } from '../components/BottomNav'
 import type { Tab } from '../components/BottomNav'
 import type { BloodType } from '../blood'
+import { COMPATIBLE_REQUEST_TYPES } from '../blood'
 import type { Lang } from '../i18n'
+import { formatNumber } from '../i18n'
+import { supabase } from '../lib/supabase'
+
+// ---- constants ----
+
+const DISPLAY_RADIUS_KM = 10
 
 // ---- types ----
 
 interface NearbyRequest {
   id: string
   bloodType: BloodType
-  township: Record<Lang, string>
-  distance: Record<Lang, string>
-  timeAgo: Record<Lang, string>
+  currentAddress: string
+  distMeters: number
+  createdAt: string
   urgent: boolean
   phone: string
 }
 
-// ---- static dummy feed ----
-
-const DUMMY_REQUESTS: NearbyRequest[] = [
-  {
-    id: 'r1',
-    bloodType: 'B+',
-    township: { my: 'ရန်ကုန် ဆေးရုံကြီး', en: 'Yangon General Hospital' },
-    distance: { my: '~၂ km', en: '~2 km' },
-    timeAgo: { my: '၁၅ မိနစ်က', en: '15 min ago' },
-    urgent: true,
-    phone: '+959678901234',
-  },
-  {
-    id: 'r2',
-    bloodType: 'A-',
-    township: { my: 'မြောက်ဥက္ကလာပ', en: 'North Okkalapa' },
-    distance: { my: '~၃ km', en: '~3 km' },
-    timeAgo: { my: '၂၂ မိနစ်က', en: '22 min ago' },
-    urgent: false,
-    phone: '+959250884017',
-  },
-  {
-    id: 'r3',
-    bloodType: 'O+',
-    township: { my: 'သင်္ဂန်းကျွန်း', en: 'Thingangkyun' },
-    distance: { my: '~၅ km', en: '~5 km' },
-    timeAgo: { my: '၁ နာရီက', en: '1 hr ago' },
-    urgent: false,
-    phone: '+959421660392',
-  },
-]
+// ---- helpers ----
 
 /** E.164 (+95 9 XXXXXXXXX) → local display "09-XXX-XXX-XXX" */
 function formatPhone(e164: string): string {
@@ -58,6 +36,29 @@ function formatPhone(e164: string): string {
   return local.length === 11
     ? local.replace(/^(\d{2})(\d{3})(\d{3})(\d{3})$/, '$1-$2-$3-$4')
     : local.replace(/^(\d{2})(\d{3})(\d{2})(\d{3})$/, '$1-$2-$3-$4')
+}
+
+/** Format distance from meters to a human-readable label with Burmese numerals. */
+function formatDistanceLabel(distMeters: number, lang: Lang): string {
+  const km = distMeters / 1000
+  const n = km < 1 ? Math.round(distMeters) : Math.round(km * 10) / 10
+  const unit = km < 1 ? (lang === 'my' ? 'မီတာ' : 'm') : 'km'
+  return `~${formatNumber(n, lang)} ${unit}`
+}
+
+/** Format ISO timestamp to a "X min ago" / "X hr ago" label with Burmese numerals. */
+function formatTimeAgo(createdAt: string, lang: Lang): string {
+  const diffMs = Date.now() - new Date(createdAt).getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  if (diffMin < 60) {
+    return lang === 'my'
+      ? `${formatNumber(diffMin, lang)} မိနစ်က`
+      : `${formatNumber(diffMin, lang)} min ago`
+  }
+  const diffHr = Math.floor(diffMin / 60)
+  return lang === 'my'
+    ? `${formatNumber(diffHr, lang)} နာရီက`
+    : `${formatNumber(diffHr, lang)} hr ago`
 }
 
 // ---- sub-component ----
@@ -116,7 +117,7 @@ function RequestCard({ req, lang, urgentLabel, callLabel }: RequestCardProps) {
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
           }}>
-            {req.township[lang]}
+            {req.currentAddress}
           </span>
         </div>
         <div style={{
@@ -128,9 +129,9 @@ function RequestCard({ req, lang, urgentLabel, callLabel }: RequestCardProps) {
           fontSize: 13,
           color: 'var(--text-secondary)',
         }}>
-          <span>{req.distance[lang]}</span>
+          <span>{formatDistanceLabel(req.distMeters, lang)}</span>
           <span style={{ width: 3, height: 3, borderRadius: '999px', background: 'var(--text-hint)', flexShrink: 0 }} />
-          <span>{req.timeAgo[lang]}</span>
+          <span>{formatTimeAgo(req.createdAt, lang)}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 13, color: 'var(--text-secondary)' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-hint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
@@ -183,13 +184,13 @@ export interface HomeProps {
   onViewRequest?: () => void
   onFinishSetup: () => void
   onNavigate: (tab: Tab) => void
-  /** Donor's last-known coarsened latitude — used by plan 04 feed query. */
+  /** Donor's last-known coarsened latitude — used by feed query. */
   donorLat?: number | null
-  /** Donor's last-known coarsened longitude — used by plan 04 feed query. */
+  /** Donor's last-known coarsened longitude — used by feed query. */
   donorLng?: number | null
-  /** Supabase user ID of the logged-in user — used by plan 04 to exclude own request from feed. */
+  /** Supabase user ID of the logged-in user — used to exclude own request from feed. */
   currentUserId?: string | null
-  /** Donor's blood type — used by plan 04 for blood-type compatibility filtering. */
+  /** Donor's blood type — used for blood-type compatibility filtering. */
   donorBloodType?: BloodType
 }
 
@@ -208,11 +209,47 @@ export function Home({
   onViewRequest,
   onFinishSetup,
   onNavigate,
-  donorLat: _donorLat,
-  donorLng: _donorLng,
-  currentUserId: _currentUserId,
-  donorBloodType: _donorBloodType,
+  donorLat = null,
+  donorLng = null,
+  currentUserId = null,
+  donorBloodType,
 }: HomeProps) {
+  const [requests, setRequests] = useState<NearbyRequest[]>([])
+
+  useEffect(() => {
+    // Pitfall 6: guard on null coords — render empty state without calling RPC
+    if (!donorLat || !donorLng || !donorBloodType) {
+      setRequests([])
+      return
+    }
+
+    let cancelled = false
+    async function loadFeed() {
+      const { data, error } = await supabase.rpc('requests_within_radius', {
+        lat: donorLat as number,
+        lng: donorLng as number,
+        radius_km: DISPLAY_RADIUS_KM,
+      })
+      if (error || !data || cancelled) return
+
+      const filtered = data
+        .filter((r) => r.requester_id !== currentUserId)
+        .filter((r) => COMPATIBLE_REQUEST_TYPES[donorBloodType as BloodType].includes(r.blood_type as BloodType))
+        .map((r) => ({
+          id: r.id,
+          bloodType: r.blood_type as BloodType,
+          currentAddress: r.current_address,
+          distMeters: r.dist_meters,
+          createdAt: r.created_at,
+          urgent: r.urgency === 'urgent',
+          phone: r.contact_phone,
+        }))
+      setRequests(filtered)
+    }
+    void loadFeed()
+    return () => { cancelled = true }
+  }, [donorLat, donorLng, donorBloodType, currentUserId])
+
   const t = {
     my: {
       availTitle: 'သွေးလှူရန် အသင့်ရှိသည်',
@@ -497,9 +534,25 @@ export function Home({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {DUMMY_REQUESTS.map((req) => (
-                <RequestCard key={req.id} req={req} lang={lang} urgentLabel={t.urgentLabel} callLabel={t.callLabel} />
-              ))}
+              {requests.length === 0 ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '32px 16px',
+                  color: 'var(--text-secondary)',
+                  fontFamily: 'var(--font-burmese)',
+                }}>
+                  <div style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.6, color: 'var(--text-primary)' }}>
+                    {t.emptyTitle}
+                  </div>
+                  <div style={{ fontSize: 13, marginTop: 6, lineHeight: 1.55 }}>
+                    {t.emptyHint}
+                  </div>
+                </div>
+              ) : (
+                requests.map((req) => (
+                  <RequestCard key={req.id} req={req} lang={lang} urgentLabel={t.urgentLabel} callLabel={t.callLabel} />
+                ))
+              )}
             </div>
           </div>
 
