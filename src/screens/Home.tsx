@@ -183,6 +183,14 @@ export interface HomeProps {
   onViewRequest?: () => void
   onFinishSetup: () => void
   onNavigate: (tab: Tab) => void
+  /** Donor's last-known coarsened latitude — used by plan 04 feed query. */
+  donorLat?: number | null
+  /** Donor's last-known coarsened longitude — used by plan 04 feed query. */
+  donorLng?: number | null
+  /** Supabase user ID of the logged-in user — used by plan 04 to exclude own request from feed. */
+  currentUserId?: string | null
+  /** Donor's blood type — used by plan 04 for blood-type compatibility filtering. */
+  donorBloodType?: BloodType
 }
 
 /**
@@ -200,6 +208,10 @@ export function Home({
   onViewRequest,
   onFinishSetup,
   onNavigate,
+  donorLat: _donorLat,
+  donorLng: _donorLng,
+  currentUserId: _currentUserId,
+  donorBloodType: _donorBloodType,
 }: HomeProps) {
   const t = {
     my: {
