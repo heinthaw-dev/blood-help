@@ -4,6 +4,8 @@ import { Button } from '../components/Button'
 import { Input } from '../components/Input'
 import { BloodTypeSelector } from '../components/BloodTypeSelector'
 import { Switch } from '../components/Switch'
+import { AlertDialog } from '../components/AlertDialog'
+import { getCurrentPosition, coarsenCoordinates } from '../geolocation'
 import type { BloodType } from '../blood'
 import type { Lang } from '../i18n'
 
@@ -14,6 +16,10 @@ export interface DonorProfile {
   phone: string
   showNumber: boolean
   available: boolean
+  /** Coarsened GPS latitude captured on Save (after AlertDialog pre-permission flow). */
+  lat: number
+  /** Coarsened GPS longitude captured on Save (after AlertDialog pre-permission flow). */
+  lng: number
 }
 
 interface DonorProfileSetupProps {
@@ -24,6 +30,8 @@ interface DonorProfileSetupProps {
   defaultPhone?: string
   onSave: (profile: DonorProfile) => void
 }
+
+type GeoPhase = 'idle' | 'prealert' | 'requesting' | 'denied'
 
 export function DonorProfileSetup({
   lang,
@@ -37,6 +45,7 @@ export function DonorProfileSetup({
   const [phone, setPhone] = useState(defaultPhone)
   const [showNumber, setShowNumber] = useState(false)
   const [available, setAvailable] = useState(true)
+  const [geoPhase, setGeoPhase] = useState<GeoPhase>('idle')
 
   const isMy = lang === 'my'
   const bodyFont = isMy ? 'var(--font-burmese)' : 'var(--font-sans)'
@@ -59,6 +68,13 @@ export function DonorProfileSetup({
       availableLabel: 'သွေးလှူရန် အသင့်ရှိသည်',
       availableHint: 'သွေးမလှူနိုင်သည့်အခါ ဤခလုတ်ကို ပိတ်ထားနိုင်သည်။',
       cta: 'သိမ်းဆည်း၍ ဆက်လုပ်ရန်',
+      geoTitle: 'တည်နေရာ ခွင့်ပြုချက် လိုအပ်ပါသည်',
+      geoMsg: 'အနီးနားရှိ သွေးတောင်းခံမှုများ ပြသရန် သင့်တည်နေရာ လိုအပ်ပါသည်။ နောက်တွင် ဘရောက်ဇာက မေးပါက "Allow / ခွင့်ပြုသည်" ကို နှိပ်ပါ။',
+      geoConfirm: 'ဆက်လုပ်ရန်',
+      geoCancel: 'မလုပ်တော့ပါ',
+      deniedTitle: 'တည်နေရာ ပိတ်ထားသည်',
+      deniedMsg: 'တည်နေရာ ခွင့်ပြုချက် မရှိဘဲ ပရိုဖိုင် သိမ်းဆည်း၍ မရပါ။ ဘရောက်ဇာ ဆက်တင်တွင် တည်နေရာကို ဖွင့်ပြီး ထပ်ကြိုးစားပါ။',
+      deniedConfirm: 'ရပါပြီ',
     },
     en: {
       navTitle: 'Set up your donor profile',
@@ -75,9 +91,36 @@ export function DonorProfileSetup({
       availableLabel: 'Available to donate',
       availableHint: "Turn this off when you can't donate.",
       cta: 'Save & continue',
+      geoTitle: 'We need your location',
+      geoMsg: 'To show you nearby blood requests, we need your location. When the browser asks next, tap "Allow".',
+      geoConfirm: 'Continue',
+      geoCancel: 'Not now',
+      deniedTitle: 'Location is off',
+      deniedMsg: "We can't save the profile without location permission. Enable location in your browser settings and try again.",
+      deniedConfirm: 'OK',
     },
   }
   const copy = strings[lang]
+
+  /** Open the pre-permission AlertDialog. Actual GPS request happens after user confirms. */
+  const handleSave = () => {
+    if (!bloodType || !name.trim() || phone.replace(/\D/g, '').length === 0) return
+    setGeoPhase('prealert')
+  }
+
+  /** Called when user confirms in the pre-permission dialog. Requests GPS then saves. */
+  const requestLocationAndSave = async () => {
+    setGeoPhase('requesting')
+    const res = await getCurrentPosition()
+    if (res.ok && bloodType) {
+      setGeoPhase('idle')
+      const { lat, lng } = coarsenCoordinates(res.lat, res.lng)
+      onSave({ name: name.trim(), bloodType, phone, showNumber, available, lat, lng })
+    } else {
+      // GPS denied or unavailable — show denied dialog, do NOT call onSave (D-12)
+      setGeoPhase('denied')
+    }
+  }
 
   const tabBase: CSSProperties = {
     fontFamily: 'var(--font-sans)',
@@ -283,14 +326,35 @@ export function DonorProfileSetup({
           <Button
             fullWidth
             height={54}
-            disabled={saveDisabled}
-            onClick={() => {
-              if (bloodType) onSave({ name: name.trim(), bloodType, phone, showNumber, available })
-            }}
+            disabled={saveDisabled || geoPhase === 'requesting'}
+            onClick={handleSave}
           >
             {copy.cta}
           </Button>
         </div>
+
+        {/* Pre-permission warning before the native location prompt */}
+        <AlertDialog
+          open={geoPhase === 'prealert' || geoPhase === 'requesting'}
+          bodyFont={bodyFont}
+          title={copy.geoTitle}
+          message={copy.geoMsg}
+          confirmLabel={copy.geoConfirm}
+          cancelLabel={copy.geoCancel}
+          onConfirm={requestLocationAndSave}
+          onCancel={() => setGeoPhase('idle')}
+        />
+
+        {/* Permission denied / unavailable */}
+        <AlertDialog
+          open={geoPhase === 'denied'}
+          bodyFont={bodyFont}
+          title={copy.deniedTitle}
+          message={copy.deniedMsg}
+          confirmLabel={copy.deniedConfirm}
+          onConfirm={() => setGeoPhase('idle')}
+          onCancel={() => setGeoPhase('idle')}
+        />
       </div>
     </div>
   )
