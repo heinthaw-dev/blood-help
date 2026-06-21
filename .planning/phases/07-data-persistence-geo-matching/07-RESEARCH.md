@@ -1131,22 +1131,25 @@ These were marked "Claude's Discretion" in CONTEXT.md. Research supports the fol
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Phase 6 seed data after column drop**
    - What we know: The 3 seed profiles have values in `blood_type`, `lat`, `lng`, etc. on `profiles` that will be dropped.
    - What's unclear: Whether the seed data has already been modified by any test during Phase 6 UAT.
    - Recommendation: Re-seed all 3 rows into `donors` in the migration script; use `ON CONFLICT (profile_id) DO NOTHING` so it's idempotent.
+   - **RESOLVED:** Adopted. Plan 07-01's migration re-seeds the donor rows into `donors` with `ON CONFLICT (profile_id) DO NOTHING` (idempotent), keyed on the existing seed profile UUIDs.
 
 2. **Existing RLS policies on `profiles` referencing donor columns**
    - What we know: Phase 6 deployed RLS on `profiles` but the exact policy SQL was discretion.
    - What's unclear: Whether `profiles` SELECT/UPDATE policies reference `blood_type`, `lat`, etc.
    - Recommendation: The planner should include a task to list current policies with `execute_sql: SELECT * FROM pg_policies WHERE tablename = 'profiles'` BEFORE running the migration, and confirm no dropped columns are in policy predicates.
+   - **RESOLVED:** Adopted. Plan 07-01 Task 1 is a pre-migration audit that lists current `profiles` policies via `execute_sql` and confirms no dropped column appears in any policy predicate before the destructive DDL runs.
 
 3. **`updated_at` trigger for `profiles` and `donors`**
    - What we know: Phase 6 schema set `DEFAULT now()` but no auto-update trigger.
    - What's unclear: Whether it's cleaner to add a trigger in this migration vs always sending `updated_at` in upsert payloads.
    - Recommendation: Add a `before update` trigger on both tables (3 lines of SQL) to keep `updated_at` always accurate regardless of caller. Include in the migration.
+   - **RESOLVED:** Adopted — add the trigger in the migration. Plan 07-01's migration creates `public.set_updated_at()` and a `BEFORE UPDATE` trigger on both `public.profiles` and `public.donors`, so `updated_at` is always accurate regardless of caller (not dependent on every upsert payload including the field).
 
 ---
 
