@@ -49,7 +49,7 @@ export function CreateRequest({
   const isMy = lang === 'my'
   const bodyFont = isMy ? 'var(--font-burmese)' : 'var(--font-sans)'
   const lh = isMy ? 1.75 : 1.5
-  const postDisabled = !bloodType || phone.replace(/\D/g, '').length === 0
+  const postDisabled = !bloodType || phone.replace(/\D/g, '').length === 0 || address.trim().length === 0
 
   const strings = {
     my: {
@@ -60,7 +60,6 @@ export function CreateRequest({
       phoneHint: 'သွေးလှူရှင်များက ဤနံပါတ်သို့ ဖုန်းဆက်ပါမည်။',
       addressLabel: 'လက်ရှိ တည်နေရာ',
       addressExample: 'ဥပမာ — ရန်ကုန် ဆေးရုံကြီး (သို့) ဆင်ချောင်းမြို့နယ်',
-      optional: 'ချန်လှပ်နိုင်သည်',
       unitsLabel: 'လိုအပ်သော သွေးအိတ် အရေအတွက်',
       urgencyLabel: 'အရေးပေါ်ဆန်မှု',
       urgent: 'အရေးပေါ်',
@@ -82,7 +81,6 @@ export function CreateRequest({
       phoneHint: 'Donors will call you on this number.',
       addressLabel: 'Current address',
       addressExample: 'E.g: Yangon Hospital (or) Sanchaung Township',
-      optional: 'Optional',
       unitsLabel: 'Units needed',
       urgencyLabel: 'Urgency',
       urgent: 'Urgent',
@@ -321,24 +319,6 @@ export function CreateRequest({
               />
             </div>
             <p style={hintStyle}>{copy.addressExample}</p>
-          </div>
-
-          {/* Optional divider */}
-          <div style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1, height: 1, background: 'var(--border-card)' }} />
-            <span
-              style={{
-                fontFamily: bodyFont,
-                fontSize: 12,
-                fontWeight: 400,
-                color: 'var(--text-hint)',
-                whiteSpace: 'nowrap',
-                letterSpacing: '0.02em',
-              }}
-            >
-              {copy.optional}
-            </span>
-            <div style={{ flex: 1, height: 1, background: 'var(--border-card)' }} />
           </div>
 
           {/* Units stepper */}
