@@ -23,11 +23,9 @@ export type Database = {
           created_at: string | null
           current_address: string
           expires_at: string
-          hospital_name: string | null
           id: string
           lat: number | null
           lng: number | null
-          note: string | null
           requester_id: string
           status: Database["public"]["Enums"]["request_status"] | null
           units_collected: number
@@ -42,11 +40,9 @@ export type Database = {
           created_at?: string | null
           current_address: string
           expires_at: string
-          hospital_name?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
-          note?: string | null
           requester_id: string
           status?: Database["public"]["Enums"]["request_status"] | null
           units_collected?: number
@@ -61,11 +57,9 @@ export type Database = {
           created_at?: string | null
           current_address?: string
           expires_at?: string
-          hospital_name?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
-          note?: string | null
           requester_id?: string
           status?: Database["public"]["Enums"]["request_status"] | null
           units_collected?: number
