@@ -71,9 +71,14 @@ interface RequestCardProps {
   lang: Lang
   urgentLabel: string
   callLabel: string
+  helpLabel: string
+  /** Whether the current donor has already responded to this request. */
+  responded: boolean
+  /** Called when the donor taps "I'll help". */
+  onRespond: () => void
 }
 
-function RequestCard({ req, lang, urgentLabel, callLabel }: RequestCardProps) {
+function RequestCard({ req, lang, urgentLabel, callLabel, helpLabel, responded, onRespond }: RequestCardProps) {
   const card: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
@@ -108,9 +113,8 @@ function RequestCard({ req, lang, urgentLabel, callLabel }: RequestCardProps) {
 
       {/* Info column */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', minHeight: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, minHeight: 24, flexWrap: 'wrap' }}>
           <span style={{
-            flex: 1,
             minWidth: 0,
             fontFamily: 'var(--font-burmese)',
             fontSize: 15,
@@ -122,6 +126,23 @@ function RequestCard({ req, lang, urgentLabel, callLabel }: RequestCardProps) {
           }}>
             {req.currentAddress}
           </span>
+          {/* Green "✓ responded" tag — appears by the address only after responding (D-01) */}
+          {responded && (
+            <span style={{
+              flexShrink: 0,
+              fontFamily: 'var(--font-burmese)',
+              fontSize: 11,
+              fontWeight: 600,
+              lineHeight: 1,
+              whiteSpace: 'nowrap',
+              color: 'var(--color-success)',
+              background: 'var(--color-success-tint)',
+              borderRadius: 'var(--radius-pill)',
+              padding: '4px 8px',
+            }}>
+              ✓ ကူညီမည်
+            </span>
+          )}
         </div>
         <div style={{
           display: 'flex',
@@ -136,38 +157,71 @@ function RequestCard({ req, lang, urgentLabel, callLabel }: RequestCardProps) {
           <span style={{ width: 3, height: 3, borderRadius: '999px', background: 'var(--text-hint)', flexShrink: 0 }} />
           <span>{formatTimeAgo(req.createdAt, lang)}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 13, color: 'var(--text-secondary)' }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-hint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
-          </svg>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {formatPhone(req.phone)}
-          </span>
-        </div>
+        {/* Phone row — hidden until the donor has responded (D-02) */}
+        {responded && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 13, color: 'var(--text-secondary)' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-hint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {formatPhone(req.phone)}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Call button */}
-      <a
-        href={`tel:${req.phone}`}
-        aria-label={callLabel}
-        style={{
-          flexShrink: 0,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 48,
-          height: 48,
-          borderRadius: '999px',
-          background: 'var(--color-primary)',
-          color: '#fff',
-          textDecoration: 'none',
-          boxShadow: 'var(--shadow-cta)',
-        }}
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
-          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
-        </svg>
-      </a>
+      {/* Action slot — state machine (D-01):
+          not responded → "I'll help" pill;
+          responded     → round red call button */}
+      {responded ? (
+        <a
+          href={`tel:${req.phone}`}
+          aria-label={callLabel}
+          style={{
+            flexShrink: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 48,
+            height: 48,
+            borderRadius: '999px',
+            background: 'var(--color-primary)',
+            color: '#fff',
+            textDecoration: 'none',
+            boxShadow: 'var(--shadow-cta)',
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+          </svg>
+        </a>
+      ) : (
+        <button
+          type="button"
+          onClick={onRespond}
+          aria-label={helpLabel}
+          style={{
+            flexShrink: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: 36,
+            borderRadius: 'var(--radius-pill)',
+            border: 'none',
+            background: 'var(--color-primary-tint)',
+            color: 'var(--color-primary)',
+            fontFamily: 'var(--font-burmese)',
+            fontSize: 13,
+            fontWeight: 600,
+            lineHeight: 1,
+            whiteSpace: 'nowrap',
+            padding: '0 14px',
+            cursor: 'pointer',
+          }}
+        >
+          {helpLabel}
+        </button>
+      )}
     </div>
   )
 }
@@ -195,6 +249,10 @@ export interface HomeProps {
   currentUserId?: string | null
   /** Donor's blood type — used for blood-type compatibility filtering. */
   donorBloodType?: BloodType
+  /** Set of request IDs the current donor has already responded to. */
+  respondedIds?: Set<string>
+  /** Called when the donor taps "I'll help" on a request card. */
+  onRespond?: (reqId: string) => void
 }
 
 /**
@@ -216,6 +274,8 @@ export function Home({
   donorLng = null,
   currentUserId = null,
   donorBloodType,
+  respondedIds,
+  onRespond,
 }: HomeProps) {
   const [requests, setRequests] = useState<NearbyRequest[]>([])
 
@@ -276,6 +336,7 @@ export function Home({
       emptyHint:  "We'll alert you the moment someone does.",
       urgentLabel:'အရေးပေါ်',
       callLabel:  'ဖုန်းခေါ်ရန်',
+      helpLabel:  'ကူညီမည်',
     },
     en: {
       availTitle: 'Available to donate',
@@ -296,6 +357,7 @@ export function Home({
       emptyHint:  "You'll be notified immediately when someone nearby needs a donor.",
       urgentLabel:'Urgent',
       callLabel:  'Call',
+      helpLabel:  "I'll help",
     },
   }[lang]
 
@@ -556,7 +618,16 @@ export function Home({
                 </div>
               ) : (
                 requests.map((req) => (
-                  <RequestCard key={req.id} req={req} lang={lang} urgentLabel={t.urgentLabel} callLabel={t.callLabel} />
+                  <RequestCard
+                    key={req.id}
+                    req={req}
+                    lang={lang}
+                    urgentLabel={t.urgentLabel}
+                    callLabel={t.callLabel}
+                    helpLabel={t.helpLabel}
+                    responded={respondedIds?.has(req.id) ?? false}
+                    onRespond={() => onRespond?.(req.id)}
+                  />
                 ))
               )}
             </div>
