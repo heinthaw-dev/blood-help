@@ -115,6 +115,8 @@ function App() {
         title: string;
         message: string;
     } | null>(null);
+    /** Set of request IDs the current donor has responded to (status='responding'). */
+    const [respondedIds, setRespondedIds] = useState<Set<string>>(new Set());
 
     const writeErrorStrings = {
         my: {
@@ -205,6 +207,17 @@ function App() {
                           lng: activeRequest.lng ?? 0,
                       }
                     : null,
+            );
+
+            // Restore responded state across reload (D-04): fetch own request_responses rows
+            // so cards that the donor has already responded to start in the responded state.
+            const { data: ownResponses } = await supabase
+                .from("request_responses")
+                .select("request_id")
+                .eq("donor_id", uid)
+                .eq("status", "responding");
+            setRespondedIds(
+                new Set((ownResponses ?? []).map((r) => r.request_id)),
             );
 
             return true;
@@ -338,6 +351,45 @@ function App() {
 
         setRequestDraft(draft);
         setScreen("request-live");
+    };
+
+    /**
+     * Donor taps "I'll help" on a feed card. Optimistically marks the request as
+     * responded (D-03), then inserts a request_responses row. On error:
+     * - 23505 (duplicate) → silent no-op; keep the responded state (D-04 backstop).
+     * - Any other error → roll back the optimistic flip and surface the AlertDialog (D-18).
+     */
+    const handleRespond = async (reqId: string) => {
+        const uid = user.supabaseId;
+        if (!uid) return;
+
+        // Optimistic flip (D-03)
+        setRespondedIds((s) => new Set(s).add(reqId));
+
+        const errStrings = writeErrorStrings[lang];
+        const { error } = await supabase.from("request_responses").insert({
+            request_id: reqId,
+            donor_id: uid,
+            // status omits → defaults to 'responding'
+        });
+
+        if (error) {
+            if (error.code === "23505") {
+                // Already responded — duplicate is the expected no-op (D-04 backstop).
+                // Keep the optimistic responded state; do NOT roll back; do NOT show AlertDialog.
+            } else {
+                // Real failure (network/RLS) → roll back + generic error dialog (D-03/D-18)
+                setRespondedIds((s) => {
+                    const next = new Set(s);
+                    next.delete(reqId);
+                    return next;
+                });
+                setWriteError({
+                    title: errStrings.genericTitle,
+                    message: errStrings.genericMsg,
+                });
+            }
+        }
     };
 
     const handleSaveDonor = async (profile: DonorProfile) => {
@@ -545,6 +597,8 @@ function App() {
                     donorLng={user.lng}
                     currentUserId={user.supabaseId}
                     donorBloodType={user.bloodType}
+                    respondedIds={respondedIds}
+                    onRespond={handleRespond}
                 />
                 {/* Write-error dialog for handlePosted and handleSaveDonor failures */}
                 <AlertDialog
