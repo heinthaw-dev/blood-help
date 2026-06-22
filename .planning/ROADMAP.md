@@ -199,5 +199,5 @@ v1.0 phases complete. v2.0 executes: 6 → 7 → 8 → 9
 | 5. Screen Refreshes | v1.0 | TBD | Complete | 2026-06-20 |
 | 6. Foundation | v2.0 | 6/6 | Complete | 2026-06-21 |
 | 7. Data Persistence + Geo-Matching | v2.0 | 4/4 | Complete   | 2026-06-21 |
-| 8. Donor Response + Realtime | v2.0 | 0/TBD | Not started | - |
+| 8. Donor Response + Realtime | v2.0 | 1/3 | In Progress|  |
 | 9. Confirmation + Lifecycle | v2.0 | 0/TBD | Not started | - |
