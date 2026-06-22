@@ -28,7 +28,7 @@ Requirements for the backend core milestone. Full data layer, anonymous auth, ge
 ### Donor Response
 
 - [x] **DNOR-01**: "I'll help" button on home feed request cards creates a `request_responses` row (status = 'responding') for the current donor; button disabled/hidden if donor already responded
-- [ ] **DNOR-02**: Request-live screen subscribes to `request_responses` for the active request via Supabase Realtime; donor list (Will Help / Can Call states) updates live when donors respond without requiring a page refresh
+- [x] **DNOR-02**: Request-live screen subscribes to `request_responses` for the active request via Supabase Realtime; donor list (Will Help / Can Call states) updates live when donors respond without requiring a page refresh
 
 ### Confirmation & Lifecycle
 
@@ -88,7 +88,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GEO-01 | Phase 7 | Pending |
 | GEO-02 | Phase 7 | Pending |
 | DNOR-01 | Phase 8 | Complete |
-| DNOR-02 | Phase 8 | Pending |
+| DNOR-02 | Phase 8 | Complete |
 | CONF-02 | Phase 9 | Pending |
 | CONF-03 | Phase 9 | Pending |
 | LIFE-01 | Phase 9 | Pending |

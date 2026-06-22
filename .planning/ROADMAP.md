@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 UI Milestone** - Phases 1-5 (shipped 2026-06-20)
-- 🚧 **v2.0 Backend Core** - Phases 6-9 (in progress)
+- ✅ **v2.0 Backend Core** - Phases 6-8 complete (2026-06-22) — Phase 9 (Confirmation + Lifecycle) is the remaining item
 
 ## Phases
 
@@ -102,7 +102,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 6: Foundation** - Supabase schema, PostGIS, RLS, anonymous auth, and React client wiring — the full infrastructure layer before any user-facing data flows *(completed: 6 plans, 2026-06-21)*
 - [x] **Phase 7: Data Persistence + Geo-Matching** - Profile and request forms write real data; home feed queries real requests from DB using blood-type compatibility matching and PostGIS proximity (completed 2026-06-21)
-- [ ] **Phase 8: Donor Response + Realtime** - "I'll help" creates a DB row; request-live screen subscribes to Supabase Realtime and updates donor list live
+- [x] **Phase 8: Donor Response + Realtime** - "I'll help" creates a DB row; request-live screen subscribes to Supabase Realtime and updates donor list live *(completed: 3 plans, 2026-06-22)*
 - [ ] **Phase 9: Confirmation + Lifecycle** - QR/5-char code confirms donations, auto-fulfills on units target, requester close writes to DB, and a scheduled Edge Function expires stale requests
 
 ## Phase Details
@@ -169,7 +169,13 @@ Plans:
   2. The request-live screen (requester view) shows a new donor in the "Will Help" section within seconds of that donor tapping "I'll help" — no page refresh required
   3. A donor who has already responded to a request cannot submit a duplicate response row (unique constraint enforced at DB level)
 
-**Plans**: TBD
+**Plans**: 3 plans
+**Completed**: 2026-06-22
+Plans:
+
+- [x] 08-01-PLAN.md — responders_for_request SECURITY DEFINER RPC + request_responses added to supabase_realtime publication + types regen (DNOR-02 foundation)
+- [x] 08-02-PLAN.md — Donor "I'll help" action: handleRespond + respondedIds in App.tsx + RequestCard state machine in Home.tsx (DNOR-01)
+- [x] 08-03-PLAN.md — RequestLive realtime: real responders via RPC + Postgres Changes subscription + toast + calm empty state + truthful D-09 count + activeRequestId threading (DNOR-02)
 
 ### Phase 9: Confirmation + Lifecycle
 
@@ -199,5 +205,5 @@ v1.0 phases complete. v2.0 executes: 6 → 7 → 8 → 9
 | 5. Screen Refreshes | v1.0 | TBD | Complete | 2026-06-20 |
 | 6. Foundation | v2.0 | 6/6 | Complete | 2026-06-21 |
 | 7. Data Persistence + Geo-Matching | v2.0 | 4/4 | Complete   | 2026-06-21 |
-| 8. Donor Response + Realtime | v2.0 | 2/3 | In Progress|  |
+| 8. Donor Response + Realtime | v2.0 | 3/3 | Complete   | 2026-06-22 |
 | 9. Confirmation + Lifecycle | v2.0 | 0/TBD | Not started | - |
