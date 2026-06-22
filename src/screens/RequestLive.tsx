@@ -7,7 +7,7 @@ import { formatNumber } from '../i18n'
 import { supabase } from '../lib/supabase'
 import type { BloodType } from '../blood'
 import { COMPATIBLE_REQUEST_TYPES } from '../blood'
-import { formatPhone, formatDistanceLabel } from './Home'
+import { formatPhone, formatDistanceLabel } from '../format'
 
 // ---- types ----
 
