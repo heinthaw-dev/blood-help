@@ -83,6 +83,14 @@ export interface RequestLiveProps {
   moreCount?: number
   unitsNeeded?: number
   unitsCollected?: number
+  /** UUID of the active blood_requests row — used for RPC fetch + realtime subscription. */
+  requestId?: string | null
+  /** Supabase user ID of the requester — used to gate the realtime effect (Pitfall 2). */
+  currentUserId?: string | null
+  /** Request latitude — used for the truthful compatible-donors count (D-09). */
+  lat?: number | null
+  /** Request longitude — used for the truthful compatible-donors count (D-09). */
+  lng?: number | null
   onBack: () => void
   onGoHome: () => void
 }
@@ -103,6 +111,10 @@ export function RequestLive({
   moreCount = 5,
   unitsNeeded = 2,
   unitsCollected: initCollected = 0,
+  requestId: _requestId, // eslint-disable-line @typescript-eslint/no-unused-vars
+  currentUserId: _currentUserId, // eslint-disable-line @typescript-eslint/no-unused-vars
+  lat: _lat, // eslint-disable-line @typescript-eslint/no-unused-vars
+  lng: _lng, // eslint-disable-line @typescript-eslint/no-unused-vars
   onBack,
   onGoHome,
 }: RequestLiveProps) {

@@ -110,6 +110,8 @@ function App() {
     const [phone, setPhone] = useState("");
     const [user, setUser] = useState<UserState>(DEFAULT_USER);
     const [requestDraft, setRequestDraft] = useState<RequestDraft | null>(null);
+    /** UUID of the requester's active blood_requests row — threaded into RequestLive for the RPC + realtime subscription. */
+    const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
     const [sessionLoading, setSessionLoading] = useState(true);
     const [writeError, setWriteError] = useState<{
         title: string;
@@ -208,6 +210,8 @@ function App() {
                       }
                     : null,
             );
+            // Thread the active request UUID (activeRequestId) into RequestLive for the RPC + realtime subscription (D-14).
+            setActiveRequestId(activeRequest?.id ?? null);
 
             // Restore responded state across reload (D-04): fetch own request_responses rows
             // so cards that the donor has already responded to start in the responded state.
@@ -350,6 +354,18 @@ function App() {
         }
 
         setRequestDraft(draft);
+
+        // Read-back the new request id and set activeRequestId (separate from the bare insert —
+        // convention is bare .insert() without chaining .select(); the id is recovered via an
+        // owner-scoped read after the write).
+        const { data: newRow } = await supabase
+            .from("blood_requests")
+            .select("id")
+            .eq("requester_id", uid)
+            .eq("status", "active")
+            .maybeSingle();
+        setActiveRequestId(newRow?.id ?? null);
+
         setScreen("request-live");
     };
 
@@ -495,6 +511,8 @@ function App() {
         void supabase.auth.signOut();
         setUser(DEFAULT_USER);
         setPhone("");
+        setRequestDraft(null);
+        setActiveRequestId(null); // clear activeRequestId on logout
         setScreen("phone");
     };
 
@@ -571,9 +589,14 @@ function App() {
                 lang={lang}
                 bloodType={requestDraft?.bloodType}
                 unitsNeeded={requestDraft?.units}
+                requestId={activeRequestId}
+                currentUserId={user.supabaseId}
+                lat={requestDraft?.lat}
+                lng={requestDraft?.lng}
                 onBack={() => setScreen("home")}
                 onGoHome={() => {
                     setRequestDraft(null);
+                    setActiveRequestId(null);
                     setScreen("home");
                 }}
             />
