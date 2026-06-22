@@ -1,34 +1,32 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
 import type { Lang } from '../i18n'
+import { formatNumber } from '../i18n'
+import { supabase } from '../lib/supabase'
+import type { BloodType } from '../blood'
+import { COMPATIBLE_REQUEST_TYPES } from '../blood'
+import { formatPhone, formatDistanceLabel } from './Home'
 
 // ---- types ----
 
 type Sheet = 'resolve' | 'code' | null
 type ClosedReason = 'fulfilled' | 'outside' | 'canceled'
 
-interface RevealedMap {
-  [id: string]: boolean
-}
-
 interface ToastMsg {
   my: string
   en: string
 }
 
-// ---- static dummy donor data ----
-
-const WILL_HELP = [
-  { id: 'w1', name: 'ကိုကိုလွင်', initial: 'က', distance: '~၁.၄ km', phone: '09-770-111-001', tel: 'tel:+959770111001' },
-  { id: 'w2', name: 'အောင်ကို',   initial: 'အ', distance: '~၂.၂ km', phone: '09-770-111-002', tel: 'tel:+959770111002' },
-]
-
-const CAN_CALL = [
-  { id: 'c1', name: 'လှလှဝင်း', initial: 'လ',  distance: '~၃.၀ km', phone: '09-250-884-017', tel: 'tel:+959250884017' },
-  { id: 'c2', name: 'နွေနွေ',    initial: 'နွ', distance: '~၄.၁ km', phone: '09-421-660-392', tel: 'tel:+959421660392' },
-]
+/** Row returned by the responders_for_request owner-scoped RPC (D-06). */
+interface ResponderRow {
+  donor_id: string
+  name: string
+  phone: string
+  dist_meters: number | null
+  created_at: string
+}
 
 // ---- helpers ----
 
@@ -97,33 +95,34 @@ export interface RequestLiveProps {
 
 /**
  * RequestLive — live blood request session screen.
- * Shows donor list, a pinned "blood received" action bar, the resolve bottom
- * sheet, the QR/code confirmation sub-sheet, and the closed success overlay.
- * Port of Request Live v3.dc.html.
+ * Shows real responders fetched via the owner-scoped responders_for_request RPC,
+ * updated live through a Supabase Postgres Changes subscription (D-11/D-12).
+ * Port of Request Live v3.dc.html — real data wired in Phase 08-03.
  */
 export function RequestLive({
-  lang: _lang, // eslint-disable-line @typescript-eslint/no-unused-vars
+  lang,
   bloodType = 'B+',
   township = 'ရန်ကုန် ဆေးရုံကြီး',
   alerting = false,
-  hasResults = true,
-  alertedCount = 12,
-  moreCount = 5,
+  alertedCount = 0,
   unitsNeeded = 2,
   unitsCollected: initCollected = 0,
-  requestId: _requestId, // eslint-disable-line @typescript-eslint/no-unused-vars
-  currentUserId: _currentUserId, // eslint-disable-line @typescript-eslint/no-unused-vars
-  lat: _lat, // eslint-disable-line @typescript-eslint/no-unused-vars
-  lng: _lng, // eslint-disable-line @typescript-eslint/no-unused-vars
+  requestId,
+  currentUserId,
+  lat,
+  lng,
   onBack,
   onGoHome,
 }: RequestLiveProps) {
-  const [revealed, setRevealed] = useState<RevealedMap>({})
   const [sheet, setSheet] = useState<Sheet>(null)
   const [closed, setClosed] = useState<ClosedReason | null>(null)
   const [toast, setToast] = useState<ToastMsg | null>(null)
   const [code, setCode] = useState('')
   const [collected, setCollected] = useState(initCollected)
+  /** Real responders from the owner-scoped RPC, updated on each realtime INSERT. */
+  const [responders, setResponders] = useState<ResponderRow[]>([])
+  /** Truthful count of compatible donors within radius who can see the request (D-09). */
+  const [compatibleCount, setCompatibleCount] = useState<number>(alertedCount)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const showToast = (my: string, en: string) => {
@@ -131,6 +130,85 @@ export function RequestLive({
     setToast({ my, en })
     toastTimer.current = setTimeout(() => setToast(null), 3600)
   }
+
+  // ---- Realtime subscription + initial RPC fetch (D-11/D-12) ----
+  //
+  // Pattern 7 from 08-RESEARCH.md:
+  // - Gate on BOTH requestId AND currentUserId (Pitfall 2 cold-start)
+  // - Refetch the WHOLE responder list via the RPC on each INSERT — NEVER apply the
+  //   payload row directly to state (the payload lacks name/phone/distance; refetch self-heals
+  //   after reconnect per D-11)
+  // - Use stable channel name rr:${requestId} to prevent duplicate channels (Pitfall 5)
+  // - removeChannel in cleanup to tear down the socket subscription (T-08-12)
+  // - Do NOT call supabase.realtime.setAuth() — auto-wired by supabase-js on SIGNED_IN
+  useEffect(() => {
+    if (!requestId || !currentUserId) return  // Pitfall 2: gate on confirmed session
+    let cancelled = false
+
+    async function refetchResponders() {
+      const { data, error } = await supabase.rpc('responders_for_request', {
+        p_request_id: requestId as string,
+      })
+      if (error || cancelled) return
+      setResponders(data ?? [])
+    }
+
+    // Initial fetch — also covers "refetch on (re)subscribe" (D-11)
+    void refetchResponders()
+
+    // Subscribe to INSERT events filtered to this request only (D-12)
+    const channel = supabase
+      .channel(`rr:${requestId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'request_responses',
+          filter: `request_id=eq.${requestId}`,
+        },
+        () => {
+          if (cancelled) return
+          // D-11: refetch whole list — never apply payload row (lacks name/phone/distance)
+          void refetchResponders()
+          // D-13: gentle arrival cue for the waiting requester
+          showToast('သွေးလှူရှင်တစ်ဦး တုံ့ပြန်ပါပြီ', 'A donor responded')
+        },
+      )
+      .subscribe()
+
+    return () => {
+      cancelled = true
+      void supabase.removeChannel(channel)  // T-08-12: tear down on unmount
+    }
+  }, [requestId, currentUserId])
+
+  // ---- Truthful "can see your request" count (D-09) ----
+  //
+  // Fetch donors_within_radius and filter by directional blood compatibility
+  // (which donor types can donate INTO the requested bloodType). Uses the
+  // existing COMPATIBLE_REQUEST_TYPES inverse: a donor type d can serve
+  // bloodType b if COMPATIBLE_REQUEST_TYPES[d].includes(b).
+  useEffect(() => {
+    if (lat == null || lng == null || !bloodType) return
+    let cancelled = false
+
+    async function fetchCompatibleCount() {
+      const { data } = await supabase.rpc('donors_within_radius', {
+        lat: lat as number,
+        lng: lng as number,
+        radius_km: 10,
+      })
+      if (cancelled || !data) return
+      const count = data.filter((d) =>
+        COMPATIBLE_REQUEST_TYPES[d.blood_type as BloodType]?.includes(bloodType as BloodType)
+      ).length
+      setCompatibleCount(count)
+    }
+
+    void fetchCompatibleCount()
+    return () => { cancelled = true }
+  }, [lat, lng, bloodType])
 
   const handleConfirmInApp = () => {
     const next = collected + 1
@@ -158,12 +236,12 @@ export function RequestLive({
   const alertingDone = !alerting
   const showProgress = unitsNeeded > 1
 
-  const transparencyLine =
-    'အနီးနားရှိ သွေးလှူရှင် ' + toMyanmarDigits(alertedCount) +
-    ' ဦးကို အကြောင်းကြားထားသည်။ "ကူညီပါမည်" နှိပ်သူတိုင်း ဤနေရာတွင် ဖုန်းခေါ်ရန်ခလုတ်နှင့်အတူ ပေါ်လာပါမည်။'
-
-  const moreLine = '+ နောက်ထပ် သွေးလှူရှင် ' + toMyanmarDigits(moreCount) + ' ဦးကို အကြောင်းကြားထားသည်'
-  const moreLineEn = '+ ' + moreCount + ' more nearby donors notified'
+  // D-09: truthful transparency line — "[X] nearby compatible donors can see your request"
+  // Never claims donors were "alerted" (no push this phase).
+  const countDisplay = formatNumber(compatibleCount, lang)
+  const transparencyLine = lang === 'my'
+    ? `အနီးနားရှိ သွေးလှူနိုင်သူ ${countDisplay} ဦးသည် သင့်တောင်းခံချက်ကို မြင်နိုင်ပါသည်။ "ကူညီမည်" နှိပ်သူတိုင်း ဤနေရာတွင် ဖုန်းခေါ်ရန်ခလုတ်နှင့်အတူ ပေါ်လာပါမည်။`
+    : `${countDisplay} nearby compatible donors can see your request. Anyone who taps "I'll help" will appear here with a call button.`
 
   const closedData: Record<ClosedReason, { iconBg: string; iconColor: string; title: string; body: string; bodyEn: string }> = {
     fulfilled: {
@@ -284,7 +362,7 @@ export function RequestLive({
             </div>
           )}
 
-          {/* Transparency card */}
+          {/* Transparency card (D-09) — truthful "can see your request" count, never "alerted" */}
           {alertingDone && (
             <div style={{ background: 'var(--surface-card)', border: '0.5px solid var(--border-card)', borderRadius: 'var(--radius-card)', padding: '13px 14px' }}>
               <p style={{ margin: 0, fontFamily: 'var(--font-burmese)', fontSize: 13, lineHeight: 1.65, color: 'var(--text-secondary)' }}>
@@ -293,26 +371,30 @@ export function RequestLive({
             </div>
           )}
 
-          {/* Searching spinner */}
-          {!hasResults && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '40px 20px 28px' }}>
-              <span className="bh-spinner" />
-              <div style={{ marginTop: 18, fontFamily: 'var(--font-burmese)', fontSize: 15, lineHeight: 1.6, color: 'var(--text-secondary)' }}>
-                သွေးလှူရှင်များကို ရှာဖွေနေပါသည်...
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--text-hint)', marginTop: 5 }}>
-                Searching for donors…
-              </div>
-            </div>
-          )}
+          {/* Will-Help donor list OR calm empty state (D-10) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-          {/* Donor list */}
-          {hasResults && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-
-              {/* Will-help donors */}
-              {WILL_HELP.map((donor) => (
-                <div key={donor.id} style={{ background: 'var(--surface-card)', border: '0.5px solid var(--border-card)', borderRadius: 16, padding: 14 }}>
+            {responders.length === 0 ? (
+              /* D-10: calm "waiting for responses" empty state — no spinner */
+              <div style={{ textAlign: 'center', padding: '36px 20px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-hint)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
+                  <path d="M12 2.7s6 6 6 10.3a6 6 0 0 1-12 0c0-4.3 6-10.3 6-10.3z" />
+                </svg>
+                <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 15, lineHeight: 1.65, color: 'var(--text-secondary)', maxWidth: 260 }}>
+                  {lang === 'my'
+                    ? 'သွေးလှူရှင်များ တုံ့ပြန်မှုကို စောင့်ဆဲဖြစ်သည်'
+                    : 'Waiting for donors to respond'}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-hint)', lineHeight: 1.5 }}>
+                  {lang === 'my'
+                    ? 'တုံ့ပြန်သူတိုင်း ဤနေရာတွင် ပေါ်လာပါမည်'
+                    : 'Anyone who responds will appear here'}
+                </div>
+              </div>
+            ) : (
+              /* Real Will-Help responder rows from the RPC (D-05) */
+              responders.map((responder) => (
+                <div key={responder.donor_id} style={{ background: 'var(--surface-card)', border: '0.5px solid var(--border-card)', borderRadius: 16, padding: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{
                       flexShrink: 0, width: 40, height: 40, borderRadius: '999px',
@@ -320,12 +402,12 @@ export function RequestLive({
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 600, color: 'var(--color-success)',
                     }}>
-                      {donor.initial}
+                      {responder.name.charAt(0)}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
                         <span style={{ fontFamily: 'var(--font-burmese)', fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
-                          {donor.name}
+                          {responder.name}
                         </span>
                         <span style={{
                           flexShrink: 0, fontFamily: 'var(--font-burmese)', fontSize: 11, fontWeight: 600,
@@ -336,69 +418,23 @@ export function RequestLive({
                         </span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 5, fontSize: 13, color: 'var(--text-hint)' }}>
-                        <span style={{ fontFamily: 'var(--font-burmese)', flexShrink: 0, whiteSpace: 'nowrap' }}>{donor.distance}</span>
-                        <span style={{ flexShrink: 0, width: 3, height: 3, borderRadius: '999px', background: 'var(--text-hint)' }} />
-                        <span style={{ whiteSpace: 'nowrap' }}>{donor.phone}</span>
-                      </div>
-                    </div>
-                    <CallButton href={donor.tel} />
-                  </div>
-                </div>
-              ))}
-
-              {/* Can-call donors */}
-              {CAN_CALL.map((donor) => (
-                <div key={donor.id} style={{ background: 'var(--surface-card)', border: '0.5px solid var(--border-card)', borderRadius: 16, padding: 14 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{
-                      flexShrink: 0, width: 40, height: 40, borderRadius: '999px',
-                      background: 'var(--color-bg)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 500, color: 'var(--text-secondary)',
-                    }}>
-                      {donor.initial}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: 'var(--font-burmese)', fontSize: 15, fontWeight: 500, color: 'var(--text-primary)' }}>
-                          {donor.name}
-                        </span>
-                        <span style={{
-                          flexShrink: 0, fontFamily: 'var(--font-burmese)', fontSize: 11, fontWeight: 600,
-                          lineHeight: 1, whiteSpace: 'nowrap', color: 'var(--text-secondary)',
-                          background: 'var(--color-bg)', border: '1px solid var(--border-card)',
-                          borderRadius: 'var(--radius-pill)', padding: '4px 8px',
-                        }}>
-                          ခေါ်ဆိုနိုင်သည်
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 5, fontSize: 13, color: 'var(--text-hint)' }}>
-                        <span style={{ fontFamily: 'var(--font-burmese)', flexShrink: 0, whiteSpace: 'nowrap' }}>{donor.distance}</span>
-                        {revealed[donor.id] && (
+                        {responder.dist_meters != null && (
                           <>
+                            <span style={{ fontFamily: 'var(--font-burmese)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                              {formatDistanceLabel(responder.dist_meters, lang)}
+                            </span>
                             <span style={{ flexShrink: 0, width: 3, height: 3, borderRadius: '999px', background: 'var(--text-hint)' }} />
-                            <span>{donor.phone}</span>
                           </>
                         )}
+                        <span style={{ whiteSpace: 'nowrap' }}>{formatPhone(responder.phone)}</span>
                       </div>
                     </div>
-                    <CallButton
-                      href={donor.tel}
-                      onClick={() => setRevealed((r) => ({ ...r, [donor.id]: true }))}
-                    />
+                    <CallButton href={`tel:${responder.phone}`} />
                   </div>
                 </div>
-              ))}
-
-              {/* More line */}
-              <div style={{ textAlign: 'center', padding: '8px 0 2px', fontFamily: 'var(--font-burmese)', fontSize: 13, color: 'var(--text-hint)' }}>
-                {moreLine}
-              </div>
-              <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-hint)', opacity: 0.8 }}>
-                {moreLineEn}
-              </div>
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
 
         {/* ── Pinned bottom action bar ── */}
