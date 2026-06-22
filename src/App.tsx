@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PhoneEntry } from "./screens/PhoneEntry";
 import { OtpVerification } from "./screens/OtpVerification";
 import { IntentChoice } from "./screens/IntentChoice";
@@ -80,6 +80,30 @@ function normalizePhone(digits: string): string {
     return `+95${clean}`;
 }
 
+/**
+ * Deterministic synthetic email for a phone number. The same phone always maps
+ * to the same Supabase account → the same auth.uid() on every device/session,
+ * which is what makes RLS (auth.uid() = owner) work for returning users.
+ */
+function phoneToEmail(e164: string): string {
+    return `${e164.replace(/\D/g, "")}@bloodhelp.local`;
+}
+
+/**
+ * Deterministic password derived from the phone via SHA-256 (Web Crypto, needs
+ * a secure context — provided by the HTTPS dev server). Reproducible client-side
+ * so the same phone re-derives the same credentials on any device. NOTE: this is
+ * prototype-grade identity (anyone knowing the scheme + phone could log in) and
+ * will be replaced by real server-verified OTP in a later auth-hardening phase.
+ */
+async function derivePassword(e164: string): Promise<string> {
+    const data = new TextEncoder().encode(`bloodhelp-auth-v1:${e164}`);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
 function App() {
     const [lang, setLang] = useState<Lang>("my");
     const [screen, setScreen] = useState<Screen>("phone");
@@ -113,148 +137,157 @@ function App() {
         },
     };
 
-    useEffect(() => {
-        async function initAuth() {
-            // Check for existing session FIRST — only sign in anonymously when there is none (D-03)
-            const {
-                data: { session },
-            } = await supabase.auth.getSession();
-            if (!session) {
-                const { error } = await supabase.auth.signInAnonymously();
-                if (error) {
-                    console.error("Anonymous sign-in failed:", error.message);
-                    setSessionLoading(false);
-                    return;
-                }
+    // Hydrate full user state (profile + donor + active request) from the DB for a given uid.
+    // Shared by initAuth (cold page load) and handleVerified (returning-user OTP login) so both
+    // entry points populate lat/lng/bloodType — without this the Home feed's null-coord guard
+    // short-circuits and the requests_within_radius RPC is never called. Returns true if a
+    // profile row exists. NOTE: the donor/request reads are RLS-scoped to auth.uid() = owner,
+    // so this fully hydrates only when the current session owns the profile (same-device case).
+    const hydrateUserFromDb = useCallback(
+        async (uid: string): Promise<boolean> => {
+            const { data: profile, error: profileErr } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", uid)
+                .maybeSingle();
+            if (profileErr)
+                console.error("profile load error:", profileErr.message);
+            if (!profile) return false;
+
+            // Hydrate phone state — strip +95 prefix since phone state holds raw digits (WR-01)
+            if (profile.phone) {
+                setPhone(profile.phone.replace(/^\+95/, ""));
             }
 
-            // Get the confirmed session (existing or just created)
+            // Load donors row — may be null for pure requesters (D-13)
+            const { data: donor, error: donorErr } = await supabase
+                .from("donors")
+                .select("*")
+                .eq("profile_id", uid)
+                .maybeSingle();
+            if (donorErr) console.error("donor load error:", donorErr.message);
+
+            // Load own active blood request — drives hasOpenRequest (D-14)
+            const { data: activeRequest, error: requestErr } = await supabase
+                .from("blood_requests")
+                .select("*")
+                .eq("requester_id", uid)
+                .eq("status", "active")
+                .maybeSingle();
+            if (requestErr)
+                console.error("active request load error:", requestErr.message);
+
+            setUser({
+                supabaseId: uid,
+                name: profile.name ?? "You",
+                bloodType: (donor?.blood_type as BloodType) ?? "O+",
+                available: donor?.is_available ?? true,
+                emergencyCallable: donor?.emergency_callable ?? false,
+                showNumber: donor?.emergency_callable ?? false,
+                donationCount: donor?.donation_count ?? 0,
+                lastDonation: donor?.last_donation_date ?? null,
+                donorSetupComplete: donor !== null,
+                donorCode: donor?.donor_code ?? "",
+                lat: donor?.lat ?? null,
+                lng: donor?.lng ?? null,
+            });
+
+            // Map active request to RequestDraft to drive hasOpenRequest (D-14, D-16)
+            setRequestDraft(
+                activeRequest
+                    ? {
+                          bloodType: activeRequest.blood_type as BloodType,
+                          phone: activeRequest.contact_phone,
+                          address: activeRequest.current_address,
+                          units: activeRequest.units_needed,
+                          urgency: activeRequest.urgency as "urgent" | "today",
+                          lat: activeRequest.lat ?? 0,
+                          lng: activeRequest.lng ?? 0,
+                      }
+                    : null,
+            );
+
+            return true;
+        },
+        [],
+    );
+
+    useEffect(() => {
+        async function initAuth() {
+            // Restore a persisted phone-keyed session if one exists (no anonymous sign-in —
+            // a session is only created after the user logs in via handleVerified).
             const result = await getSession();
             if (result.ok) {
-                const { session: confirmedSession } = result;
-                const uid = confirmedSession.user.id;
+                const uid = result.session.user.id;
 
-                // Always store the auth UID so handleSaveDonor / handlePosted can write even before
-                // the profiles row exists (new users hit this path with no profile yet)
+                // Store the auth UID so handleSaveDonor / handlePosted can write
                 setUser((u) => ({ ...u, supabaseId: uid }));
 
-                // Load full profiles row (D-13)
-                const { data: profile, error: profileErr } = await supabase
-                    .from("profiles")
-                    .select("*")
-                    .eq("id", uid)
-                    .maybeSingle();
-                if (profileErr)
-                    console.error("profile load error:", profileErr.message);
-
-                if (profile) {
-                    // Hydrate phone state — strip +95 prefix since phone state holds raw digits (WR-01)
-                    if (profile.phone) {
-                        setPhone(profile.phone.replace(/^\+95/, ""));
-                    }
-
-                    // Load donors row — may be null for pure requesters (D-13)
-                    const { data: donor, error: donorErr } = await supabase
-                        .from("donors")
-                        .select("*")
-                        .eq("profile_id", uid)
-                        .maybeSingle();
-                    if (donorErr)
-                        console.error("donor load error:", donorErr.message);
-
-                    // Load own active blood request — drives hasOpenRequest (D-14)
-                    const { data: activeRequest, error: requestErr } =
-                        await supabase
-                            .from("blood_requests")
-                            .select("*")
-                            .eq("requester_id", uid)
-                            .eq("status", "active")
-                            .maybeSingle();
-                    if (requestErr)
-                        console.error(
-                            "active request load error:",
-                            requestErr.message,
-                        );
-
-                    setUser({
-                        supabaseId: uid,
-                        name: profile.name ?? "You",
-                        bloodType: (donor?.blood_type as BloodType) ?? "O+",
-                        available: donor?.is_available ?? true,
-                        emergencyCallable: donor?.emergency_callable ?? false,
-                        showNumber: donor?.emergency_callable ?? false,
-                        donationCount: donor?.donation_count ?? 0,
-                        lastDonation: donor?.last_donation_date ?? null,
-                        donorSetupComplete: donor !== null,
-                        donorCode: donor?.donor_code ?? "",
-                        lat: donor?.lat ?? null,
-                        lng: donor?.lng ?? null,
-                    });
-
-                    // Map active request to RequestDraft to drive hasOpenRequest (D-14, D-16)
-                    setRequestDraft(
-                        activeRequest
-                            ? {
-                                  bloodType:
-                                      activeRequest.blood_type as BloodType,
-                                  phone: activeRequest.contact_phone,
-                                  address: activeRequest.current_address,
-                                  units: activeRequest.units_needed,
-                                  urgency: activeRequest.urgency as
-                                      | "urgent"
-                                      | "today",
-                                  lat: activeRequest.lat ?? 0,
-                                  lng: activeRequest.lng ?? 0,
-                              }
-                            : null,
-                    );
-
-                    setScreen("home");
-                }
+                // Full hydration; navigate to home only if a profile row exists
+                const hydrated = await hydrateUserFromDb(uid);
+                if (hydrated) setScreen("home");
             }
 
             setSessionLoading(false);
         }
         void initAuth();
-    }, []);
+    }, [hydrateUserFromDb]);
 
     if (sessionLoading) return null;
 
     const handleVerified = async () => {
-        // Normalize to E.164 before querying — DB stores '+959XXXXXXXXX', not raw digits (CR-01)
         const e164 = normalizePhone(phone);
+        const email = phoneToEmail(e164);
+        const password = await derivePassword(e164);
+        const errStrings = writeErrorStrings[lang];
 
-        // Look up the phone via a SECURITY DEFINER RPC. A plain SELECT is filtered by the
-        // own_profile_select RLS policy (auth.uid() = id), which hides the row when logging in
-        // from a different device with a different anonymous UID. The RPC bypasses that so the
-        // same number is recognized as a returning user on every device.
-        const { data: existingId } = await supabase.rpc("profile_id_by_phone", {
-            p_phone: e164,
+        // Establish a STABLE phone-keyed session: sign in if the account exists, else sign up.
+        // Either way the same phone yields the same auth.uid() on every device, so RLS
+        // (auth.uid() = owner) lets the user read/write their own rows anywhere.
+        let uid: string | null = null;
+        const signIn = await supabase.auth.signInWithPassword({
+            email,
+            password,
         });
+        if (signIn.data.user) {
+            uid = signIn.data.user.id;
+        } else {
+            const signUp = await supabase.auth.signUp({ email, password });
+            if (signUp.error || !signUp.data.user) {
+                console.error(
+                    "phone auth failed:",
+                    signUp.error?.message ?? signIn.error?.message,
+                );
+                setWriteError({
+                    title: errStrings.genericTitle,
+                    message: errStrings.genericMsg,
+                });
+                return;
+            }
+            uid = signUp.data.user.id;
+        }
 
-        if (existingId) {
-            // Returning user — sync supabaseId to the profile's owner UID so RLS passes on writes
-            setUser((u) => ({ ...u, supabaseId: existingId }));
+        setUser((u) => ({ ...u, supabaseId: uid }));
+
+        // Returning user has a profile row → hydrate + home. New user → create the minimal
+        // profile row (satisfies blood_requests FK + lets writes through) → intent choice.
+        const hydrated = await hydrateUserFromDb(uid);
+        if (hydrated) {
             setScreen("home");
         } else {
-            // New user — create a minimal profile row immediately so blood_requests FK is satisfied
-            // and handleSaveDonor / handlePosted can write in this session
-            const uid = user.supabaseId;
-            if (uid) {
-                const { error } = await supabase.from("profiles").upsert(
-                    {
-                        id: uid,
-                        phone: e164,
-                        updated_at: new Date().toISOString(),
-                    },
-                    { onConflict: "id" },
+            const { error } = await supabase.from("profiles").upsert(
+                {
+                    id: uid,
+                    phone: e164,
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: "id" },
+            );
+            if (error)
+                console.error(
+                    "profile create on verify failed:",
+                    error.message,
                 );
-                if (error)
-                    console.error(
-                        "profile create on verify failed:",
-                        error.message,
-                    );
-            }
             setScreen("intent");
         }
     };
