@@ -312,7 +312,6 @@ export type Database = {
         }[]
       }
       generate_donor_code: { Args: never; Returns: string }
-      profile_id_by_phone: { Args: { p_phone: string }; Returns: string }
       requests_within_radius: {
         Args: { lat: number; lng: number; radius_km: number }
         Returns: {
