@@ -323,6 +323,16 @@ export type Database = {
           urgency: Database["public"]["Enums"]["urgency"]
         }[]
       }
+      responders_for_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          created_at: string
+          dist_meters: number
+          donor_id: string
+          name: string
+          phone: string
+        }[]
+      }
     }
     Enums: {
       blood_type: "A+" | "A-" | "B+" | "B-" | "O+" | "O-" | "AB+" | "AB-"
