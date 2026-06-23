@@ -23,6 +23,7 @@ export type Database = {
           created_at: string | null
           current_address: string
           expires_at: string
+          extended: boolean
           id: string
           lat: number | null
           lng: number | null
@@ -40,6 +41,7 @@ export type Database = {
           created_at?: string | null
           current_address: string
           expires_at: string
+          extended?: boolean
           id?: string
           lat?: number | null
           lng?: number | null
@@ -57,6 +59,7 @@ export type Database = {
           created_at?: string | null
           current_address?: string
           expires_at?: string
+          extended?: boolean
           id?: string
           lat?: number | null
           lng?: number | null
@@ -293,6 +296,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      confirm_donation: {
+        Args: { p_donor_code: string; p_request_id: string; p_via: string }
+        Returns: Json
+      }
       donors_within_radius: {
         Args: { lat: number; lng: number; radius_km: number }
         Returns: {
