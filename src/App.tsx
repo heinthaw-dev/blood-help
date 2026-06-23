@@ -595,6 +595,12 @@ function App() {
                 currentUserId={user.supabaseId}
                 lat={requestDraft?.lat}
                 lng={requestDraft?.lng}
+                onResolveClosed={(_reason) => {
+                    // LIFE-01: DB write of status + closed_at is wired in 09-03 (handleResolveClosed).
+                    // For now, clear local state so the UI transitions correctly.
+                    setRequestDraft(null);
+                    setActiveRequestId(null);
+                }}
                 onBack={() => setScreen("home")}
                 onGoHome={() => {
                     setRequestDraft(null);

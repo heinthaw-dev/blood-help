@@ -2,12 +2,14 @@ import { useState, useRef, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
+import { AlertDialog } from '../components/AlertDialog'
 import type { Lang } from '../i18n'
 import { formatNumber } from '../i18n'
 import { supabase } from '../lib/supabase'
 import type { BloodType } from '../blood'
 import { COMPATIBLE_REQUEST_TYPES } from '../blood'
 import { formatPhone, formatDistanceLabel } from '../format'
+import { useZxing } from 'react-zxing'
 
 // ---- types ----
 
@@ -32,6 +34,22 @@ interface ResponderRow {
 
 function toMyanmarDigits(n: number): string {
   return String(n).replace(/[0-9]/g, (d) => '၀၁၂၃၄၅၆၇၈၉'[+d])
+}
+
+/** Bilingual write-error strings for the AlertDialog (mirrors App.tsx WRITE_ERROR_STRINGS shape). */
+const WRITE_ERROR_STRINGS = {
+  my: {
+    genericTitle: 'အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့သည်',
+    genericMsg: 'ကြိုးစားမှု မအောင်မြင်ပါ။ ကျေးဇူးပြု၍ ထပ်ကြိုးစားပါ။',
+    retry: 'ထပ်ကြိုးစားရန်',
+    dismiss: 'ပိတ်ရန်',
+  },
+  en: {
+    genericTitle: 'Something went wrong',
+    genericMsg: 'The action could not be completed. Please try again.',
+    retry: 'Retry',
+    dismiss: 'Dismiss',
+  },
 }
 
 function PhoneIcon() {
@@ -87,6 +105,12 @@ export interface RequestLiveProps {
   lat?: number | null
   /** Request longitude — used for the truthful compatible-donors count (D-09). */
   lng?: number | null
+  /** Called when the user resolves the request via outside or cancel paths (LIFE-01). App.tsx writes status + closed_at. */
+  onResolveClosed: (reason: 'outside' | 'canceled') => void
+  /** Whether to show the expiring-soon extend banner (D-17). Supplied by App.tsx in 09-03. */
+  showExtendBanner?: boolean
+  /** Called when the user taps "Extend +12h" (D-18). Supplied by App.tsx in 09-03. */
+  onExtend?: () => void
 
   onBack: () => void
   onGoHome: () => void
@@ -96,7 +120,8 @@ export interface RequestLiveProps {
  * RequestLive — live blood request session screen.
  * Shows real responders fetched via the owner-scoped responders_for_request RPC,
  * updated live through a Supabase Postgres Changes subscription (D-11/D-12).
- * Port of Request Live v3.dc.html — real data wired in Phase 08-03.
+ * Confirms donations via the confirm_donation SECURITY DEFINER RPC (D-05/D-10).
+ * Port of Request Live v3.dc.html — real data wired in Phase 08-03; confirm + QR wired in Phase 09-02.
  */
 export function RequestLive({
   lang,
@@ -110,6 +135,9 @@ export function RequestLive({
   currentUserId,
   lat,
   lng,
+  onResolveClosed,
+  showExtendBanner,
+  onExtend,
   onBack,
   onGoHome,
 }: RequestLiveProps) {
@@ -118,17 +146,44 @@ export function RequestLive({
   const [toast, setToast] = useState<ToastMsg | null>(null)
   const [code, setCode] = useState('')
   const [collected, setCollected] = useState(initCollected)
+  /** Write-error dialog state — shown on confirm_donation transport failures. */
+  const [writeError, setWriteError] = useState<{ title: string; message: string } | null>(null)
+  /** Camera permission pre-warning AlertDialog — shown before opening the code/QR sheet. */
+  const [cameraWarningOpen, setCameraWarningOpen] = useState(false)
   /** Real responders from the owner-scoped RPC, updated on each realtime INSERT. */
   const [responders, setResponders] = useState<ResponderRow[]>([])
   /** Truthful count of compatible donors within radius who can see the request (D-09). */
   const [compatibleCount, setCompatibleCount] = useState<number>(alertedCount)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const errStrings = WRITE_ERROR_STRINGS[lang]
+
   const showToast = (my: string, en: string) => {
     if (toastTimer.current) clearTimeout(toastTimer.current)
     setToast({ my, en })
     toastTimer.current = setTimeout(() => setToast(null), 3600)
   }
+
+  // ---- useZxing QR scanner hook (D-08) ----
+  //
+  // Configured with formats: ['qr_code'] so only QR codes are decoded.
+  // On a valid 5-char Base32 decode, populates the code state so the confirm button enables.
+  // onError logs without crashing (camera denied / WASM failure).
+  // NOTE: react-zxing loads zxing_reader.wasm from jsDelivr CDN by default.
+  // For production PWA (offline use), pass a self-hosted wasmUrl — tracked as a follow-up.
+  const { ref: zxingRef } = useZxing({
+    formats: ['qr_code'],
+    onDecodeResult(result) {
+      const raw = result.rawValue.trim().toUpperCase()
+      if (/^[A-Z2-7]{5}$/.test(raw)) {
+        // Valid donor_code scanned — populate the same code state as manual entry
+        setCode(raw)
+      }
+    },
+    onError(err) {
+      console.warn('QR scan error:', err)
+    },
+  })
 
   // ---- Realtime subscription + initial RPC fetch (D-11/D-12) ----
   //
@@ -209,17 +264,57 @@ export function RequestLive({
     return () => { cancelled = true }
   }, [lat, lng, bloodType])
 
-  const handleConfirmInApp = () => {
-    const next = collected + 1
-    if (next >= unitsNeeded) {
+  // ---- Real confirm_donation RPC call (D-05/D-10) ----
+  //
+  // Replaces the dummy local-state increment. Calls the SECURITY DEFINER RPC which:
+  //   - verifies auth.uid() owns the request
+  //   - looks up the donor by donor_code
+  //   - checks the donor is a responding participant (anti-fraud D-04)
+  //   - checks for duplicate confirm
+  //   - atomically inserts donations row + increments donor + increments request
+  //   - auto-fulfills if units_collected >= units_needed
+  //
+  // D-06 error granularity:
+  //   'invalid_code'    → generic toast (covers unknown code + non-participant)
+  //   'already_confirmed' → specific duplicate toast
+  //   transport error  → AlertDialog write-error
+  const handleConfirmInApp = async (via: 'manual' | 'qr' = 'manual') => {
+    if (!requestId || !confirmReady) return
+
+    const { data, error } = await supabase.rpc('confirm_donation', {
+      p_request_id: requestId,
+      p_donor_code: code.trim().toUpperCase(),
+      p_via: via,
+    })
+
+    if (error || !data) {
+      setWriteError({ title: errStrings.genericTitle, message: errStrings.genericMsg })
+      return
+    }
+
+    const result = data as { error?: string; units_collected?: number; fulfilled?: boolean }
+
+    if (result.error === 'invalid_code') {
+      // D-06: generic message for unknown code + not-a-participant (T-09-02-02: no info disclosure)
+      showToast('ကုဒ် မမှန်ကန်ပါ', 'Invalid or unrecognized code')
+      return
+    }
+    if (result.error === 'already_confirmed') {
+      // D-06: specific message only for the already-known-valid duplicate case
+      showToast('ဤသွေးလှူရှင်ကို အတည်ပြုပြီးဖြစ်သည်', 'This donor is already confirmed')
+      return
+    }
+
+    const next = result.units_collected ?? collected + 1
+    setCode('')
+
+    if (result.fulfilled) {
+      setCollected(next)
       setClosed('fulfilled')
       setSheet(null)
-      setCode('')
-      setCollected(next)
     } else {
-      setSheet(null)
-      setCode('')
       setCollected(next)
+      setSheet(null)
       showToast(
         toMyanmarDigits(next) + ' / ' + toMyanmarDigits(unitsNeeded) + ' unit ရရှိပြီး — ကျန်အတွက် ဆက်ရှာနေပါမည်',
         next + ' / ' + unitsNeeded + ' units — still searching for the rest.'
@@ -242,6 +337,8 @@ export function RequestLive({
     ? `အနီးနားရှိ သွေးလှူနိုင်သူ ${countDisplay} ဦးသည် သင့်တောင်းခံချက်ကို မြင်နိုင်ပါသည်။ "ကူညီမည်" နှိပ်သူတိုင်း ဤနေရာတွင် ဖုန်းခေါ်ရန်ခလုတ်နှင့်အတူ ပေါ်လာပါမည်။`
     : `${countDisplay} nearby compatible donors can see your request. Anyone who taps "I'll help" will appear here with a call button.`
 
+  // D-03: honest closed copy — drops the false "personal data purged" claims.
+  // D-01: outside → fulfilled semantics (user got blood, regardless of app path).
   const closedData: Record<ClosedReason, { iconBg: string; iconColor: string; title: string; body: string; bodyEn: string }> = {
     fulfilled: {
       iconBg: 'var(--color-success-tint)',
@@ -254,15 +351,17 @@ export function RequestLive({
       iconBg: 'var(--color-success-tint)',
       iconColor: 'var(--color-success)',
       title: 'တောင်းခံချက် ပိတ်ပြီးပါပြီ',
-      body: 'အပြင်မှ ရရှိကြောင်း မှတ်သားပြီး — ကိုယ်ရေးအချက်အလက်များကို ဖျက်လိုက်ပါပြီ။',
-      bodyEn: 'Marked as received outside the app. Your personal data was purged.',
+      // D-03: No purge claim — data is retained per D-02. Honest receipt confirmation.
+      body: 'အပြင်မှ ရရှိကြောင်း မှတ်သားပြီးပါပြီ။ သွေး ရရှိသည်ကို ဝမ်းသာပါသည်။',
+      bodyEn: 'Marked as received. Glad you got the blood you needed.',
     },
     canceled: {
       iconBg: 'var(--color-bg)',
       iconColor: 'var(--text-hint)',
       title: 'တောင်းခံချက် ပယ်ဖျက်ပြီးပါပြီ',
-      body: 'တောင်းခံချက်ကို ပိတ်ပြီး ကိုယ်ရေးအချက်အလက်များကို ဖျက်လိုက်ပါပြီ။',
-      bodyEn: 'Request closed and personal data purged.',
+      // D-03: No purge claim — data is retained per D-02. Honest cancellation copy.
+      body: 'တောင်းခံချက် မလိုအပ်တော့ကြောင်း မှတ်သားပြီးပါပြီ။',
+      bodyEn: 'Your request has been marked as no longer needed.',
     },
   }
   const cl = closedData[closed ?? 'fulfilled']
@@ -358,6 +457,38 @@ export function RequestLive({
                   Sending to nearby donors… please wait.
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Expiring-soon extend banner (D-17) — rendered when showExtendBanner is true.
+              Uses amber inline tokens (#B45309, rgba(230,120,0,.18)) — no --color-warning token exists.
+              Values supplied by App.tsx in 09-03; this plan only defines the prop + JSX. */}
+          {showExtendBanner && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              background: '#FFF3E0',
+              borderRadius: 'var(--radius-card)', padding: '13px 14px',
+              border: '1px solid rgba(230,120,0,.18)',
+            }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 14, fontWeight: 600, color: '#B45309' }}>
+                  {lang === 'my' ? 'တောင်းခံချက် မကြာမီ သက်တမ်းကုန်မည်' : 'Request expiring soon'}
+                </div>
+                <div style={{ fontSize: 12, color: '#92400E', marginTop: 2, opacity: 0.85 }}>
+                  {lang === 'my' ? 'နောက်ထပ် ၁၂ နာရီ တိုးမည်' : 'Extend by 12 hours'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onExtend}
+                style={{
+                  flexShrink: 0, height: 34, padding: '0 14px', border: 'none',
+                  borderRadius: 'var(--radius-pill)', background: '#B45309', color: '#fff',
+                  fontFamily: 'var(--font-burmese)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                {lang === 'my' ? '+12 နာရီ' : '+12h'}
+              </button>
             </div>
           )}
 
@@ -462,6 +593,32 @@ export function RequestLive({
           </div>
         )}
 
+        {/* ── Write-error AlertDialog (confirm_donation transport failures) ── */}
+        <AlertDialog
+          open={writeError !== null}
+          title={writeError?.title ?? ''}
+          message={writeError?.message ?? ''}
+          confirmLabel={errStrings.retry}
+          cancelLabel={errStrings.dismiss}
+          onConfirm={() => setWriteError(null)}
+          onCancel={() => setWriteError(null)}
+        />
+
+        {/* ── Camera pre-permission AlertDialog (D-08) ──
+            Shown before the code/QR sheet opens. Mirrors the GPS pre-permission pattern from
+            DonorProfileSetup.tsx — explains the upcoming getUserMedia browser prompt. */}
+        <AlertDialog
+          open={cameraWarningOpen}
+          title={lang === 'my' ? 'ကင်မရာ ခွင့်ပြုချက်' : 'Camera Permission'}
+          message={lang === 'my'
+            ? 'QR ကုဒ် ဖတ်ရှုရန် ကင်မရာ ခွင့်ပြုချက် လိုအပ်ပါသည်။ ဘရောက်ဇာမေးပါက "Allow" နှိပ်ပါ။'
+            : 'Camera access is needed to scan the donor QR code. Tap "Allow" when your browser asks.'}
+          confirmLabel={lang === 'my' ? 'ဆက်လက်မည်' : 'Continue'}
+          cancelLabel={lang === 'my' ? 'မလုပ်တော့ပါ' : 'Cancel'}
+          onConfirm={() => { setCameraWarningOpen(false); setSheet('code') }}
+          onCancel={() => setCameraWarningOpen(false)}
+        />
+
         {/* ── Resolve bottom sheet ── */}
         {sheet === 'resolve' && (
           <div style={{ position: 'absolute', inset: 0, zIndex: 40, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
@@ -480,10 +637,10 @@ export function RequestLive({
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 18 }}>
 
-                {/* From app donor */}
+                {/* From app donor — opens camera pre-permission dialog first */}
                 <button
                   type="button"
-                  onClick={() => setSheet('code')}
+                  onClick={() => setCameraWarningOpen(true)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 13,
                     width: '100%', textAlign: 'left',
@@ -509,10 +666,14 @@ export function RequestLive({
                   </svg>
                 </button>
 
-                {/* Outside app */}
+                {/* Outside app — D-01: maps to status='fulfilled' in App.tsx handleResolveClosed */}
                 <button
                   type="button"
-                  onClick={() => { setClosed('outside'); setSheet(null) }}
+                  onClick={() => {
+                    setClosed('outside')
+                    setSheet(null)
+                    onResolveClosed('outside')  // LIFE-01: App.tsx writes status='fulfilled' + closed_at
+                  }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 13,
                     width: '100%', textAlign: 'left',
@@ -539,10 +700,14 @@ export function RequestLive({
                   </div>
                 </button>
 
-                {/* Cancel request */}
+                {/* Cancel request — D-01: maps to status='cancelled' in App.tsx handleResolveClosed */}
                 <button
                   type="button"
-                  onClick={() => { setClosed('canceled'); setSheet(null) }}
+                  onClick={() => {
+                    setClosed('canceled')
+                    setSheet(null)
+                    onResolveClosed('canceled')  // LIFE-01: App.tsx writes status='cancelled' + closed_at
+                  }}
                   style={{
                     width: '100%', textAlign: 'center', background: 'none', border: 'none',
                     padding: '10px 8px 2px', cursor: 'pointer',
@@ -592,30 +757,28 @@ export function RequestLive({
                 </div>
               </div>
 
-              {/* QR scanner viewport */}
-              <button
-                type="button"
-                onClick={handleConfirmInApp}
+              {/* QR scanner viewport (D-08) — real useZxing camera feed.
+                  Pitfall 4: replaced the <button> with a non-interactive <div> container.
+                  The <video ref={zxingRef}> receives the camera stream; corner-bracket overlay is unchanged. */}
+              <div
                 style={{
                   position: 'relative', width: '100%', height: 188, marginTop: 16,
-                  border: 'none', borderRadius: 16, background: 'var(--text-primary)',
-                  overflow: 'hidden', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: 16, background: 'var(--text-primary)',
+                  overflow: 'hidden',
                 }}
               >
-                <div style={{ position: 'absolute', width: 130, height: 130, borderRadius: 14 }}>
+                <video
+                  ref={zxingRef}
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+                {/* Corner-bracket overlay — unchanged from Phase 8 design */}
+                <div style={{ position: 'absolute', width: 130, height: 130, borderRadius: 14, top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}>
                   <span style={{ position: 'absolute', top: 0, left: 0, width: 26, height: 26, borderTop: '3px solid #fff', borderLeft: '3px solid #fff', borderRadius: '8px 0 0 0' }} />
                   <span style={{ position: 'absolute', top: 0, right: 0, width: 26, height: 26, borderTop: '3px solid #fff', borderRight: '3px solid #fff', borderRadius: '0 8px 0 0' }} />
                   <span style={{ position: 'absolute', bottom: 0, left: 0, width: 26, height: 26, borderBottom: '3px solid #fff', borderLeft: '3px solid #fff', borderRadius: '0 0 0 8px' }} />
                   <span style={{ position: 'absolute', bottom: 0, right: 0, width: 26, height: 26, borderBottom: '3px solid #fff', borderRight: '3px solid #fff', borderRadius: '0 0 8px 0' }} />
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,.85)' }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
-                    <path d="M12 2.7s6 6 6 10.3a6 6 0 0 1-12 0c0-4.3 6-10.3 6-10.3z" />
-                  </svg>
-                  <span style={{ fontFamily: 'var(--font-burmese)', fontSize: 12 }}>QR ကို ဤနေရာတွင် ထားပါ</span>
-                </div>
-              </button>
+              </div>
 
               {/* Divider */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
@@ -649,7 +812,12 @@ export function RequestLive({
                 </span>
               </p>
 
-              <button type="button" onClick={handleConfirmInApp} disabled={!confirmReady} style={confirmBtnStyle}>
+              <button
+                type="button"
+                onClick={() => void handleConfirmInApp('manual')}
+                disabled={!confirmReady}
+                style={confirmBtnStyle}
+              >
                 အတည်ပြုမည်
               </button>
             </div>
