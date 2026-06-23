@@ -93,6 +93,9 @@ const WRITE_ERROR_STRINGS = {
     },
 };
 
+/** 4-hour window before expiry at which the extend banner appears (D-17). */
+const EXTEND_WARN_MS = 4 * 60 * 60 * 1000;
+
 /**
  * Normalize a phone number to E.164 format for DB writes.
  * Strips non-digits and prepends the Myanmar +95 country code.
@@ -141,15 +144,20 @@ function App() {
     } | null>(null);
     /** Set of request IDs the current donor has responded to (status='responding'). */
     const [respondedIds, setRespondedIds] = useState<Set<string>>(new Set());
+    /** Whether the active request has already been extended once (D-19). Hydrated from DB row — never defaulted. */
+    const [activeRequestExtended, setActiveRequestExtended] = useState(false);
+    /** ISO expiry timestamp of the active request — for client-side extend banner computation (D-17). */
+    const [activeRequestExpiresAt, setActiveRequestExpiresAt] = useState<string | null>(null);
 
     // Hydrate full user state (profile + donor + active request) from the DB for a given uid.
     // Shared by initAuth (cold page load) and handleVerified (returning-user OTP login) so both
     // entry points populate lat/lng/bloodType — without this the Home feed's null-coord guard
     // short-circuits and the requests_within_radius RPC is never called. Returns true if a
-    // profile row exists. NOTE: the donor/request reads are RLS-scoped to auth.uid() = owner,
+    // profile row exists, or 'congrats' when an unseen donation is found (D-12 check-on-open).
+    // NOTE: the donor/request reads are RLS-scoped to auth.uid() = owner,
     // so this fully hydrates only when the current session owns the profile (same-device case).
     const hydrateUserFromDb = useCallback(
-        async (uid: string): Promise<boolean> => {
+        async (uid: string): Promise<boolean | 'congrats'> => {
             const { data: profile, error: profileErr } = await supabase
                 .from("profiles")
                 .select("*")
@@ -213,6 +221,9 @@ function App() {
             );
             // Thread the active request UUID (activeRequestId) into RequestLive for the RPC + realtime subscription (D-14).
             setActiveRequestId(activeRequest?.id ?? null);
+            // Hydrate extend banner state from DB (Pitfall 5 — must not default extended to false or banner re-shows after reload).
+            setActiveRequestExtended(activeRequest?.extended ?? false);
+            setActiveRequestExpiresAt(activeRequest?.expires_at ?? null);
 
             // Restore responded state across reload (D-04): fetch own request_responses rows
             // so cards that the donor has already responded to start in the responded state.
@@ -224,6 +235,26 @@ function App() {
             setRespondedIds(
                 new Set((ownResponses ?? []).map((r) => r.request_id)),
             );
+
+            // D-12: check-on-open for unseen donations (closed-app congrats).
+            // If any donation row was inserted while the app was closed and not yet seen,
+            // signal callers to route to the congrats screen instead of home.
+            const lastSeenAt = localStorage.getItem("bloodhelp.lastSeenDonationAt") ?? "";
+            const { data: unseenDonation } = await supabase
+                .from("donations")
+                .select("id, created_at")
+                .eq("donor_id", uid)
+                .gt("created_at", lastSeenAt)
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+            if (unseenDonation) {
+                localStorage.setItem(
+                    "bloodhelp.lastSeenDonationAt",
+                    unseenDonation.created_at ?? new Date().toISOString(),
+                );
+                return "congrats";
+            }
 
             return true;
         },
@@ -241,15 +272,55 @@ function App() {
                 // Store the auth UID so handleSaveDonor / handlePosted can write
                 setUser((u) => ({ ...u, supabaseId: uid }));
 
-                // Full hydration; navigate to home only if a profile row exists
+                // Full hydration; navigate to home only if a profile row exists (or donor-congrats on unseen donation).
                 const hydrated = await hydrateUserFromDb(uid);
-                if (hydrated) setScreen("home");
+                if (hydrated === "congrats") {
+                    setScreen("donor-congrats");
+                } else if (hydrated) {
+                    setScreen("home");
+                }
             }
 
             setSessionLoading(false);
         }
         void initAuth();
     }, [hydrateUserFromDb]);
+
+    // D-11: App-wide donations Realtime subscription — fires DonorCongrats takeover on any screen
+    // when a new donation row arrives for the current donor. Mirrors the RequestLive rr:${requestId}
+    // channel pattern but scoped to the donor's uid and owned in App.tsx (global-state owner).
+    useEffect(() => {
+        const uid = user.supabaseId;
+        if (!uid) return;
+
+        const channel = supabase
+            .channel(`donations:${uid}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "donations",
+                    filter: `donor_id=eq.${uid}`,
+                },
+                (payload) => {
+                    // Mark this donation as seen so check-on-open (D-12) skips it on next load.
+                    localStorage.setItem(
+                        "bloodhelp.lastSeenDonationAt",
+                        (payload.new as { created_at?: string }).created_at ?? new Date().toISOString(),
+                    );
+                    // Optimistically increment donation count (D-11 open question 3).
+                    setUser((u) => ({ ...u, donationCount: u.donationCount + 1 }));
+                    // Congrats takeover — interrupts whatever screen the donor is on (D-11).
+                    setScreen("donor-congrats");
+                },
+            )
+            .subscribe();
+
+        return () => {
+            void supabase.removeChannel(channel);
+        };
+    }, [user.supabaseId]);
 
     if (sessionLoading) return null;
 
@@ -287,10 +358,12 @@ function App() {
 
         setUser((u) => ({ ...u, supabaseId: uid }));
 
-        // Returning user has a profile row → hydrate + home. New user → create the minimal
-        // profile row (satisfies blood_requests FK + lets writes through) → intent choice.
+        // Returning user has a profile row → hydrate + home (or congrats on unseen donation, D-12).
+        // New user → create the minimal profile row → intent choice.
         const hydrated = await hydrateUserFromDb(uid);
-        if (hydrated) {
+        if (hydrated === "congrats") {
+            setScreen("donor-congrats");
+        } else if (hydrated) {
             setScreen("home");
         } else {
             const { error } = await supabase.from("profiles").upsert(
@@ -506,6 +579,78 @@ function App() {
             console.error("emergency callable update failed:", error.message);
     };
 
+    /**
+     * Writes the D-01-mapped status + closed_at for the manual close paths (LIFE-01).
+     * 'outside' → status='fulfilled' (requester got blood by other means).
+     * 'canceled' → status='cancelled' (request no longer needed).
+     * Owner-scoped to prevent writing another user's row.
+     */
+    const handleResolveClosed = async (reason: "outside" | "canceled") => {
+        const uid = user.supabaseId;
+        if (!uid || !activeRequestId) return;
+        const errStrings = WRITE_ERROR_STRINGS[lang];
+        // D-01 status map: outside→fulfilled, canceled→cancelled
+        const status = reason === "canceled" ? "cancelled" : "fulfilled";
+
+        const { error } = await supabase
+            .from("blood_requests")
+            .update({ status, closed_at: new Date().toISOString() })
+            .eq("id", activeRequestId)
+            .eq("requester_id", uid);
+
+        if (error) {
+            setWriteError({ title: errStrings.genericTitle, message: errStrings.genericMsg });
+            return;
+        }
+
+        // Clear local request state on success; navigation back to Home driven by RequestLive's onGoHome.
+        setRequestDraft(null);
+        setActiveRequestId(null);
+        setActiveRequestExtended(false);
+        setActiveRequestExpiresAt(null);
+    };
+
+    /**
+     * Extends the active request by +12h, once only (D-18/D-19).
+     * Optimistically updates extend state + expiry timestamp, then writes to DB.
+     * Rolls back on error and surfaces the AlertDialog.
+     */
+    const handleExtend = async () => {
+        const uid = user.supabaseId;
+        if (!uid || !activeRequestId || !activeRequestExpiresAt) return;
+        const errStrings = WRITE_ERROR_STRINGS[lang];
+
+        const newExpiry = new Date(
+            new Date(activeRequestExpiresAt).getTime() + 12 * 60 * 60 * 1000,
+        ).toISOString();
+
+        // Optimistic: hide banner immediately (D-18)
+        setActiveRequestExtended(true);
+        setActiveRequestExpiresAt(newExpiry);
+
+        // Direct owner UPDATE — verified sufficient in 09-01 (no column restriction on UPDATE policy)
+        const { error } = await supabase
+            .from("blood_requests")
+            .update({ expires_at: newExpiry, extended: true })
+            .eq("id", activeRequestId)
+            .eq("requester_id", uid);
+
+        if (error) {
+            // Roll back optimistic update on failure
+            setActiveRequestExtended(false);
+            setActiveRequestExpiresAt(activeRequestExpiresAt);
+            setWriteError({ title: errStrings.genericTitle, message: errStrings.genericMsg });
+        }
+    };
+
+    // D-17: client-side expiring-soon computation — show extend banner when within 4h of expiry,
+    // status is active (requestDraft !== null), and the request has not yet been extended (D-19 once-only).
+    const showExtendBanner = (() => {
+        if (!activeRequestExpiresAt || activeRequestExtended || requestDraft === null) return false;
+        const msLeft = new Date(activeRequestExpiresAt).getTime() - Date.now();
+        return msLeft > 0 && msLeft < EXTEND_WARN_MS;
+    })();
+
     const handleLogout = () => {
         // signOut errors are intentionally ignored — the local session is cleared regardless of
         // server response, so the user is effectively logged out from the app's perspective
@@ -514,7 +659,11 @@ function App() {
         setPhone("");
         setRequestDraft(null);
         setActiveRequestId(null); // clear activeRequestId on logout
+        setActiveRequestExtended(false);
+        setActiveRequestExpiresAt(null);
         setRespondedIds(new Set()); // clear responded card state so the next user on a shared device does not inherit it (privacy)
+        // D-12/T-09-03-04: clear the unseen-donation marker so a shared device does not leak one user's congrats to the next.
+        localStorage.removeItem("bloodhelp.lastSeenDonationAt");
         setScreen("phone");
     };
 
@@ -595,10 +744,15 @@ function App() {
                 currentUserId={user.supabaseId}
                 lat={requestDraft?.lat}
                 lng={requestDraft?.lng}
+                onResolveClosed={handleResolveClosed}
+                showExtendBanner={showExtendBanner}
+                onExtend={handleExtend}
                 onBack={() => setScreen("home")}
                 onGoHome={() => {
                     setRequestDraft(null);
                     setActiveRequestId(null);
+                    setActiveRequestExtended(false);
+                    setActiveRequestExpiresAt(null);
                     setScreen("home");
                 }}
             />
@@ -624,6 +778,8 @@ function App() {
                     donorBloodType={user.bloodType}
                     respondedIds={respondedIds}
                     onRespond={handleRespond}
+                    showExtendBanner={showExtendBanner}
+                    onExtend={handleExtend}
                 />
                 {/* Write-error dialog for handlePosted and handleSaveDonor failures */}
                 <AlertDialog
