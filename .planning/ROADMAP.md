@@ -199,7 +199,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 09-02-PLAN.md — RequestLive wiring: real confirm RPC, react-zxing QR scanner + camera permission, honest closed copy, resolve DB-write callback, extend banner (CONF-02, LIFE-01)
+- [x] 09-02-PLAN.md — RequestLive wiring: real confirm RPC, react-zxing QR scanner + camera permission, honest closed copy, resolve DB-write callback, extend banner (CONF-02, LIFE-01)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
