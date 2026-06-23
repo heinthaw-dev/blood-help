@@ -203,7 +203,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 09-03-PLAN.md — App.tsx + Home: app-wide donations Realtime congrats takeover + check-on-open, handleResolveClosed, extend +12h once, extend banner wiring (CONF-03, LIFE-01)
+- [x] 09-03-PLAN.md — App.tsx + Home: app-wide donations Realtime congrats takeover + check-on-open, handleResolveClosed, extend +12h once, extend banner wiring (CONF-03, LIFE-01)
 
 ## Progress
 
