@@ -66,10 +66,32 @@ const DEFAULT_USER: UserState = {
     lng: null,
 };
 
-/** Format a national number for display under the +95 country code. */
-function formatPhone(digits: string): string {
+/** Format raw digit string for display in the OTP header under the +95 country code. */
+function formatDialDisplay(digits: string): string {
     return digits ? `+95 ${digits}` : "+95";
 }
+
+/** Bilingual strings for write-error dialogs (duplicate request, generic failure). */
+const WRITE_ERROR_STRINGS = {
+    my: {
+        duplicateTitle: "တောင်းခံချက် ရှိပြီးသား",
+        duplicateMsg:
+            "သင့်တွင် တက်ကြွသော တောင်းခံချက် တစ်ခု ရှိပြီးဖြစ်သည်။ ၄င်းကို ပိတ်ပြီးမှ အသစ်တင်နိုင်ပါသည်။",
+        genericTitle: "အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့သည်",
+        genericMsg: "ကြိုးစားမှု မအောင်မြင်ပါ။ ကျေးဇူးပြု၍ ထပ်ကြိုးစားပါ။",
+        retry: "ထပ်ကြိုးစားရန်",
+        dismiss: "ပိတ်ရန်",
+    },
+    en: {
+        duplicateTitle: "Request already open",
+        duplicateMsg:
+            "You already have an active blood request. Close it before posting a new one.",
+        genericTitle: "Something went wrong",
+        genericMsg: "The action could not be completed. Please try again.",
+        retry: "Retry",
+        dismiss: "Dismiss",
+    },
+};
 
 /**
  * Normalize a phone number to E.164 format for DB writes.
@@ -119,27 +141,6 @@ function App() {
     } | null>(null);
     /** Set of request IDs the current donor has responded to (status='responding'). */
     const [respondedIds, setRespondedIds] = useState<Set<string>>(new Set());
-
-    const writeErrorStrings = {
-        my: {
-            duplicateTitle: "တောင်းခံချက် ရှိပြီးသား",
-            duplicateMsg:
-                "သင့်တွင် တက်ကြွသော တောင်းခံချက် တစ်ခု ရှိပြီးဖြစ်သည်။ ၄င်းကို ပိတ်ပြီးမှ အသစ်တင်နိုင်ပါသည်။",
-            genericTitle: "အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့သည်",
-            genericMsg: "ကြိုးစားမှု မအောင်မြင်ပါ။ ကျေးဇူးပြု၍ ထပ်ကြိုးစားပါ။",
-            retry: "ထပ်ကြိုးစားရန်",
-            dismiss: "ပိတ်ရန်",
-        },
-        en: {
-            duplicateTitle: "Request already open",
-            duplicateMsg:
-                "You already have an active blood request. Close it before posting a new one.",
-            genericTitle: "Something went wrong",
-            genericMsg: "The action could not be completed. Please try again.",
-            retry: "Retry",
-            dismiss: "Dismiss",
-        },
-    };
 
     // Hydrate full user state (profile + donor + active request) from the DB for a given uid.
     // Shared by initAuth (cold page load) and handleVerified (returning-user OTP login) so both
@@ -256,7 +257,7 @@ function App() {
         const e164 = normalizePhone(phone);
         const email = phoneToEmail(e164);
         const password = await derivePassword(e164);
-        const errStrings = writeErrorStrings[lang];
+        const errStrings = WRITE_ERROR_STRINGS[lang];
 
         // Establish a STABLE phone-keyed session: sign in if the account exists, else sign up.
         // Either way the same phone yields the same auth.uid() on every device, so RLS
@@ -320,7 +321,7 @@ function App() {
         const expiresAt = new Date(
             Date.now() + 24 * 60 * 60 * 1000,
         ).toISOString();
-        const errStrings = writeErrorStrings[lang];
+        const errStrings = WRITE_ERROR_STRINGS[lang];
 
         // Bare .insert() without chaining .select() or .single() (Pitfall 1)
         const { error } = await supabase.from("blood_requests").insert({
@@ -382,7 +383,7 @@ function App() {
         // Optimistic flip (D-03)
         setRespondedIds((s) => new Set(s).add(reqId));
 
-        const errStrings = writeErrorStrings[lang];
+        const errStrings = WRITE_ERROR_STRINGS[lang];
         const { error } = await supabase.from("request_responses").insert({
             request_id: reqId,
             donor_id: uid,
@@ -412,7 +413,7 @@ function App() {
         const uid = user.supabaseId;
         if (!uid) return; // should never happen post-auth
 
-        const errStrings = writeErrorStrings[lang];
+        const errStrings = WRITE_ERROR_STRINGS[lang];
 
         // Step 1: upsert profiles (identity row) keyed by id (D-15)
         const { error: profileErr } = await supabase.from("profiles").upsert(
@@ -513,13 +514,14 @@ function App() {
         setPhone("");
         setRequestDraft(null);
         setActiveRequestId(null); // clear activeRequestId on logout
+        setRespondedIds(new Set()); // clear responded card state so the next user on a shared device does not inherit it (privacy)
         setScreen("phone");
     };
 
     if (screen === "otp") {
         return (
             <OtpVerification
-                phoneDisplay={formatPhone(phone)}
+                phoneDisplay={formatDialDisplay(phone)}
                 lang={lang}
                 onLangChange={setLang}
                 onBack={() => setScreen("phone")}
@@ -628,8 +630,8 @@ function App() {
                     open={writeError !== null}
                     title={writeError?.title ?? ""}
                     message={writeError?.message ?? ""}
-                    confirmLabel={writeErrorStrings[lang].retry}
-                    cancelLabel={writeErrorStrings[lang].dismiss}
+                    confirmLabel={WRITE_ERROR_STRINGS[lang].retry}
+                    cancelLabel={WRITE_ERROR_STRINGS[lang].dismiss}
                     onConfirm={() => setWriteError(null)}
                     onCancel={() => setWriteError(null)}
                 />
@@ -664,8 +666,8 @@ function App() {
                     open={writeError !== null}
                     title={writeError?.title ?? ""}
                     message={writeError?.message ?? ""}
-                    confirmLabel={writeErrorStrings[lang].retry}
-                    cancelLabel={writeErrorStrings[lang].dismiss}
+                    confirmLabel={WRITE_ERROR_STRINGS[lang].retry}
+                    cancelLabel={WRITE_ERROR_STRINGS[lang].dismiss}
                     onConfirm={() => setWriteError(null)}
                     onCancel={() => setWriteError(null)}
                 />

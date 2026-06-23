@@ -76,9 +76,7 @@ export interface RequestLiveProps {
   bloodType?: string
   township?: string
   alerting?: boolean
-  hasResults?: boolean
   alertedCount?: number
-  moreCount?: number
   unitsNeeded?: number
   unitsCollected?: number
   /** UUID of the active blood_requests row — used for RPC fetch + realtime subscription. */
@@ -89,6 +87,7 @@ export interface RequestLiveProps {
   lat?: number | null
   /** Request longitude — used for the truthful compatible-donors count (D-09). */
   lng?: number | null
+
   onBack: () => void
   onGoHome: () => void
 }
