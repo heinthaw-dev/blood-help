@@ -195,7 +195,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 09-01-PLAN.md — [BLOCKING] Schema foundation via Supabase MCP: confirm_donation RPC, donations unique constraint + Realtime publication, blood_requests.extended column, pg_cron auto-expiry + dummy-seed verification, type regen (CONF-02, CONF-03, LIFE-02)
+- [x] 09-01-PLAN.md — [BLOCKING] Schema foundation via Supabase MCP: confirm_donation RPC, donations unique constraint + Realtime publication, blood_requests.extended column, pg_cron auto-expiry + dummy-seed verification, type regen (CONF-02, CONF-03, LIFE-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
