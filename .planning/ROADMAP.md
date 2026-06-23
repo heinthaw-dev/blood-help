@@ -186,10 +186,16 @@ Plans:
 
   1. Entering a valid 5-char code on the confirmation screen (for a donor who is a 'responding' participant) creates a donations row and increments donation_count and units_collected on the request; an invalid code or non-participant code shows an error
   2. When units_collected reaches units_needed after a confirmation, the request status is set to 'fulfilled' and closed_at is set; the donor sees the congrats screen triggered by a Realtime event on their new donations row
-  3. The requester tapping "Mark as fulfilled" (outside path) writes status='cancelled' and closed_at to blood_requests
+  3. The requester resolving the request writes status + closed_at per the D-01 mapping: the "got it outside the app" path writes status='fulfilled' (the need was met), and the "no longer needed" path writes status='cancelled' (revised from the original wording per CONTEXT D-01)
   4. The scheduled Edge Function (or pg_cron) sets status='expired' for any blood_requests where expires_at < now() and status='active'; dummy seed data exists to verify this behavior without waiting 24 hours
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+
+- [ ] 09-01-PLAN.md — [BLOCKING] Schema foundation via Supabase MCP: confirm_donation RPC, donations unique constraint + Realtime publication, blood_requests.extended column, pg_cron auto-expiry + dummy-seed verification, type regen (CONF-02, CONF-03, LIFE-02)
+- [ ] 09-02-PLAN.md — RequestLive wiring: real confirm RPC, react-zxing QR scanner + camera permission, honest closed copy, resolve DB-write callback, extend banner (CONF-02, LIFE-01)
+- [ ] 09-03-PLAN.md — App.tsx + Home: app-wide donations Realtime congrats takeover + check-on-open, handleResolveClosed, extend +12h once, extend banner wiring (CONF-03, LIFE-01)
 
 ## Progress
 
