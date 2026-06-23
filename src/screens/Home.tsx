@@ -234,6 +234,10 @@ export interface HomeProps {
   respondedIds?: Set<string>
   /** Called when the donor taps "I'll help" on a request card. */
   onRespond?: (reqId: string) => void
+  /** Whether to show the expiring-soon extend banner on the active-request card (D-17). */
+  showExtendBanner?: boolean
+  /** Called when the requester taps "Extend +12h" on the banner (D-18). */
+  onExtend?: () => void
 }
 
 /**
@@ -257,6 +261,8 @@ export function Home({
   donorBloodType,
   respondedIds,
   onRespond,
+  showExtendBanner,
+  onExtend,
 }: HomeProps) {
   const [requests, setRequests] = useState<NearbyRequest[]>([])
 
@@ -515,6 +521,40 @@ export function Home({
                   </div>
                 </div>
               </div>
+              {/* Expiring-soon extend banner (D-17) — renders inside the active-request card before View button.
+                  Uses inline amber tokens (#B45309, rgba(230,120,0,.18)) matching RequestLive banner since
+                  no --color-warning CSS token exists in the current theme. */}
+              {showExtendBanner && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  marginTop: 10,
+                  paddingTop: 10,
+                  borderTop: '1px solid rgba(230,120,0,.18)',
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 13.5, fontWeight: 600, color: '#B45309', lineHeight: 1.4 }}>
+                      {lang === 'my' ? 'တောင်းခံချက် မကြာမီ သက်တမ်းကုန်မည်' : 'Request expiring soon'}
+                    </div>
+                  </div>
+                  <button type="button" onClick={onExtend} style={{
+                    flexShrink: 0,
+                    height: 32,
+                    padding: '0 12px',
+                    border: 'none',
+                    borderRadius: 'var(--radius-pill)',
+                    background: '#B45309',
+                    color: '#fff',
+                    fontFamily: 'var(--font-burmese)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}>
+                    {lang === 'my' ? '+12 နာရီ' : '+12h'}
+                  </button>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={onViewRequest}
