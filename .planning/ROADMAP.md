@@ -193,8 +193,16 @@ Plans:
 
 Plans:
 
+**Wave 1**
+
 - [ ] 09-01-PLAN.md — [BLOCKING] Schema foundation via Supabase MCP: confirm_donation RPC, donations unique constraint + Realtime publication, blood_requests.extended column, pg_cron auto-expiry + dummy-seed verification, type regen (CONF-02, CONF-03, LIFE-02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 09-02-PLAN.md — RequestLive wiring: real confirm RPC, react-zxing QR scanner + camera permission, honest closed copy, resolve DB-write callback, extend banner (CONF-02, LIFE-01)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 09-03-PLAN.md — App.tsx + Home: app-wide donations Realtime congrats takeover + check-on-open, handleResolveClosed, extend +12h once, extend banner wiring (CONF-03, LIFE-01)
 
 ## Progress
