@@ -173,6 +173,9 @@ export function RequestLive({
   // For production PWA (offline use), pass a self-hosted wasmUrl — tracked as a follow-up.
   const { ref: zxingRef } = useZxing({
     formats: ['qr_code'],
+    // Only run the camera while the QR sheet is open — releases camera on close and avoids
+    // iOS Safari's requirement that getUserMedia is triggered close to a user gesture.
+    paused: sheet !== 'code',
     onDecodeResult(result) {
       const raw = result.rawValue.trim().toUpperCase()
       if (/^[A-Z2-7]{5}$/.test(raw)) {
@@ -769,6 +772,8 @@ export function RequestLive({
               >
                 <video
                   ref={zxingRef}
+                  playsInline
+                  muted
                   style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                 />
                 {/* Corner-bracket overlay — unchanged from Phase 8 design */}
