@@ -296,6 +296,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      callable_donors_for_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          blood_type: string
+          dist_meters: number
+          donor_id: string
+          name: string
+          phone: string
+        }[]
+      }
       confirm_donation: {
         Args: { p_donor_code: string; p_request_id: string; p_via: string }
         Returns: Json
