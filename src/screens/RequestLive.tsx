@@ -105,8 +105,8 @@ export interface RequestLiveProps {
   lat?: number | null
   /** Request longitude — used for the truthful compatible-donors count (D-09). */
   lng?: number | null
-  /** Called when the user resolves the request via outside or cancel paths (LIFE-01). App.tsx writes status + closed_at. */
-  onResolveClosed: (reason: 'outside' | 'canceled') => void
+  /** Called when the user resolves the request via outside or cancel paths (LIFE-01). App.tsx writes status + closed_at. Returns true on success; false on write error (caller does not close UI on false). */
+  onResolveClosed: (reason: 'outside' | 'canceled') => Promise<boolean>
   /** Whether to show the expiring-soon extend banner (D-17). Supplied by App.tsx in 09-03. */
   showExtendBanner?: boolean
   /** Called when the user taps "Extend +12h" (D-18). Supplied by App.tsx in 09-03. */
@@ -176,8 +176,9 @@ export function RequestLive({
     onDecodeResult(result) {
       const raw = result.rawValue.trim().toUpperCase()
       if (/^[A-Z2-7]{5}$/.test(raw)) {
-        // Valid donor_code scanned — populate the same code state as manual entry
         setCode(raw)
+        // Auto-submit immediately — pass raw directly to avoid reading stale code state
+        void handleConfirmInApp('qr', raw)
       }
     },
     onError(err) {
@@ -278,12 +279,13 @@ export function RequestLive({
   //   'invalid_code'    → generic toast (covers unknown code + non-participant)
   //   'already_confirmed' → specific duplicate toast
   //   transport error  → AlertDialog write-error
-  const handleConfirmInApp = async (via: 'manual' | 'qr' = 'manual') => {
-    if (!requestId || !confirmReady) return
+  const handleConfirmInApp = async (via: 'manual' | 'qr' = 'manual', codeOverride?: string) => {
+    const codeToUse = codeOverride ?? code
+    if (!requestId || (!codeOverride && !confirmReady)) return
 
     const { data, error } = await supabase.rpc('confirm_donation', {
       p_request_id: requestId,
-      p_donor_code: code.trim().toUpperCase(),
+      p_donor_code: codeToUse.trim().toUpperCase(),
       p_via: via,
     })
 
@@ -669,10 +671,9 @@ export function RequestLive({
                 {/* Outside app — D-01: maps to status='fulfilled' in App.tsx handleResolveClosed */}
                 <button
                   type="button"
-                  onClick={() => {
-                    setClosed('outside')
-                    setSheet(null)
-                    onResolveClosed('outside')  // LIFE-01: App.tsx writes status='fulfilled' + closed_at
+                  onClick={async () => {
+                    const ok = await onResolveClosed('outside')  // LIFE-01: write first, close UI only on success
+                    if (ok) { setClosed('outside'); setSheet(null) }
                   }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 13,
@@ -703,10 +704,9 @@ export function RequestLive({
                 {/* Cancel request — D-01: maps to status='cancelled' in App.tsx handleResolveClosed */}
                 <button
                   type="button"
-                  onClick={() => {
-                    setClosed('canceled')
-                    setSheet(null)
-                    onResolveClosed('canceled')  // LIFE-01: App.tsx writes status='cancelled' + closed_at
+                  onClick={async () => {
+                    const ok = await onResolveClosed('canceled')  // LIFE-01: write first, close UI only on success
+                    if (ok) { setClosed('canceled'); setSheet(null) }
                   }}
                   style={{
                     width: '100%', textAlign: 'center', background: 'none', border: 'none',

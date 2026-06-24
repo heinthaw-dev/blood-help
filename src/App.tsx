@@ -237,17 +237,20 @@ function App() {
             );
 
             // D-12: check-on-open for unseen donations (closed-app congrats).
-            // If any donation row was inserted while the app was closed and not yet seen,
-            // signal callers to route to the congrats screen instead of home.
-            const lastSeenAt = localStorage.getItem("bloodhelp.lastSeenDonationAt") ?? "";
-            const { data: unseenDonation } = await supabase
-                .from("donations")
-                .select("id, created_at")
-                .eq("donor_id", uid)
-                .gt("created_at", lastSeenAt)
-                .order("created_at", { ascending: false })
-                .limit(1)
-                .maybeSingle();
+            // Guard: only run the query when a prior seen timestamp exists. An absent marker
+            // means this is a fresh session with no prior seen donation — skip the query so
+            // an empty string never leaks as `.gt("created_at", "")` (which matches every row).
+            const lastSeenAt = localStorage.getItem("bloodhelp.lastSeenDonationAt");
+            const { data: unseenDonation } = lastSeenAt
+                ? await supabase
+                      .from("donations")
+                      .select("id, created_at")
+                      .eq("donor_id", uid)
+                      .gt("created_at", lastSeenAt)
+                      .order("created_at", { ascending: false })
+                      .limit(1)
+                      .maybeSingle()
+                : { data: null };
             if (unseenDonation) {
                 localStorage.setItem(
                     "bloodhelp.lastSeenDonationAt",
@@ -439,6 +442,7 @@ function App() {
             .eq("status", "active")
             .maybeSingle();
         setActiveRequestId(newRow?.id ?? null);
+        setActiveRequestExpiresAt(expiresAt);
 
         setScreen("request-live");
     };
@@ -585,9 +589,9 @@ function App() {
      * 'canceled' → status='cancelled' (request no longer needed).
      * Owner-scoped to prevent writing another user's row.
      */
-    const handleResolveClosed = async (reason: "outside" | "canceled") => {
+    const handleResolveClosed = async (reason: "outside" | "canceled"): Promise<boolean> => {
         const uid = user.supabaseId;
-        if (!uid || !activeRequestId) return;
+        if (!uid || !activeRequestId) return false;
         const errStrings = WRITE_ERROR_STRINGS[lang];
         // D-01 status map: outside→fulfilled, canceled→cancelled
         const status = reason === "canceled" ? "cancelled" : "fulfilled";
@@ -600,7 +604,7 @@ function App() {
 
         if (error) {
             setWriteError({ title: errStrings.genericTitle, message: errStrings.genericMsg });
-            return;
+            return false;
         }
 
         // Clear local request state on success; navigation back to Home driven by RequestLive's onGoHome.
@@ -608,6 +612,7 @@ function App() {
         setActiveRequestId(null);
         setActiveRequestExtended(false);
         setActiveRequestExpiresAt(null);
+        return true;
     };
 
     /**
