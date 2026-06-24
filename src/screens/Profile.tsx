@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ReactElement } from 'react'
+import QRCode from 'react-qr-code'
 import { Switch } from '../components/Switch'
 import { Badge } from '../components/Badge'
 import { BottomNav } from '../components/BottomNav'
@@ -8,47 +8,18 @@ import type { BloodType } from '../blood'
 import type { Lang } from '../i18n'
 import { formatNumber } from '../i18n'
 
-// ---- QR placeholder ----
+// ---- QR code ----
 
-/** Deterministic QR-like SVG based on code — visually convincing, not scannable. */
+/** Real scannable QR code encoding the donor's 5-char donor_code. */
 function DonorQR({ code }: { code: string }) {
-  const N = 21
-  const cell = 8
-
-  const seed = code.split('').reduce((acc, ch, i) => acc ^ (ch.charCodeAt(0) << (i * 4 % 24)), 0)
-
-  const isFinderCell = (r: number, c: number): boolean => {
-    if (r === 0 || r === 6 || c === 0 || c === 6) return true
-    if (r >= 2 && r <= 4 && c >= 2 && c <= 4) return true
-    return false
-  }
-
-  const isBlack = (r: number, c: number): boolean => {
-    if (r < 7 && c < 7) return isFinderCell(r, c)
-    if (r < 7 && c >= 14) return isFinderCell(r, c - 14)
-    if (r >= 14 && c < 7) return isFinderCell(r - 14, c)
-    if (r === 7 || c === 7) return false
-    if (r === 6) return c % 2 === 0
-    if (c === 6) return r % 2 === 0
-    const n = r * N + c
-    return ((seed ^ (n * 2654435761)) >>> 16) % 2 === 0
-  }
-
-  const size = N * cell
-  const rects: ReactElement[] = []
-  for (let r = 0; r < N; r++) {
-    for (let c = 0; c < N; c++) {
-      if (isBlack(r, c)) {
-        rects.push(<rect key={`${r},${c}`} x={c * cell} y={r * cell} width={cell} height={cell} />)
-      }
-    }
-  }
-
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} shapeRendering="crispEdges" style={{ display: 'block' }}>
-      <rect width={size} height={size} fill="white" />
-      <g fill="#1A1A1A">{rects}</g>
-    </svg>
+    <QRCode
+      value={code.toUpperCase()}
+      size={168}
+      bgColor="#ffffff"
+      fgColor="#1A1A1A"
+      style={{ display: 'block' }}
+    />
   )
 }
 
