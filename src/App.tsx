@@ -148,6 +148,8 @@ function App() {
     const [activeRequestExtended, setActiveRequestExtended] = useState(false);
     /** ISO expiry timestamp of the active request — for client-side extend banner computation (D-17). */
     const [activeRequestExpiresAt, setActiveRequestExpiresAt] = useState<string | null>(null);
+    /** Units already collected on the active request — kept in App so RequestLive progress survives navigation. */
+    const [activeRequestUnitsCollected, setActiveRequestUnitsCollected] = useState(0);
 
     // Hydrate full user state (profile + donor + active request) from the DB for a given uid.
     // Shared by initAuth (cold page load) and handleVerified (returning-user OTP login) so both
@@ -221,6 +223,7 @@ function App() {
             );
             // Thread the active request UUID (activeRequestId) into RequestLive for the RPC + realtime subscription (D-14).
             setActiveRequestId(activeRequest?.id ?? null);
+            setActiveRequestUnitsCollected(activeRequest?.units_collected ?? 0);
             // Hydrate extend banner state from DB (Pitfall 5 — must not default extended to false or banner re-shows after reload).
             setActiveRequestExtended(activeRequest?.extended ?? false);
             setActiveRequestExpiresAt(activeRequest?.expires_at ?? null);
@@ -443,6 +446,7 @@ function App() {
             .maybeSingle();
         setActiveRequestId(newRow?.id ?? null);
         setActiveRequestExpiresAt(expiresAt);
+        setActiveRequestUnitsCollected(0);
 
         setScreen("request-live");
     };
@@ -538,6 +542,14 @@ function App() {
             return;
         }
 
+        // Read back the DB-assigned donor_code — the trigger sets it on INSERT so the
+        // in-memory state must come from the DB, not a local guess.
+        const { data: savedDonor } = await supabase
+            .from("donors")
+            .select("donor_code")
+            .eq("profile_id", uid)
+            .maybeSingle();
+
         // Update local state with hydrated values + navigate
         setUser((u) => ({
             ...u,
@@ -547,6 +559,7 @@ function App() {
             emergencyCallable: profile.showNumber,
             showNumber: profile.showNumber,
             donorSetupComplete: true,
+            donorCode: savedDonor?.donor_code ?? u.donorCode,
             lat: profile.lat,
             lng: profile.lng,
         }));
@@ -612,6 +625,7 @@ function App() {
         setActiveRequestId(null);
         setActiveRequestExtended(false);
         setActiveRequestExpiresAt(null);
+        setActiveRequestUnitsCollected(0);
         return true;
     };
 
@@ -666,6 +680,7 @@ function App() {
         setActiveRequestId(null); // clear activeRequestId on logout
         setActiveRequestExtended(false);
         setActiveRequestExpiresAt(null);
+        setActiveRequestUnitsCollected(0);
         setRespondedIds(new Set()); // clear responded card state so the next user on a shared device does not inherit it (privacy)
         // D-12/T-09-03-04: clear the unseen-donation marker so a shared device does not leak one user's congrats to the next.
         localStorage.removeItem("bloodhelp.lastSeenDonationAt");
@@ -745,11 +760,13 @@ function App() {
                 lang={lang}
                 bloodType={requestDraft?.bloodType}
                 unitsNeeded={requestDraft?.units}
+                unitsCollected={activeRequestUnitsCollected}
                 requestId={activeRequestId}
                 currentUserId={user.supabaseId}
                 lat={requestDraft?.lat}
                 lng={requestDraft?.lng}
                 onResolveClosed={handleResolveClosed}
+                onUnitConfirmed={(n) => setActiveRequestUnitsCollected(n)}
                 showExtendBanner={showExtendBanner}
                 onExtend={handleExtend}
                 onBack={() => setScreen("home")}
@@ -758,6 +775,7 @@ function App() {
                     setActiveRequestId(null);
                     setActiveRequestExtended(false);
                     setActiveRequestExpiresAt(null);
+                    setActiveRequestUnitsCollected(0);
                     setScreen("home");
                 }}
             />

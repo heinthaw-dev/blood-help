@@ -107,6 +107,8 @@ export interface RequestLiveProps {
   lng?: number | null
   /** Called when the user resolves the request via outside or cancel paths (LIFE-01). App.tsx writes status + closed_at. Returns true on success; false on write error (caller does not close UI on false). */
   onResolveClosed: (reason: 'outside' | 'canceled') => Promise<boolean>
+  /** Called after each successful donation confirm so App.tsx can persist the count across navigation. */
+  onUnitConfirmed?: (n: number) => void
   /** Whether to show the expiring-soon extend banner (D-17). Supplied by App.tsx in 09-03. */
   showExtendBanner?: boolean
   /** Called when the user taps "Extend +12h" (D-18). Supplied by App.tsx in 09-03. */
@@ -136,6 +138,7 @@ export function RequestLive({
   lat,
   lng,
   onResolveClosed,
+  onUnitConfirmed,
   showExtendBanner,
   onExtend,
   onBack,
@@ -146,6 +149,9 @@ export function RequestLive({
   const [toast, setToast] = useState<ToastMsg | null>(null)
   const [code, setCode] = useState('')
   const [collected, setCollected] = useState(initCollected)
+  // Sync from parent when App.tsx hydrates the real DB value after the component has mounted
+  // (e.g., navigating away and back resets initCollected to the current App.tsx state).
+  useEffect(() => { setCollected(initCollected) }, [initCollected])
   /** Write-error dialog state — shown on confirm_donation transport failures. */
   const [writeError, setWriteError] = useState<{ title: string; message: string } | null>(null)
   /** Camera permission pre-warning AlertDialog — shown before opening the code/QR sheet. */
@@ -180,8 +186,6 @@ export function RequestLive({
       const raw = result.rawValue.trim().toUpperCase()
       if (/^[A-Z2-7]{5}$/.test(raw)) {
         setCode(raw)
-        // Auto-submit immediately — pass raw directly to avoid reading stale code state
-        void handleConfirmInApp('qr', raw)
       }
     },
     onError(err) {
@@ -282,14 +286,13 @@ export function RequestLive({
   //   'invalid_code'    → generic toast (covers unknown code + non-participant)
   //   'already_confirmed' → specific duplicate toast
   //   transport error  → AlertDialog write-error
-  const handleConfirmInApp = async (via: 'manual' | 'qr' = 'manual', codeOverride?: string) => {
-    const codeToUse = codeOverride ?? code
-    if (!requestId || (!codeOverride && !confirmReady)) return
+  const handleConfirmInApp = async () => {
+    if (!requestId || !confirmReady) return
 
     const { data, error } = await supabase.rpc('confirm_donation', {
       p_request_id: requestId,
-      p_donor_code: codeToUse.trim().toUpperCase(),
-      p_via: via,
+      p_donor_code: code.trim().toUpperCase(),
+      p_via: 'manual',
     })
 
     if (error || !data) {
@@ -315,10 +318,12 @@ export function RequestLive({
 
     if (result.fulfilled) {
       setCollected(next)
+      onUnitConfirmed?.(next)
       setClosed('fulfilled')
       setSheet(null)
     } else {
       setCollected(next)
+      onUnitConfirmed?.(next)
       setSheet(null)
       showToast(
         toMyanmarDigits(next) + ' / ' + toMyanmarDigits(unitsNeeded) + ' unit ရရှိပြီး — ကျန်အတွက် ဆက်ရှာနေပါမည်',
@@ -819,7 +824,7 @@ export function RequestLive({
 
               <button
                 type="button"
-                onClick={() => void handleConfirmInApp('manual')}
+                onClick={() => void handleConfirmInApp()}
                 disabled={!confirmReady}
                 style={confirmBtnStyle}
               >
