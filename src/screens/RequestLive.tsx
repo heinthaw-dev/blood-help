@@ -30,6 +30,15 @@ interface ResponderRow {
   created_at: string
 }
 
+/** Row returned by the callable_donors_for_request owner-scoped RPC. */
+interface CallableDonorRow {
+  donor_id: string
+  name: string
+  phone: string
+  blood_type: string
+  dist_meters: number | null
+}
+
 // ---- helpers ----
 
 function toMyanmarDigits(n: number): string {
@@ -152,6 +161,8 @@ export function RequestLive({
   const [cameraWarningOpen, setCameraWarningOpen] = useState(false)
   /** Real responders from the owner-scoped RPC, updated on each realtime INSERT. */
   const [responders, setResponders] = useState<ResponderRow[]>([])
+  /** Emergency-callable donors fetched once on mount via the callable_donors_for_request RPC. */
+  const [callableDonors, setCallableDonors] = useState<CallableDonorRow[]>([])
   /** Truthful count of compatible donors within radius who can see the request (D-09). */
   const [compatibleCount, setCompatibleCount] = useState<number>(alertedCount)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -239,6 +250,29 @@ export function RequestLive({
       cancelled = true
       void supabase.removeChannel(channel)  // T-08-12: tear down on unmount
     }
+  }, [requestId, currentUserId])
+
+  // ---- Emergency-callable donors fetch (fetch-once on mount) ----
+  //
+  // Gate on BOTH requestId AND currentUserId (Pitfall 2 cold-start).
+  // Fetch-once — no realtime subscription needed for this scope (donors who opted in
+  // were already callable before the request; the list is stable on the timescale of
+  // a single request-live session).
+  // Owner-scoped RPC: a non-owner gets zero rows, no existence disclosure (T-VXW-01).
+  useEffect(() => {
+    if (!requestId || !currentUserId) return  // Pitfall 2: gate on confirmed session
+    let cancelled = false
+
+    async function fetchCallableDonors() {
+      const { data, error } = await supabase.rpc('callable_donors_for_request', {
+        p_request_id: requestId as string,
+      })
+      if (error || cancelled) return
+      setCallableDonors(data ?? [])
+    }
+
+    void fetchCallableDonors()
+    return () => { cancelled = true }
   }, [requestId, currentUserId])
 
   // ---- Truthful "can see your request" count (D-09) ----
@@ -334,6 +368,10 @@ export function RequestLive({
   const confirmReady = code.trim().length === 5
   const alertingDone = !alerting
   const showProgress = unitsNeeded > 1
+
+  // De-duplicate callable donors against Will-Help responders:
+  // a donor who already tapped "I'll help" is in responders and must NOT appear in both sections.
+  const visibleCallable = callableDonors.filter(d => !responders.find(r => r.donor_id === d.donor_id))
 
   // D-09: truthful transparency line — "[X] nearby compatible donors can see your request"
   // Never claims donors were "alerted" (no push this phase).
@@ -503,6 +541,40 @@ export function RequestLive({
               <p style={{ margin: 0, fontFamily: 'var(--font-burmese)', fontSize: 13, lineHeight: 1.65, color: 'var(--text-secondary)' }}>
                 {transparencyLine}
               </p>
+            </div>
+          )}
+
+          {/* Available to Call section — emergency-callable donors visible immediately.
+              Hidden when empty (visibleCallable.length === 0). De-duped against responders. */}
+          {visibleCallable.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {/* Section header — neutral grey treatment (design skill: green = "Will help", grey = "Can call") */}
+              <div style={{ paddingBottom: 2 }}>
+                <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 15, fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}>
+                  ခေါ်ဆိုနိုင်သောသွေးလှူရှင်များ
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-hint)', marginTop: 1 }}>
+                  Available to Call
+                </div>
+              </div>
+              {visibleCallable.map((donor) => (
+                <div key={donor.donor_id} style={{ background: 'var(--surface-card)', border: '0.5px solid var(--border-card)', borderRadius: 16, padding: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Badge>{donor.blood_type}</Badge>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 15, fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}>
+                        {donor.name}
+                      </div>
+                      {donor.dist_meters != null && (
+                        <div style={{ fontSize: 13, color: 'var(--text-hint)', marginTop: 3, fontFamily: 'var(--font-burmese)' }}>
+                          {formatDistanceLabel(donor.dist_meters, lang)}
+                        </div>
+                      )}
+                    </div>
+                    <CallButton href={`tel:${donor.phone}`} />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
