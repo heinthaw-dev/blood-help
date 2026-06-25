@@ -122,6 +122,10 @@ export interface RequestLiveProps {
   showExtendBanner?: boolean
   /** Called when the user taps "Extend +12h" (D-18). Supplied by App.tsx in 09-03. */
   onExtend?: () => void
+  /** FCM requester alert to show as an overlay modal when app opens via notification tap. */
+  fcmRequesterAlert?: { responderName: string; responderPhone: string; responderBloodType: string } | null
+  /** Clears the FCM requester alert (after dismiss). */
+  onDismissFcmRequesterAlert?: () => void
 
   onBack: () => void
   onGoHome: () => void
@@ -150,6 +154,8 @@ export function RequestLive({
   onUnitConfirmed,
   showExtendBanner,
   onExtend,
+  fcmRequesterAlert = null,
+  onDismissFcmRequesterAlert,
   onBack,
   onGoHome,
 }: RequestLiveProps) {
@@ -268,10 +274,13 @@ export function RequestLive({
     let cancelled = false
 
     async function fetchCallableDonors() {
+      console.log('[callable_donors] calling RPC with requestId:', requestId, 'currentUserId:', currentUserId)
       const { data, error } = await supabase.rpc('callable_donors_for_request', {
         p_request_id: requestId as string,
       })
-      if (error || cancelled) return
+      if (error) { console.error('[callable_donors] RPC error:', error.code, error.message, error.details, error.hint); return }
+      if (cancelled) return
+      console.log('[callable_donors] result:', data?.length, 'rows')
       setCallableDonors(data ?? [])
     }
 
@@ -948,6 +957,85 @@ export function RequestLive({
             </div>
           </div>
         )}
+
+      {/* ── FCM requester alert modal — shown when app opens via notification tap ── */}
+      {fcmRequesterAlert && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 70,
+          display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+        }}>
+          {/* Scrim */}
+          <div
+            style={{ position: 'absolute', inset: 0, background: 'rgba(26,26,26,0.45)' }}
+            onClick={onDismissFcmRequesterAlert}
+          />
+          {/* Sheet */}
+          <div style={{
+            position: 'relative',
+            background: 'var(--surface-card)',
+            borderRadius: '20px 20px 0 0',
+            padding: '8px 20px 32px',
+          }}>
+            <div style={{ width: 38, height: 4, borderRadius: '999px', background: 'var(--border-field)', margin: '8px auto 20px' }} />
+
+            {/* Donor avatar + name */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+              <div style={{
+                flexShrink: 0, width: 52, height: 52, borderRadius: '999px',
+                background: 'var(--color-success-tint)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'var(--font-burmese)', fontSize: 20, fontWeight: 600,
+                color: 'var(--color-success)',
+              }}>
+                {fcmRequesterAlert.responderName.charAt(0)}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                  {fcmRequesterAlert.responderName}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                  <Badge>{fcmRequesterAlert.responderBloodType}</Badge>
+                  <span style={{ fontFamily: 'var(--font-burmese)', fontSize: 13, color: 'var(--color-success)', fontWeight: 600 }}>
+                    {lang === 'my' ? 'ကူညီမည်' : "Will help"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Call CTA */}
+            <a
+              href={`tel:${fcmRequesterAlert.responderPhone}`}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                width: '100%', height: 54, textDecoration: 'none',
+                borderRadius: 'var(--radius-button)',
+                background: 'var(--color-primary)', color: '#fff',
+                fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 600,
+                boxShadow: 'var(--shadow-cta)',
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
+              {lang === 'my' ? 'ဖုန်းခေါ်ရန်' : 'Call donor'}
+            </a>
+
+            {/* Dismiss — shows normal RequestLive donor list */}
+            <button
+              type="button"
+              onClick={onDismissFcmRequesterAlert}
+              style={{
+                display: 'block', width: '100%', textAlign: 'center',
+                background: 'none', border: 'none', marginTop: 12,
+                fontFamily: 'var(--font-burmese)', fontSize: 14,
+                color: 'var(--text-hint)', cursor: 'pointer',
+              }}
+            >
+              {lang === 'my' ? 'သွေးလှူရှင် စာရင်း ကြည့်ရန်' : 'View donor list'}
+            </button>
+          </div>
+        </div>
+      )}
 
       </div>
     </div>

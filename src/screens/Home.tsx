@@ -11,6 +11,13 @@ import { formatNumber } from '../i18n'
 import { supabase } from '../lib/supabase'
 import { formatPhone, formatDistanceLabel } from '../format'
 
+interface FcmDonorAlert {
+  requestId: string
+  bloodType: string
+  urgency: string
+  address: string
+}
+
 // ---- constants ----
 
 const DISPLAY_RADIUS_KM = 10
@@ -238,6 +245,10 @@ export interface HomeProps {
   showExtendBanner?: boolean
   /** Called when the requester taps "Extend +12h" on the banner (D-18). */
   onExtend?: () => void
+  /** FCM donor alert to show as an overlay modal when app opens via notification tap. */
+  fcmDonorAlert?: FcmDonorAlert | null
+  /** Clears the FCM donor alert (after dismiss or "Will Help"). */
+  onDismissFcmDonorAlert?: () => void
 }
 
 /**
@@ -263,6 +274,8 @@ export function Home({
   onRespond,
   showExtendBanner,
   onExtend,
+  fcmDonorAlert = null,
+  onDismissFcmDonorAlert,
 }: HomeProps) {
   const [requests, setRequests] = useState<NearbyRequest[]>([])
 
@@ -350,7 +363,7 @@ export function Home({
 
   return (
     <div className="phone-entry-stage">
-      <div className="phone-entry-card">
+      <div className="phone-entry-card" style={{ position: 'relative' }}>
 
         {/* Top bar */}
         <div style={{
@@ -660,6 +673,98 @@ export function Home({
         <BottomNav active="home" lang={lang} onNavigate={onNavigate} />
 
       </div>
+
+      {/* FCM donor alert modal — shown when app opens via notification tap */}
+      {fcmDonorAlert && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 50,
+          display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+        }}>
+          {/* Scrim */}
+          <div
+            style={{ position: 'absolute', inset: 0, background: 'rgba(26,26,26,0.45)' }}
+            onClick={onDismissFcmDonorAlert}
+          />
+          {/* Sheet */}
+          <div style={{
+            position: 'relative',
+            background: 'var(--surface-card)',
+            borderRadius: '20px 20px 0 0',
+            padding: '8px 20px 32px',
+          }}>
+            <div style={{ width: 38, height: 4, borderRadius: '999px', background: 'var(--border-field)', margin: '8px auto 20px' }} />
+
+            {/* Urgency + blood type row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              {fcmDonorAlert.urgency === 'urgent' && (
+                <span style={{
+                  background: 'var(--color-primary)', color: '#fff',
+                  borderRadius: 6, padding: '3px 9px',
+                  fontFamily: 'var(--font-burmese)', fontSize: 12, fontWeight: 600,
+                }}>
+                  {lang === 'my' ? 'အရေးပေါ်' : 'Urgent'}
+                </span>
+              )}
+              <Badge size="lg">{fcmDonorAlert.bloodType}</Badge>
+            </div>
+
+            {/* Title */}
+            <div style={{
+              fontFamily: 'var(--font-burmese)', fontSize: 18, fontWeight: 600,
+              lineHeight: 1.4, color: 'var(--text-primary)', marginBottom: 6,
+            }}>
+              {lang === 'my' ? 'သွေး လိုအပ်နေသည်' : 'Blood needed nearby'}
+            </div>
+
+            {/* Address */}
+            <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: 7,
+              fontFamily: 'var(--font-burmese)', fontSize: 14,
+              color: 'var(--text-secondary)', marginBottom: 20,
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-hint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0, marginTop: 2 }}>
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span>{fcmDonorAlert.address}</span>
+            </div>
+
+            {/* Will Help button */}
+            <button
+              type="button"
+              onClick={() => {
+                onRespond?.(fcmDonorAlert.requestId)
+                onDismissFcmDonorAlert?.()
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '100%', height: 54, border: 'none',
+                borderRadius: 'var(--radius-button)',
+                background: 'var(--color-primary)', color: '#fff',
+                fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 600,
+                cursor: 'pointer', boxShadow: 'var(--shadow-cta)',
+              }}
+            >
+              {lang === 'my' ? 'ကူညီမည်' : "I'll help"}
+            </button>
+
+            {/* Dismiss link */}
+            <button
+              type="button"
+              onClick={onDismissFcmDonorAlert}
+              style={{
+                display: 'block', width: '100%', textAlign: 'center',
+                background: 'none', border: 'none', marginTop: 12,
+                fontFamily: 'var(--font-burmese)', fontSize: 14,
+                color: 'var(--text-hint)', cursor: 'pointer',
+              }}
+            >
+              {lang === 'my' ? 'ပိတ်ရန်' : 'Dismiss'}
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

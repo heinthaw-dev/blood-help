@@ -17,6 +17,7 @@ import { AlertDialog } from "./components/AlertDialog";
 import type { Tab } from "./components/BottomNav";
 import { getSession } from "./auth";
 import { supabase } from "./lib/supabase";
+import { registerPushToken, pushSupported } from "./lib/push";
 import type { BloodType } from "./blood";
 import type { Lang } from "./i18n";
 
@@ -96,6 +97,19 @@ const WRITE_ERROR_STRINGS = {
 /** 4-hour window before expiry at which the extend banner appears (D-17). */
 const EXTEND_WARN_MS = 4 * 60 * 60 * 1000;
 
+interface FcmDonorAlert {
+    requestId: string
+    bloodType: string
+    urgency: string
+    address: string
+}
+
+interface FcmRequesterAlert {
+    responderName: string
+    responderPhone: string
+    responderBloodType: string
+}
+
 /**
  * Normalize a phone number to E.164 format for DB writes.
  * Strips non-digits and prepends the Myanmar +95 country code.
@@ -150,6 +164,13 @@ function App() {
     const [activeRequestExpiresAt, setActiveRequestExpiresAt] = useState<string | null>(null);
     /** Units already collected on the active request — kept in App so RequestLive progress survives navigation. */
     const [activeRequestUnitsCollected, setActiveRequestUnitsCollected] = useState(0);
+    /** Donor alert received via FCM notification tap — shows overlay modal on Home screen. */
+    const [fcmDonorAlert, setFcmDonorAlert] = useState<FcmDonorAlert | null>(null);
+    /** Requester alert received via FCM notification tap — shows overlay modal on RequestLive screen. */
+    const [fcmRequesterAlert, setFcmRequesterAlert] = useState<FcmRequesterAlert | null>(null);
+    /** Controls the pre-permission push notification dialog. */
+    const [pushDialogOpen, setPushDialogOpen] = useState(false);
+    const [pendingPushProfileId, setPendingPushProfileId] = useState<string | null>(null);
 
     // Hydrate full user state (profile + donor + active request) from the DB for a given uid.
     // Shared by initAuth (cold page load) and handleVerified (returning-user OTP login) so both
@@ -283,6 +304,28 @@ function App() {
                 if (hydrated === "congrats") {
                     setScreen("donor-congrats");
                 } else if (hydrated) {
+                    // Read FCM deep-link URL params injected by the service worker notificationclick handler
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const fcmType = urlParams.get("fcm_type");
+                    if (fcmType === "donor_alert") {
+                        setFcmDonorAlert({
+                            requestId: urlParams.get("request_id") ?? "",
+                            bloodType: urlParams.get("blood_type") ?? "",
+                            urgency: urlParams.get("urgency") ?? "",
+                            address: urlParams.get("address") ?? "",
+                        });
+                        window.history.replaceState({}, "", "/");
+                    } else if (fcmType === "requester_alert") {
+                        setFcmRequesterAlert({
+                            responderName: urlParams.get("responder_name") ?? "",
+                            responderPhone: urlParams.get("responder_phone") ?? "",
+                            responderBloodType: urlParams.get("responder_blood_type") ?? "",
+                        });
+                        window.history.replaceState({}, "", "/");
+                        setScreen("request-live");
+                        setSessionLoading(false);
+                        return;
+                    }
                     setScreen("home");
                 }
             }
@@ -448,6 +491,28 @@ function App() {
         setActiveRequestExpiresAt(expiresAt);
         setActiveRequestUnitsCollected(0);
 
+        // Notify nearby compatible donors via FCM (fire-and-forget — failure does not block UX)
+        if (newRow?.id) {
+            const notifyPayload = {
+                requestId: newRow.id,
+                bloodType: draft.bloodType,
+                lat: draft.lat,
+                lng: draft.lng,
+                urgency: draft.urgency,
+                address: draft.address,
+            };
+            console.log('[FCM] invoking notify-donors →', notifyPayload);
+            void supabase.functions.invoke("notify-donors", {
+                body: notifyPayload,
+            }).then(({ data, error }) => {
+                if (error) console.warn('[FCM] notify-donors error:', error.message);
+                else console.log('[FCM] notify-donors result:', data);
+            });
+        }
+
+        // Prompt for push permission so requester gets alerted on donor responses
+        maybeAskPush(uid);
+
         setScreen("request-live");
     };
 
@@ -487,6 +552,15 @@ function App() {
                     message: errStrings.genericMsg,
                 });
             }
+        } else {
+            // Successful new response — Edge Function handles "first-only" check before sending FCM
+            console.log('[FCM] invoking notify-requester → requestId:', reqId, 'responderId:', uid);
+            void supabase.functions.invoke("notify-requester", {
+                body: { requestId: reqId, responderId: uid },
+            }).then(({ data, error: fnErr }) => {
+                if (fnErr) console.warn('[FCM] notify-requester error:', fnErr.message);
+                else console.log('[FCM] notify-requester result:', data);
+            });
         }
     };
 
@@ -563,6 +637,9 @@ function App() {
             lat: profile.lat,
             lng: profile.lng,
         }));
+        // Prompt for push permission so donor gets alerted on new nearby requests
+        maybeAskPush(uid);
+
         setScreen("donor-thankyou");
     };
 
@@ -594,6 +671,19 @@ function App() {
             .eq("profile_id", user.supabaseId);
         if (error)
             console.error("emergency callable update failed:", error.message);
+    };
+
+    /** Show push permission pre-dialog if permission not yet granted; silently re-register if already granted. */
+    const maybeAskPush = (profileId: string) => {
+        if (!pushSupported()) return;
+        if (Notification.permission === "granted") {
+            void registerPushToken(profileId);
+            return;
+        }
+        if (Notification.permission === "default") {
+            setPendingPushProfileId(profileId);
+            setPushDialogOpen(true);
+        }
     };
 
     /** Reset all active-request slices to their empty defaults. Called after any close path. */
@@ -757,25 +847,44 @@ function App() {
 
     if (screen === "request-live") {
         return (
-            <RequestLive
-                lang={lang}
-                bloodType={requestDraft?.bloodType}
-                unitsNeeded={requestDraft?.units}
-                unitsCollected={activeRequestUnitsCollected}
-                requestId={activeRequestId}
-                currentUserId={user.supabaseId}
-                lat={requestDraft?.lat}
-                lng={requestDraft?.lng}
-                onResolveClosed={handleResolveClosed}
-                onUnitConfirmed={(n) => setActiveRequestUnitsCollected(n)}
-                showExtendBanner={showExtendBanner}
-                onExtend={handleExtend}
-                onBack={() => setScreen("home")}
-                onGoHome={() => {
-                    clearActiveRequest();
-                    setScreen("home");
-                }}
-            />
+            <>
+                <RequestLive
+                    lang={lang}
+                    bloodType={requestDraft?.bloodType}
+                    unitsNeeded={requestDraft?.units}
+                    unitsCollected={activeRequestUnitsCollected}
+                    requestId={activeRequestId}
+                    currentUserId={user.supabaseId}
+                    lat={requestDraft?.lat}
+                    lng={requestDraft?.lng}
+                    onResolveClosed={handleResolveClosed}
+                    onUnitConfirmed={(n) => setActiveRequestUnitsCollected(n)}
+                    showExtendBanner={showExtendBanner}
+                    onExtend={handleExtend}
+                    onBack={() => setScreen("home")}
+                    onGoHome={() => {
+                        clearActiveRequest();
+                        setScreen("home");
+                    }}
+                    fcmRequesterAlert={fcmRequesterAlert}
+                    onDismissFcmRequesterAlert={() => setFcmRequesterAlert(null)}
+                />
+                {/* Push notification pre-permission dialog */}
+                <AlertDialog
+                    open={pushDialogOpen}
+                    title={lang === "my" ? "သတိပေးချက် ခွင့်ပြုမည်လား?" : "Enable notifications?"}
+                    message={lang === "my"
+                        ? "သွေးလှူရှင်များ တုံ့ပြန်မှုများကို ချက်ချင်း သိနိုင်ရန် push notification ခွင့်ပြုပါ။"
+                        : "Allow push notifications to get instant alerts when donors respond."}
+                    confirmLabel={lang === "my" ? "ခွင့်ပြုမည်" : "Allow"}
+                    cancelLabel={lang === "my" ? "နောက်မှ" : "Not now"}
+                    onConfirm={() => {
+                        setPushDialogOpen(false);
+                        if (pendingPushProfileId) void registerPushToken(pendingPushProfileId);
+                    }}
+                    onCancel={() => setPushDialogOpen(false)}
+                />
+            </>
         );
     }
 
@@ -800,6 +909,8 @@ function App() {
                     onRespond={handleRespond}
                     showExtendBanner={showExtendBanner}
                     onExtend={handleExtend}
+                    fcmDonorAlert={fcmDonorAlert}
+                    onDismissFcmDonorAlert={() => setFcmDonorAlert(null)}
                 />
                 {/* Write-error dialog for handlePosted and handleSaveDonor failures */}
                 <AlertDialog
@@ -810,6 +921,21 @@ function App() {
                     cancelLabel={WRITE_ERROR_STRINGS[lang].dismiss}
                     onConfirm={() => setWriteError(null)}
                     onCancel={() => setWriteError(null)}
+                />
+                {/* Push notification pre-permission dialog */}
+                <AlertDialog
+                    open={pushDialogOpen}
+                    title={lang === "my" ? "သတိပေးချက် ခွင့်ပြုမည်လား?" : "Enable notifications?"}
+                    message={lang === "my"
+                        ? "သွေးလှူရှင်များ တုံ့ပြန်မှုများနှင့် အနီးနားရှိ တောင်းခံချက်များကို ချက်ချင်း သိနိုင်ရန် push notification ခွင့်ပြုပါ။"
+                        : "Allow push notifications to get instant alerts when donors respond or blood is needed nearby."}
+                    confirmLabel={lang === "my" ? "ခွင့်ပြုမည်" : "Allow"}
+                    cancelLabel={lang === "my" ? "နောက်မှ" : "Not now"}
+                    onConfirm={() => {
+                        setPushDialogOpen(false);
+                        if (pendingPushProfileId) void registerPushToken(pendingPushProfileId);
+                    }}
+                    onCancel={() => setPushDialogOpen(false)}
                 />
             </>
         );
