@@ -101,6 +101,7 @@
       }
     ]
   },
+  "model": "opus",
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase"
