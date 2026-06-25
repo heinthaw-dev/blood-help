@@ -89,7 +89,7 @@
 
 ---
 
-### 🚧 v2.0 Backend Core (In Progress)
+### ✅ v2.0 Backend Core (Complete — 2026-06-24)
 
 **Milestone Goal:** Wire the full blood request loop end-to-end on Supabase — schema, anonymous auth, geo-matching, donor responses, real-time updates, QR/code confirmation, and request lifecycle. FCM push deferred to v3.0.
 
@@ -103,7 +103,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Foundation** - Supabase schema, PostGIS, RLS, anonymous auth, and React client wiring — the full infrastructure layer before any user-facing data flows *(completed: 6 plans, 2026-06-21)*
 - [x] **Phase 7: Data Persistence + Geo-Matching** - Profile and request forms write real data; home feed queries real requests from DB using blood-type compatibility matching and PostGIS proximity (completed 2026-06-21)
 - [x] **Phase 8: Donor Response + Realtime** - "I'll help" creates a DB row; request-live screen subscribes to Supabase Realtime and updates donor list live *(completed: 3 plans, 2026-06-22)*
-- [ ] **Phase 9: Confirmation + Lifecycle** - QR/5-char code confirms donations, auto-fulfills on units target, requester close writes to DB, and a scheduled Edge Function expires stale requests
+- [x] **Phase 9: Confirmation + Lifecycle** - QR/5-char code confirms donations, auto-fulfills on units target, requester close writes to DB, and pg_cron expires stale requests *(completed: 3 plans, 2026-06-24)*
 
 ## Phase Details
 
@@ -220,4 +220,4 @@ v1.0 phases complete. v2.0 executes: 6 → 7 → 8 → 9
 | 6. Foundation | v2.0 | 6/6 | Complete | 2026-06-21 |
 | 7. Data Persistence + Geo-Matching | v2.0 | 4/4 | Complete   | 2026-06-21 |
 | 8. Donor Response + Realtime | v2.0 | 3/3 | Complete   | 2026-06-22 |
-| 9. Confirmation + Lifecycle | v2.0 | 0/TBD | Not started | - |
+| 9. Confirmation + Lifecycle | v2.0 | 3/3 | Complete | 2026-06-24 |

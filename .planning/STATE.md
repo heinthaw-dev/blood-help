@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Backend Core
-status: executing
-stopped_at: Phase 9 all plans complete — verifying
-last_updated: "2026-06-24T00:00:00.000Z"
-last_activity: 2026-06-24 -- Phase 9 plan 09-03 complete (App.tsx + Home lifecycle wiring)
+status: complete
+stopped_at: v2.0 milestone complete — all 4 phases shipped, E2E loop verified
+last_updated: "2026-06-25T00:00:00.000Z"
+last_activity: 2026-06-25 -- v2.0 marked complete; quick tasks landed (progress bar fix, pre-visible callable donors)
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 19
-  completed_plans: 16
-  percent: 84
+  completed_plans: 19
+  percent: 100
 ---
 
 # Project State
