@@ -1,0 +1,8 @@
+# A string used to distinguish different Supabase projects on the same host.
+project_id = "blood-help-old"
+
+[db]
+port = 54322
+
+[auth]
+enabled = true
