@@ -23,3 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 
+# Firebase service account key — treat as password, never commit
+*firebase-adminsdk*.json
+configs.txt
+
+# PWA dev/build artifacts (vite-plugin-pwa)
+dev-dist
+
+# Supabase CLI local cache
+supabase/.temp
+
