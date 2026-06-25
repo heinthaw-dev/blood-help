@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9
 Plan: 09-03 complete — all plans done
 Status: Verifying phase goal
-Last activity: 2026-06-23 -- Phase 9 planning complete
+Last activity: 2026-06-25 -- Completed quick task 260625-taj: fix callable_donors_for_request d.geog column error
 
 Progress: [██████████] 100%
 
@@ -84,6 +84,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260624-vxw | Implement pre-visible emergency-callable donors on RequestLive screen | 2026-06-24 | 8645ff2 | [260624-vxw-implement-pre-visible-emergency-callable](./quick/260624-vxw-implement-pre-visible-emergency-callable/) |
+| 260625-taj | Fix callable_donors_for_request RPC referencing non-existent d.geog column | 2026-06-25 | 9ab4240 | [260625-taj-fix-callable-donors-for-request-rpc-refe](./quick/260625-taj-fix-callable-donors-for-request-rpc-refe/) |
 
 ## Deferred Items
 
