@@ -5,7 +5,7 @@ milestone_name: Backend Core
 status: complete
 stopped_at: v2.0 milestone complete — all 4 phases shipped, E2E loop verified
 last_updated: "2026-06-25T00:00:00.000Z"
-last_activity: 2026-06-25 -- Completed quick task 260625-v8m: frontend FCM wiring hardened + committed on feat/fcm-frontend
+last_activity: 2026-06-25 -- Completed quick task 260625-vps: added vercel.json (Part C) on feat/fcm-frontend
 progress:
   total_phases: 4
   completed_phases: 4
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9
 Plan: 09-03 complete — all plans done
 Status: Verifying phase goal
-Last activity: 2026-06-25 -- Completed quick task 260625-v8m: frontend FCM wiring (Part B) hardened + committed on feat/fcm-frontend
+Last activity: 2026-06-25 -- Completed quick task 260625-vps: added vercel.json (Part C) on feat/fcm-frontend
 
 Progress: [██████████] 100%
 
@@ -86,6 +86,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260624-vxw | Implement pre-visible emergency-callable donors on RequestLive screen | 2026-06-24 | 8645ff2 | [260624-vxw-implement-pre-visible-emergency-callable](./quick/260624-vxw-implement-pre-visible-emergency-callable/) |
 | 260625-taj | Fix callable_donors_for_request RPC referencing non-existent d.geog column | 2026-06-25 | 9ab4240 | [260625-taj-fix-callable-donors-for-request-rpc-refe](./quick/260625-taj-fix-callable-donors-for-request-rpc-refe/) |
 | 260625-v8m | Frontend FCM wiring — firebase client, merged service worker, manifest, push opt-in (harden + checkpoint; pulls FCM forward from v3.0 deferral) | 2026-06-25 | 8886500 | [260625-v8m-frontend-fcm-wiring-firebase-client-serv](./quick/260625-v8m-frontend-fcm-wiring-firebase-client-serv/) |
+| 260625-vps | Add vercel.json — SPA fallback, service-worker no-cache, security headers (Part C of Vercel/FCM deploy) | 2026-06-25 | a8090ba | [260625-vps-add-vercel-json-spa-rewrites-service-wor](./quick/260625-vps-add-vercel-json-spa-rewrites-service-wor/) |
 
 ## Deferred Items
 
