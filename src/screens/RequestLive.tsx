@@ -8,7 +8,7 @@ import { formatNumber } from '../i18n'
 import { supabase } from '../lib/supabase'
 import type { BloodType } from '../blood'
 import { COMPATIBLE_REQUEST_TYPES } from '../blood'
-import { formatPhone, formatDistanceLabel } from '../format'
+import { formatDistanceLabel } from '../format'
 import { useZxing } from 'react-zxing'
 
 // ---- types ----
@@ -629,14 +629,10 @@ export function RequestLive({
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 5, fontSize: 13, color: 'var(--text-hint)' }}>
                         {responder.dist_meters != null && (
-                          <>
-                            <span style={{ fontFamily: 'var(--font-burmese)', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                              {formatDistanceLabel(responder.dist_meters, lang)}
-                            </span>
-                            <span style={{ flexShrink: 0, width: 3, height: 3, borderRadius: '999px', background: 'var(--text-hint)' }} />
-                          </>
+                          <span style={{ fontFamily: 'var(--font-burmese)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                            {formatDistanceLabel(responder.dist_meters, lang)}
+                          </span>
                         )}
-                        <span style={{ whiteSpace: 'nowrap' }}>{formatPhone(responder.phone)}</span>
                       </div>
                     </div>
                     <CallButton href={`tel:${responder.phone}`} />
