@@ -349,15 +349,13 @@ export function RequestLive({
 
     const next = result.units_collected ?? collected + 1
     setCode('')
+    setCollected(next)
+    onUnitConfirmed?.(next)
 
     if (result.fulfilled) {
-      setCollected(next)
-      onUnitConfirmed?.(next)
       setClosed('fulfilled')
       setSheet(null)
     } else {
-      setCollected(next)
-      onUnitConfirmed?.(next)
       setSheet(null)
       showToast(
         toMyanmarDigits(next) + ' / ' + toMyanmarDigits(unitsNeeded) + ' unit ရရှိပြီး — ကျန်အတွက် ဆက်ရှာနေပါမည်',

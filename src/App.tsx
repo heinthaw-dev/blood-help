@@ -596,6 +596,15 @@ function App() {
             console.error("emergency callable update failed:", error.message);
     };
 
+    /** Reset all active-request slices to their empty defaults. Called after any close path. */
+    const clearActiveRequest = () => {
+        setRequestDraft(null);
+        setActiveRequestId(null);
+        setActiveRequestExtended(false);
+        setActiveRequestExpiresAt(null);
+        setActiveRequestUnitsCollected(0);
+    };
+
     /**
      * Writes the D-01-mapped status + closed_at for the manual close paths (LIFE-01).
      * 'outside' → status='fulfilled' (requester got blood by other means).
@@ -621,11 +630,7 @@ function App() {
         }
 
         // Clear local request state on success; navigation back to Home driven by RequestLive's onGoHome.
-        setRequestDraft(null);
-        setActiveRequestId(null);
-        setActiveRequestExtended(false);
-        setActiveRequestExpiresAt(null);
-        setActiveRequestUnitsCollected(0);
+        clearActiveRequest();
         return true;
     };
 
@@ -676,11 +681,7 @@ function App() {
         void supabase.auth.signOut();
         setUser(DEFAULT_USER);
         setPhone("");
-        setRequestDraft(null);
-        setActiveRequestId(null); // clear activeRequestId on logout
-        setActiveRequestExtended(false);
-        setActiveRequestExpiresAt(null);
-        setActiveRequestUnitsCollected(0);
+        clearActiveRequest();
         setRespondedIds(new Set()); // clear responded card state so the next user on a shared device does not inherit it (privacy)
         // D-12/T-09-03-04: clear the unseen-donation marker so a shared device does not leak one user's congrats to the next.
         localStorage.removeItem("bloodhelp.lastSeenDonationAt");
@@ -771,11 +772,7 @@ function App() {
                 onExtend={handleExtend}
                 onBack={() => setScreen("home")}
                 onGoHome={() => {
-                    setRequestDraft(null);
-                    setActiveRequestId(null);
-                    setActiveRequestExtended(false);
-                    setActiveRequestExpiresAt(null);
-                    setActiveRequestUnitsCollected(0);
+                    clearActiveRequest();
                     setScreen("home");
                 }}
             />
