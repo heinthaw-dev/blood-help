@@ -577,11 +577,16 @@ export function RequestLive({
                       <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 15, fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}>
                         {donor.name}
                       </div>
-                      {donor.dist_meters != null && (
-                        <div style={{ fontSize: 13, color: 'var(--text-hint)', marginTop: 3, fontFamily: 'var(--font-burmese)' }}>
-                          {formatDistanceLabel(donor.dist_meters, lang)}
-                        </div>
-                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 3, fontSize: 13, color: 'var(--text-hint)', fontFamily: 'var(--font-burmese)' }}>
+                        {donor.dist_meters != null && (
+                          <span style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
+                            {formatDistanceLabel(donor.dist_meters, lang)}
+                          </span>
+                        )}
+                        {donor.phone && (
+                          <span style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>{donor.phone}</span>
+                        )}
+                      </div>
                     </div>
                     <CallButton href={`tel:${donor.phone}`} />
                   </div>
@@ -641,6 +646,9 @@ export function RequestLive({
                           <span style={{ fontFamily: 'var(--font-burmese)', flexShrink: 0, whiteSpace: 'nowrap' }}>
                             {formatDistanceLabel(responder.dist_meters, lang)}
                           </span>
+                        )}
+                        {responder.phone && (
+                          <span style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>{responder.phone}</span>
                         )}
                       </div>
                     </div>
