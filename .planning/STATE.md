@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9
 Plan: 09-03 complete — all plans done
 Status: Verifying phase goal
-Last activity: 2026-06-25 -- Completed quick task 260625-vps: added vercel.json (Part C) on feat/fcm-frontend
+Last activity: 2026-06-26 -- Completed quick task 260626-igc: rebuilt Leaderboard v2 with real Supabase data
 
 Progress: [██████████] 100%
 
@@ -87,6 +87,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260625-taj | Fix callable_donors_for_request RPC referencing non-existent d.geog column | 2026-06-25 | 9ab4240 | [260625-taj-fix-callable-donors-for-request-rpc-refe](./quick/260625-taj-fix-callable-donors-for-request-rpc-refe/) |
 | 260625-v8m | Frontend FCM wiring — firebase client, merged service worker, manifest, push opt-in (harden + checkpoint; pulls FCM forward from v3.0 deferral) | 2026-06-25 | 8886500 | [260625-v8m-frontend-fcm-wiring-firebase-client-serv](./quick/260625-v8m-frontend-fcm-wiring-firebase-client-serv/) |
 | 260625-vps | Add vercel.json — SPA fallback, service-worker no-cache, security headers (Part C of Vercel/FCM deploy) | 2026-06-25 | a8090ba | [260625-vps-add-vercel-json-spa-rewrites-service-wor](./quick/260625-vps-add-vercel-json-spa-rewrites-service-wor/) |
+| 260626-igc | Rebuild Leaderboard screen v2 with real Supabase data (leaderboard_top_donors SECURITY DEFINER RPC) | 2026-06-26 | 84be1d3 | [260626-igc-rebuild-leaderboard-screen-v2-with-real-](./quick/260626-igc-rebuild-leaderboard-screen-v2-with-real-/) |
 
 ## Deferred Items
 
