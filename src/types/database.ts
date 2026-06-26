@@ -323,6 +323,17 @@ export type Database = {
         }[]
       }
       generate_donor_code: { Args: never; Returns: string }
+      leaderboard_top_donors: {
+        Args: { p_limit?: number }
+        Returns: {
+          profile_id: string
+          name: string
+          blood_type: Database["public"]["Enums"]["blood_type"]
+          donation_count: number
+          rank: number
+          total_donations: number
+        }[]
+      }
       requests_within_radius: {
         Args: { lat: number; lng: number; radius_km: number }
         Returns: {
