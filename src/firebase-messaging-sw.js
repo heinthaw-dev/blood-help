@@ -6,6 +6,14 @@ importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js')
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js')
 
+// Force new SW to activate immediately without waiting for tabs to close.
+// Without this, the updated notificationclick handler would stay "waiting" until
+// every open window is manually closed and reopened.
+self.addEventListener('install', function() { self.skipWaiting() })
+self.addEventListener('activate', function(event) {
+  event.waitUntil(clients.claim())
+})
+
 // Precache app shell — entries injected by vite-plugin-pwa at build time
 workbox.precaching.precacheAndRoute(self.__WB_MANIFEST || [])
 
@@ -33,26 +41,33 @@ messaging.onBackgroundMessage(function (payload) {
   })
 })
 
-// Notification click → reopen/focus app with FCM deep-link URL params
+// Notification click handler — two paths depending on whether the app is already open:
+//   Warm start (app backgrounded): postMessage the FCM data directly to the running React
+//     app so it can show the modal without a full page reload. client.navigate() is unreliable
+//     here because Workbox's precacheAndRoute only caches bare '/' — a query-string URL like
+//     '/?fcm_type=...' falls through to the network, which can be slow or fail on mobile.
+//   Cold start (app closed): openWindow with URL params so initAuth can read them on boot.
 self.addEventListener('notificationclick', function (event) {
   event.notification.close()
   var data = event.notification.data || {}
+
+  // Build fallback URL for cold-start path (openWindow)
   var params = new URLSearchParams()
   Object.keys(data).forEach(function (k) {
     if (typeof data[k] === 'string') params.set(k, data[k])
   })
-  // Use absolute URL — clients.openWindow requires it in most browsers
   var path = params.toString() ? '/?' + params.toString() : '/'
   var url = self.location.origin + path
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (windowClients) {
-      for (var i = 0; i < windowClients.length; i++) {
-        var client = windowClients[i]
-        if ('navigate' in client) {
-          return client.navigate(url).then(function () { return client.focus() })
-        }
+      if (windowClients.length > 0) {
+        // Warm start — deliver data directly, no reload needed
+        var client = windowClients[0]
+        client.postMessage({ type: 'fcm_notification_click', data: data })
+        return client.focus()
       }
+      // Cold start — open fresh window; initAuth will read URL params on boot
       return clients.openWindow(url)
     })
   )
