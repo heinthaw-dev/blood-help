@@ -4,6 +4,7 @@ import { Badge } from '../components/Badge'
 import { Switch } from '../components/Switch'
 import { BottomNav } from '../components/BottomNav'
 import { ScreenHeader } from '../components/ScreenHeader'
+import { NotificationBell } from '../components/NotificationBell'
 import { IncomingRequestAlert } from '../components/IncomingRequestAlert'
 import type { Tab } from '../components/BottomNav'
 import type { BloodType } from '../blood'
@@ -231,6 +232,8 @@ export interface HomeProps {
   onViewRequest?: () => void
   onFinishSetup: () => void
   onNavigate: (tab: Tab) => void
+  /** Open the notifications screen (header bell). */
+  onOpenNotifications: () => void
   /** Donor's last-known coarsened latitude — used by feed query. */
   donorLat?: number | null
   /** Donor's last-known coarsened longitude — used by feed query. */
@@ -268,6 +271,7 @@ export function Home({
   onViewRequest,
   onFinishSetup,
   onNavigate,
+  onOpenNotifications,
   donorLat = null,
   donorLng = null,
   currentUserId = null,
@@ -371,12 +375,7 @@ export function Home({
         <ScreenHeader
           variant="brand"
           align="left"
-          right={
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
-              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.5 21a1.7 1.7 0 0 1-3 0" />
-            </svg>
-          }
+          right={<NotificationBell onClick={onOpenNotifications} />}
         />
 
         {/* Scrollable content */}

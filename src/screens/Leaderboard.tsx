@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { BottomNav } from "../components/BottomNav";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { NotificationBell } from "../components/NotificationBell";
 import type { Tab } from "../components/BottomNav";
 import type { Lang } from "../i18n";
 import { formatNumber } from "../i18n";
@@ -23,6 +24,8 @@ interface LeaderboardProps {
     onNavigate: (tab: Tab) => void;
     /** Logged-in user's Supabase auth id — highlights their row as "You". */
     currentUserId: string | null;
+    /** Open the notifications screen (header bell). */
+    onOpenNotifications: () => void;
 }
 
 // ---- constants ----
@@ -81,6 +84,7 @@ export function Leaderboard({
     lang,
     onNavigate,
     currentUserId,
+    onOpenNotifications,
 }: LeaderboardProps) {
     const isMy = lang === "my";
     const burmeseFont = "var(--font-burmese)";
@@ -193,7 +197,7 @@ export function Leaderboard({
         <div className="phone-entry-stage">
             <div className="phone-entry-card" style={{ height: "100dvh" }}>
                 {/* Header */}
-                <ScreenHeader variant="brand" align="left" />
+                <ScreenHeader variant="brand" align="left" right={<NotificationBell onClick={onOpenNotifications} />} />
 
                 {/* Scrollable body */}
                 <div

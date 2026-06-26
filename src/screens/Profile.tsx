@@ -5,6 +5,7 @@ import { Badge } from '../components/Badge'
 import { BottomNav } from '../components/BottomNav'
 import { ScreenHeader } from '../components/ScreenHeader'
 import { LanguageToggle } from '../components/LanguageToggle'
+import { NotificationBell } from '../components/NotificationBell'
 import type { Tab } from '../components/BottomNav'
 import type { BloodType } from '../blood'
 import type { Lang } from '../i18n'
@@ -49,6 +50,8 @@ export interface ProfileProps {
   onRegisterDonor: () => void
   onLogout: () => void
   onNavigate: (tab: Tab) => void
+  /** Open the notifications screen (header bell). */
+  onOpenNotifications: () => void
 }
 
 /**
@@ -73,6 +76,7 @@ export function Profile({
   onRegisterDonor,
   onLogout,
   onNavigate,
+  onOpenNotifications,
 }: ProfileProps) {
   const [logoutHover, setLogoutHover] = useState(false)
 
@@ -137,7 +141,7 @@ export function Profile({
       <div className="phone-entry-card">
 
         {/* Top bar */}
-        <ScreenHeader variant="brand" align="left" />
+        <ScreenHeader variant="brand" align="left" right={<NotificationBell onClick={onOpenNotifications} />} />
 
         {/* Scrollable content */}
         <div className="bh-scroll" style={{

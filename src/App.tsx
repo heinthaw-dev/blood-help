@@ -13,6 +13,7 @@ import { DonorCongrats } from "./screens/DonorCongrats";
 import { DonorThankYou } from "./screens/DonorThankYou";
 import { Home } from "./screens/Home";
 import { RequestLive } from "./screens/RequestLive";
+import { Notifications } from "./screens/Notifications";
 import { AlertDialog } from "./components/AlertDialog";
 import type { Tab } from "./components/BottomNav";
 import { getSession } from "./auth";
@@ -34,7 +35,8 @@ type Screen =
     | "donor-setup"
     | "donor-congrats"
     | "donor-thankyou"
-    | "request-live";
+    | "request-live"
+    | "notifications";
 
 /** Logged-in user state, hydrated from profiles + donors on session restore. */
 interface UserState {
@@ -148,6 +150,8 @@ async function derivePassword(e164: string): Promise<string> {
 function App() {
     const [lang, setLang] = useState<Lang>("my");
     const [screen, setScreen] = useState<Screen>("phone");
+    /** The tab to return to when leaving the notifications screen. */
+    const [notificationsReturn, setNotificationsReturn] = useState<Screen>("home");
     const [phone, setPhone] = useState("");
     const [user, setUser] = useState<UserState>(DEFAULT_USER);
     const [requestDraft, setRequestDraft] = useState<RequestDraft | null>(null);
@@ -711,6 +715,12 @@ function App() {
         else if (tab === "leaderboard") setScreen("leaderboard");
     };
 
+    /** Open the notifications screen, remembering the current tab to return to. */
+    const handleOpenNotifications = () => {
+        setNotificationsReturn(screen);
+        setScreen("notifications");
+    };
+
     const handleAvailableChange = async (v: boolean) => {
         setUser((u) => ({ ...u, available: v }));
         if (!user.supabaseId) return;
@@ -964,6 +974,7 @@ function App() {
                     onViewRequest={() => setScreen("request-live")}
                     onFinishSetup={() => setScreen("donor-setup")}
                     onNavigate={handleNavigate}
+                    onOpenNotifications={handleOpenNotifications}
                     donorLat={user.lat}
                     donorLng={user.lng}
                     currentUserId={user.supabaseId}
@@ -1025,6 +1036,7 @@ function App() {
                     onRegisterDonor={() => setScreen("donor-setup")}
                     onLogout={handleLogout}
                     onNavigate={handleNavigate}
+                    onOpenNotifications={handleOpenNotifications}
                 />
                 {/* Write-error dialog also accessible from profile screen */}
                 <AlertDialog
@@ -1046,6 +1058,16 @@ function App() {
                 lang={lang}
                 onNavigate={handleNavigate}
                 currentUserId={user.supabaseId}
+                onOpenNotifications={handleOpenNotifications}
+            />
+        );
+    }
+
+    if (screen === "notifications") {
+        return (
+            <Notifications
+                lang={lang}
+                onBack={() => setScreen(notificationsReturn)}
             />
         );
     }
