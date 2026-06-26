@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { BottomNav } from "../components/BottomNav";
+import { Card } from "../components/Card";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { NotificationBell } from "../components/NotificationBell";
 import type { Tab } from "../components/BottomNav";
@@ -375,18 +376,16 @@ export function Leaderboard({
                                         ];
                                     const isFirst = row.rank === 1;
                                     return (
-                                        <div
+                                        <Card
                                             key={row.profileId}
+                                            padding="lg"
+                                            background={medal.cardBg}
+                                            borderColor={medal.cardBorder}
                                             style={{
                                                 position: "relative",
                                                 display: "flex",
                                                 alignItems: "center",
                                                 gap: 16,
-                                                padding: 18,
-                                                borderRadius:
-                                                    "var(--radius-card)",
-                                                background: medal.cardBg,
-                                                border: `1px solid ${medal.cardBorder}`,
                                                 boxShadow: medal.cardShadow,
                                             }}
                                         >
@@ -587,7 +586,7 @@ export function Leaderboard({
                                                     {t.times}
                                                 </div>
                                             </div>
-                                        </div>
+                                        </Card>
                                     );
                                 })}
                             </div>
@@ -623,19 +622,15 @@ export function Leaderboard({
                                         }}
                                     >
                                         {rest.map((row) => (
-                                            <div
+                                            <Card
                                                 key={row.profileId}
+                                                padding="sm"
+                                                background={row.isUser ? "var(--color-primary-tint)" : undefined}
+                                                borderColor={row.isUser ? "transparent" : undefined}
                                                 style={{
                                                     display: "flex",
                                                     alignItems: "center",
                                                     gap: 14,
-                                                    padding: "12px 14px",
-                                                    borderRadius:
-                                                        "var(--radius-card)",
-                                                    background: row.isUser
-                                                        ? "var(--color-primary-tint)"
-                                                        : "var(--surface-card)",
-                                                    border: `1px solid ${row.isUser ? "transparent" : "var(--border-card)"}`,
                                                 }}
                                             >
                                                 {/* rank */}
@@ -754,7 +749,7 @@ export function Leaderboard({
                                                         {t.times}
                                                     </span>
                                                 </div>
-                                            </div>
+                                            </Card>
                                         ))}
                                     </div>
                                 </>

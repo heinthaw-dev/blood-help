@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { useState } from 'react'
+import { Card } from '../components/Card'
 import { ScreenHeader } from '../components/ScreenHeader'
 import { LanguageToggle } from '../components/LanguageToggle'
 import type { Lang } from '../i18n'
@@ -45,17 +46,13 @@ export function IntentChoice({ lang, onLangChange, onChoose }: IntentChoiceProps
   }
   const copy = strings[lang]
 
-  const cardStyle = (id: Intent): CSSProperties => ({
+  const cardDynStyle = (id: Intent) => ({
     display: 'flex',
     alignItems: 'center',
     gap: 16,
-    padding: '22px 20px',
-    borderRadius: 'var(--radius-card)',
     cursor: 'pointer',
     transition: 'border-color 120ms ease, background 120ms ease, transform 120ms ease',
-    userSelect: 'none',
-    background: hovered === id ? 'var(--color-primary-wash)' : '#fff',
-    border: `1.5px solid ${hovered === id ? 'var(--color-primary)' : 'var(--border-card)'}`,
+    userSelect: 'none' as const,
     transform: hovered === id ? 'scale(0.988)' : 'scale(1)',
     boxShadow: hovered === id ? 'none' : 'var(--shadow-soft)',
   })
@@ -148,13 +145,16 @@ export function IntentChoice({ lang, onLangChange, onChoose }: IntentChoiceProps
           {/* Cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 44 }}>
             {/* Card 1: I need blood */}
-            <div
+            <Card
+              padding="lg"
+              selected={hovered === 'need'}
+              background={hovered === 'need' ? 'var(--color-primary-wash)' : '#fff'}
               role="button"
               tabIndex={0}
               onClick={() => onChoose('need')}
               onMouseEnter={() => setHovered('need')}
               onMouseLeave={() => setHovered(null)}
-              style={cardStyle('need')}
+              style={cardDynStyle('need')}
             >
               <div style={iconContainerStyle}>
                 <svg
@@ -176,16 +176,19 @@ export function IntentChoice({ lang, onLangChange, onChoose }: IntentChoiceProps
                 <p style={cardDescStyle}>{copy.card1Desc}</p>
               </div>
               {chevron}
-            </div>
+            </Card>
 
             {/* Card 2: I want to donate */}
-            <div
+            <Card
+              padding="lg"
+              selected={hovered === 'donate'}
+              background={hovered === 'donate' ? 'var(--color-primary-wash)' : '#fff'}
               role="button"
               tabIndex={0}
               onClick={() => onChoose('donate')}
               onMouseEnter={() => setHovered('donate')}
               onMouseLeave={() => setHovered(null)}
-              style={cardStyle('donate')}
+              style={cardDynStyle('donate')}
             >
               <div style={iconContainerStyle}>
                 <svg
@@ -211,7 +214,7 @@ export function IntentChoice({ lang, onLangChange, onChoose }: IntentChoiceProps
                 <p style={cardDescStyle}>{copy.card2Desc}</p>
               </div>
               {chevron}
-            </div>
+            </Card>
           </div>
         </div>
       </div>

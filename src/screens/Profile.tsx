@@ -2,6 +2,7 @@ import { useState } from 'react'
 import QRCode from 'react-qr-code'
 import { Switch } from '../components/Switch'
 import { Badge } from '../components/Badge'
+import { Card } from '../components/Card'
 import { BottomNav } from '../components/BottomNav'
 import { ScreenHeader } from '../components/ScreenHeader'
 import { LanguageToggle } from '../components/LanguageToggle'
@@ -169,7 +170,7 @@ export function Profile({
           </div>
 
           {/* Stats card */}
-          <div style={{ background: 'var(--surface-card)', border: '1px solid var(--border-card)', borderRadius: 'var(--radius-card)', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card padding="md" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* Donation count row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <span style={{ flexShrink: 0, width: 40, height: 40, borderRadius: '999px', background: 'var(--color-primary-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -232,11 +233,11 @@ export function Profile({
                 </div>
               </div>
             )}
-          </div>
+          </Card>
 
           {/* Donor QR code card */}
           {isDonor ? (
-            <div style={{ background: 'var(--surface-card)', border: '1px solid var(--border-card)', borderRadius: 'var(--radius-card)', padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <Card padding="lg" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
               <div style={{ fontFamily: langFont, fontSize: 18, fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}>
                 {t.qrTitle}
               </div>
@@ -263,7 +264,7 @@ export function Profile({
                   {donorCode.toUpperCase()}
                 </div>
               </div>
-            </div>
+            </Card>
           ) : (
             /* Not-a-donor nudge */
             <button

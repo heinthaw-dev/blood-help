@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
+import { Card } from '../components/Card'
 import { ScreenHeader } from '../components/ScreenHeader'
 import { AlertDialog } from '../components/AlertDialog'
 import type { Lang } from '../i18n'
@@ -527,11 +528,11 @@ export function RequestLive({
 
           {/* Transparency card (D-09) — truthful "can see your request" count, never "alerted" */}
           {alertingDone && (
-            <div style={{ background: 'var(--surface-card)', border: '0.5px solid var(--border-card)', borderRadius: 'var(--radius-card)', padding: '13px 14px' }}>
+            <Card padding="sm">
               <p style={{ margin: 0, fontFamily: 'var(--font-burmese)', fontSize: 13, lineHeight: 1.65, color: 'var(--text-secondary)' }}>
                 {transparencyLine}
               </p>
-            </div>
+            </Card>
           )}
 
           {/* Available to Call section — emergency-callable donors visible immediately.
@@ -548,7 +549,7 @@ export function RequestLive({
                 </div>
               </div>
               {visibleCallable.map((donor) => (
-                <div key={donor.donor_id} style={{ background: 'var(--surface-card)', border: '0.5px solid var(--border-card)', borderRadius: 16, padding: 14 }}>
+                <Card key={donor.donor_id} padding="sm">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Badge>{donor.blood_type}</Badge>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -568,7 +569,7 @@ export function RequestLive({
                     </div>
                     <CallButton href={`tel:${donor.phone}`} />
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           )}
@@ -596,7 +597,7 @@ export function RequestLive({
             ) : (
               /* Real Will-Help responder rows from the RPC (D-05) */
               responders.map((responder) => (
-                <div key={responder.donor_id} style={{ background: 'var(--surface-card)', border: '0.5px solid var(--border-card)', borderRadius: 16, padding: 14 }}>
+                <Card key={responder.donor_id} padding="sm">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{
                       flexShrink: 0, width: 40, height: 40, borderRadius: '999px',
@@ -632,7 +633,7 @@ export function RequestLive({
                     </div>
                     <CallButton href={`tel:${responder.phone}`} />
                   </div>
-                </div>
+                </Card>
               ))
             )}
           </div>

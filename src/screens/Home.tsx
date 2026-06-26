@@ -1,6 +1,6 @@
-import type { CSSProperties } from 'react'
 import { useState, useEffect } from 'react'
 import { Badge } from '../components/Badge'
+import { Card } from '../components/Card'
 import { Switch } from '../components/Switch'
 import { BottomNav } from '../components/BottomNav'
 import { ScreenHeader } from '../components/ScreenHeader'
@@ -70,18 +70,8 @@ interface RequestCardProps {
 }
 
 function RequestCard({ req, lang, urgentLabel, callLabel, helpLabel, responded, onRespond }: RequestCardProps) {
-  const card: CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    background: 'var(--surface-card)',
-    border: '1px solid var(--border-card)',
-    borderRadius: 16,
-    padding: 15,
-  }
-
   return (
-    <div style={card}>
+    <Card padding="md" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       {/* Blood type column (urgent tag + badge) */}
       <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7 }}>
         {req.urgent && (
@@ -213,7 +203,7 @@ function RequestCard({ req, lang, urgentLabel, callLabel, helpLabel, responded, 
           {helpLabel}
         </button>
       )}
-    </div>
+    </Card>
   )
 }
 
@@ -391,15 +381,7 @@ export function Home({
 
           {/* Availability row OR donor-setup nudge */}
           {donorReady ? (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 14,
-              background: 'var(--surface-card)',
-              border: '1px solid var(--border-card)',
-              borderRadius: 'var(--radius-card)',
-              padding: '14px 16px',
-            }}>
+            <Card padding="md" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <span style={{
                 flexShrink: 0,
                 width: 40,
@@ -424,7 +406,7 @@ export function Home({
                 </div>
               </div>
               <Switch checked={available} onChange={onAvailableChange} ariaLabel={t.availTitle} />
-            </div>
+            </Card>
           ) : (
             <button
               type="button"
