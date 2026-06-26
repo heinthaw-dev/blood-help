@@ -335,6 +335,40 @@ function App() {
         void initAuth();
     }, [hydrateUserFromDb]);
 
+    // Warm-start FCM path: service worker posts notification data directly to the running app
+    // instead of calling client.navigate() (which requires a full page reload to trigger initAuth).
+    // Cold-start path (app was closed) still uses URL params read inside initAuth.
+    useEffect(() => {
+        if (!navigator.serviceWorker) return;
+
+        function handleSWMessage(event: MessageEvent) {
+            if ((event.data as { type?: string } | null)?.type !== "fcm_notification_click") return;
+            const d = (event.data as { data?: Record<string, string> }).data ?? {};
+
+            if (d.fcm_type === "donor_alert") {
+                setFcmDonorAlert({
+                    requestId: d.request_id ?? "",
+                    bloodType: d.blood_type ?? "",
+                    urgency: d.urgency ?? "",
+                    address: d.address ?? "",
+                });
+                setScreen("home");
+            } else if (d.fcm_type === "requester_alert") {
+                setFcmRequesterAlert({
+                    responderName: d.responder_name ?? "",
+                    responderPhone: d.responder_phone ?? "",
+                    responderBloodType: d.responder_blood_type ?? "",
+                });
+                setScreen("request-live");
+            }
+        }
+
+        navigator.serviceWorker.addEventListener("message", handleSWMessage);
+        return () => {
+            navigator.serviceWorker.removeEventListener("message", handleSWMessage);
+        };
+    }, []);
+
     // D-11: App-wide donations Realtime subscription — fires DonorCongrats takeover on any screen
     // when a new donation row arrives for the current donor. Mirrors the RequestLive rr:${requestId}
     // channel pattern but scoped to the donor's uid and owned in App.tsx (global-state owner).
@@ -982,8 +1016,7 @@ function App() {
             <Leaderboard
                 lang={lang}
                 onNavigate={handleNavigate}
-                userName={user.name}
-                userBloodType={user.bloodType}
+                currentUserId={user.supabaseId}
             />
         );
     }
