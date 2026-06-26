@@ -184,31 +184,40 @@ function App() {
     // so this fully hydrates only when the current session owns the profile (same-device case).
     const hydrateUserFromDb = useCallback(
         async (uid: string): Promise<boolean | 'congrats'> => {
-            // Read the donations marker before firing queries (used in the parallel donations query below)
+            // Single edge-function call — all 5 queries run server-side in parallel (~0.5ms each).
+            // The function derives uid from the caller's JWT; lastSeenAt controls the donations check.
             const lastSeenAt = localStorage.getItem("bloodhelp.lastSeenDonationAt");
+            const { data, error } = await supabase.functions.invoke('hydrate-user', {
+                body: { lastSeenAt },
+            });
 
-            // All 5 queries are independent (only need uid) — run in parallel to cut
-            // total DB wait from ~5 sequential round trips down to ~1.
-            const [
-                { data: profile, error: profileErr },
-                { data: donor, error: donorErr },
-                { data: activeRequest, error: requestErr },
-                { data: ownResponses },
-                { data: unseenDonation },
-            ] = await Promise.all([
-                supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
-                supabase.from("donors").select("*").eq("profile_id", uid).maybeSingle(),
-                supabase.from("blood_requests").select("*").eq("requester_id", uid).eq("status", "active").maybeSingle(),
-                supabase.from("request_responses").select("request_id").eq("donor_id", uid).eq("status", "responding"),
-                lastSeenAt
-                    ? supabase.from("donations").select("id, created_at").eq("donor_id", uid).gt("created_at", lastSeenAt).order("created_at", { ascending: false }).limit(1).maybeSingle()
-                    : Promise.resolve({ data: null, error: null }),
-            ]);
+            if (error) {
+                console.error('[hydrate-user] edge function error:', error.message);
+                return false;
+            }
 
-            if (profileErr) console.error("profile load error:", profileErr.message);
+            const { profile, donor, activeRequest, ownResponses, unseenDonation } = data as {
+                profile: { id: string; phone: string | null; name: string | null } | null;
+                donor: {
+                    blood_type: string; is_available: boolean; emergency_callable: boolean;
+                    donation_count: number; last_donation_date: string | null;
+                    donor_code: string; lat: number | null; lng: number | null;
+                } | null;
+                activeRequest: {
+                    id: string; blood_type: string; contact_phone: string; current_address: string;
+                    units_needed: number; urgency: string; lat: number | null; lng: number | null;
+                    units_collected: number; extended: boolean; expires_at: string;
+                } | null;
+                ownResponses: { request_id: string }[];
+                unseenDonation: { id: string; created_at: string } | null;
+            };
+
             if (!profile) return false;
-            if (donorErr) console.error("donor load error:", donorErr.message);
-            if (requestErr) console.error("active request load error:", requestErr.message);
+
+            // Hydrate phone state — strip +95 prefix since phone state holds raw digits (WR-01)
+            if (profile.phone) {
+                setPhone(profile.phone.replace(/^\+95/, ""));
+            }
 
             setUser({
                 supabaseId: uid,
@@ -239,21 +248,16 @@ function App() {
                       }
                     : null,
             );
-            // Thread the active request UUID (activeRequestId) into RequestLive for the RPC + realtime subscription (D-14).
             setActiveRequestId(activeRequest?.id ?? null);
             setActiveRequestUnitsCollected(activeRequest?.units_collected ?? 0);
-            // Hydrate extend banner state from DB (Pitfall 5 — must not default extended to false or banner re-shows after reload).
+            // Must not default extended to false or the extend banner re-shows after reload (Pitfall 5).
             setActiveRequestExtended(activeRequest?.extended ?? false);
             setActiveRequestExpiresAt(activeRequest?.expires_at ?? null);
 
-            // Restore responded state across reload (D-04)
-            setRespondedIds(
-                new Set((ownResponses ?? []).map((r: { request_id: string }) => r.request_id)),
-            );
+            // Restore responded card state across reload (D-04)
+            setRespondedIds(new Set(ownResponses.map((r) => r.request_id)));
 
-            // D-12: check-on-open for unseen donations (closed-app congrats).
-            // Guard: only run when a prior seen timestamp exists — the conditional in Promise.all above
-            // returns { data: null } when lastSeenAt is absent, so this branch is safe.
+            // D-12: unseen donation congrats — edge function only returns this when lastSeenAt was sent
             if (unseenDonation) {
                 localStorage.setItem(
                     "bloodhelp.lastSeenDonationAt",
