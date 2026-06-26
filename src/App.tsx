@@ -18,6 +18,8 @@ import type { Tab } from "./components/BottomNav";
 import { getSession } from "./auth";
 import { supabase } from "./lib/supabase";
 import { registerPushToken, pushSupported } from "./lib/push";
+import { onMessage } from "firebase/messaging";
+import { messaging } from "./lib/firebase";
 import type { BloodType } from "./blood";
 import type { Lang } from "./i18n";
 
@@ -368,6 +370,46 @@ function App() {
             navigator.serviceWorker.removeEventListener("message", handleSWMessage);
         };
     }, []);
+
+    // Foreground FCM path: when the app tab is visible, Firebase routes the push to onMessage
+    // instead of the SW's onBackgroundMessage — so no native notification appears unless we
+    // handle it here. We show the in-app modal directly (better UX than a notification tap).
+    useEffect(() => {
+        const unsub = onMessage(messaging, (payload) => {
+            const d = (payload.data ?? {}) as Record<string, string>;
+            if (d.fcm_type === "donor_alert") {
+                setFcmDonorAlert({
+                    requestId: d.request_id ?? "",
+                    bloodType: d.blood_type ?? "",
+                    urgency: d.urgency ?? "",
+                    address: d.address ?? "",
+                });
+                setScreen("home");
+            } else if (d.fcm_type === "requester_alert") {
+                setFcmRequesterAlert({
+                    responderName: d.responder_name ?? "",
+                    responderPhone: d.responder_phone ?? "",
+                    responderBloodType: d.responder_blood_type ?? "",
+                });
+                setScreen("request-live");
+            }
+        });
+        return unsub;
+    }, []);
+
+    // Re-register the FCM push token whenever the service worker updates and claims the page.
+    // Firebase may generate a new token when the controlling SW changes — without this, the
+    // stale token stays in device_tokens and messages are silently dropped.
+    useEffect(() => {
+        if (!navigator.serviceWorker) return;
+        function handleControllerChange() {
+            if (user.supabaseId) void registerPushToken(user.supabaseId);
+        }
+        navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
+        return () => {
+            navigator.serviceWorker.removeEventListener("controllerchange", handleControllerChange);
+        };
+    }, [user.supabaseId]);
 
     // D-11: App-wide donations Realtime subscription — fires DonorCongrats takeover on any screen
     // when a new donation row arrives for the current donor. Mirrors the RequestLive rr:${requestId}
