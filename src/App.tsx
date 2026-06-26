@@ -154,6 +154,7 @@ function App() {
     /** UUID of the requester's active blood_requests row — threaded into RequestLive for the RPC + realtime subscription. */
     const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
     const [sessionLoading, setSessionLoading] = useState(true);
+    const [verifying, setVerifying] = useState(false);
     const [writeError, setWriteError] = useState<{
         title: string;
         message: string;
@@ -183,37 +184,31 @@ function App() {
     // so this fully hydrates only when the current session owns the profile (same-device case).
     const hydrateUserFromDb = useCallback(
         async (uid: string): Promise<boolean | 'congrats'> => {
-            const { data: profile, error: profileErr } = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", uid)
-                .maybeSingle();
-            if (profileErr)
-                console.error("profile load error:", profileErr.message);
+            // Read the donations marker before firing queries (used in the parallel donations query below)
+            const lastSeenAt = localStorage.getItem("bloodhelp.lastSeenDonationAt");
+
+            // All 5 queries are independent (only need uid) — run in parallel to cut
+            // total DB wait from ~5 sequential round trips down to ~1.
+            const [
+                { data: profile, error: profileErr },
+                { data: donor, error: donorErr },
+                { data: activeRequest, error: requestErr },
+                { data: ownResponses },
+                { data: unseenDonation },
+            ] = await Promise.all([
+                supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
+                supabase.from("donors").select("*").eq("profile_id", uid).maybeSingle(),
+                supabase.from("blood_requests").select("*").eq("requester_id", uid).eq("status", "active").maybeSingle(),
+                supabase.from("request_responses").select("request_id").eq("donor_id", uid).eq("status", "responding"),
+                lastSeenAt
+                    ? supabase.from("donations").select("id, created_at").eq("donor_id", uid).gt("created_at", lastSeenAt).order("created_at", { ascending: false }).limit(1).maybeSingle()
+                    : Promise.resolve({ data: null, error: null }),
+            ]);
+
+            if (profileErr) console.error("profile load error:", profileErr.message);
             if (!profile) return false;
-
-            // Hydrate phone state — strip +95 prefix since phone state holds raw digits (WR-01)
-            if (profile.phone) {
-                setPhone(profile.phone.replace(/^\+95/, ""));
-            }
-
-            // Load donors row — may be null for pure requesters (D-13)
-            const { data: donor, error: donorErr } = await supabase
-                .from("donors")
-                .select("*")
-                .eq("profile_id", uid)
-                .maybeSingle();
             if (donorErr) console.error("donor load error:", donorErr.message);
-
-            // Load own active blood request — drives hasOpenRequest (D-14)
-            const { data: activeRequest, error: requestErr } = await supabase
-                .from("blood_requests")
-                .select("*")
-                .eq("requester_id", uid)
-                .eq("status", "active")
-                .maybeSingle();
-            if (requestErr)
-                console.error("active request load error:", requestErr.message);
+            if (requestErr) console.error("active request load error:", requestErr.message);
 
             setUser({
                 supabaseId: uid,
@@ -251,32 +246,14 @@ function App() {
             setActiveRequestExtended(activeRequest?.extended ?? false);
             setActiveRequestExpiresAt(activeRequest?.expires_at ?? null);
 
-            // Restore responded state across reload (D-04): fetch own request_responses rows
-            // so cards that the donor has already responded to start in the responded state.
-            const { data: ownResponses } = await supabase
-                .from("request_responses")
-                .select("request_id")
-                .eq("donor_id", uid)
-                .eq("status", "responding");
+            // Restore responded state across reload (D-04)
             setRespondedIds(
-                new Set((ownResponses ?? []).map((r) => r.request_id)),
+                new Set((ownResponses ?? []).map((r: { request_id: string }) => r.request_id)),
             );
 
             // D-12: check-on-open for unseen donations (closed-app congrats).
-            // Guard: only run the query when a prior seen timestamp exists. An absent marker
-            // means this is a fresh session with no prior seen donation — skip the query so
-            // an empty string never leaks as `.gt("created_at", "")` (which matches every row).
-            const lastSeenAt = localStorage.getItem("bloodhelp.lastSeenDonationAt");
-            const { data: unseenDonation } = lastSeenAt
-                ? await supabase
-                      .from("donations")
-                      .select("id, created_at")
-                      .eq("donor_id", uid)
-                      .gt("created_at", lastSeenAt)
-                      .order("created_at", { ascending: false })
-                      .limit(1)
-                      .maybeSingle()
-                : { data: null };
+            // Guard: only run when a prior seen timestamp exists — the conditional in Promise.all above
+            // returns { data: null } when lastSeenAt is absent, so this branch is safe.
             if (unseenDonation) {
                 localStorage.setItem(
                     "bloodhelp.lastSeenDonationAt",
@@ -450,6 +427,8 @@ function App() {
     if (sessionLoading) return null;
 
     const handleVerified = async () => {
+        setVerifying(true);
+        try {
         const e164 = normalizePhone(phone);
         const email = phoneToEmail(e164);
         const password = await derivePassword(e164);
@@ -505,6 +484,9 @@ function App() {
                     error.message,
                 );
             setScreen("intent");
+        }
+        } finally {
+            setVerifying(false);
         }
     };
 
@@ -862,6 +844,7 @@ function App() {
                 onLangChange={setLang}
                 onBack={() => setScreen("phone")}
                 onVerified={handleVerified}
+                verifying={verifying}
             />
         );
     }

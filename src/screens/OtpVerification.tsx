@@ -16,6 +16,8 @@ interface OtpVerificationProps {
     onBack: () => void;
     /** Called with the verified 6-digit code once the user taps Verify. */
     onVerified: (code: string) => void;
+    /** While true, the button shows a spinner and is disabled — set by App while handleVerified runs. */
+    verifying?: boolean;
 }
 
 function randomOtp(): string {
@@ -36,6 +38,7 @@ export function OtpVerification({
     onLangChange,
     onBack,
     onVerified,
+    verifying = false,
 }: OtpVerificationProps) {
     const [code, setCode] = useState("");
     const [error, setError] = useState(false);
@@ -405,10 +408,20 @@ export function OtpVerification({
                         <Button
                             fullWidth
                             height={54}
-                            disabled={verifyDisabled}
+                            disabled={verifyDisabled || verifying}
                             onClick={handleVerify}
                         >
-                            {copy.cta}
+                            {verifying ? (
+                                <span style={{
+                                    display: 'inline-block',
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: '50%',
+                                    border: '2.5px solid rgba(255,255,255,0.35)',
+                                    borderTopColor: '#fff',
+                                    animation: 'bh-spin 0.8s linear infinite',
+                                }} />
+                            ) : copy.cta}
                         </Button>
                     </div>
                 </div>
