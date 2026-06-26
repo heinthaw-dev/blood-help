@@ -91,13 +91,10 @@ serve(async (req) => {
       `&responder_blood_type=${encodeURIComponent(responderBloodType)}` +
       `&request_id=${encodeURIComponent(String(requestId))}`
 
+    // Data-only message — see notify-donors for rationale (duplicate prevention).
     console.log('[notify-requester] sending FCM to requester...')
     await getMessaging().send({
       token: tokenRow.fcm_token,
-      notification: {
-        title: `${responderName} will help! 🩸`,
-        body: `Blood type ${responderBloodType} — tap to call`,
-      },
       data: {
         fcm_type: 'requester_alert',
         responder_name: responderName,
@@ -106,7 +103,6 @@ serve(async (req) => {
         request_id: String(requestId),
       },
       webpush: {
-        notification: { requireInteraction: true, icon: '/pwa-192x192.png' },
         fcmOptions: { link: deepLink },
       },
     })

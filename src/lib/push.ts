@@ -43,6 +43,15 @@ export async function registerPushToken(profileId: string): Promise<PushResult> 
     console.log('[Push] FCM token:', token ? token.slice(0, 20) + '…' : 'EMPTY')
     if (!token) return 'error'
 
+    // Remove stale web tokens for this profile (e.g. token rotated after SW update).
+    // Without this, sendEachForMulticast would deliver two notifications to the same device.
+    await supabase
+      .from('device_tokens')
+      .delete()
+      .eq('profile_id', profileId)
+      .eq('platform', 'web')
+      .neq('fcm_token', token)
+
     console.log('[Push] upserting token to device_tokens for profile:', profileId)
     const { error } = await supabase
       .from('device_tokens')

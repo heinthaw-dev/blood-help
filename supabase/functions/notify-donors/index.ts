@@ -86,13 +86,12 @@ serve(async (req) => {
       `&urgency=${encodeURIComponent(String(urgency ?? 'today'))}` +
       `&address=${encodeURIComponent(String(address ?? ''))}`
 
+    // Data-only message: no notification field so FCM does not auto-display a notification.
+    // The SW's onBackgroundMessage handler builds the title/body from data and calls showNotification().
+    // Sending both notification + onBackgroundMessage causes duplicate alerts on Android Chrome.
     console.log('[notify-donors] sending FCM to', tokens.length, 'token(s)...')
     const result = await getMessaging().sendEachForMulticast({
       tokens,
-      notification: {
-        title: `${urgency === 'urgent' ? '🚨 ' : ''}Blood ${bloodType} Needed`,
-        body: String(address),
-      },
       data: {
         fcm_type: 'donor_alert',
         request_id: String(requestId),
@@ -101,7 +100,6 @@ serve(async (req) => {
         address: String(address ?? ''),
       },
       webpush: {
-        notification: { requireInteraction: true, icon: '/pwa-192x192.png' },
         fcmOptions: { link: deepLink },
       },
     })

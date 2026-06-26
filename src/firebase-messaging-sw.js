@@ -28,15 +28,27 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging()
 
-// Background message handler — shows notification when app is not focused
+// Background message handler — shows notification when app is not focused.
+// Messages are sent data-only (no FCM notification field) to avoid the compat SDK
+// showing an automatic notification AND this handler showing another — resulting in duplicates.
 messaging.onBackgroundMessage(function (payload) {
-  var title = (payload.notification && payload.notification.title) || 'Blood Help'
-  var body = (payload.notification && payload.notification.body) || ''
+  var d = payload.data || {}
+  var title, body
+  if (d.fcm_type === 'donor_alert') {
+    title = (d.urgency === 'urgent' ? '🚨 ' : '') + 'Blood ' + d.blood_type + ' Needed'
+    body = d.address || ''
+  } else if (d.fcm_type === 'requester_alert') {
+    title = (d.responder_name || 'A donor') + ' will help! 🩸'
+    body = 'Blood type ' + (d.responder_blood_type || '') + ' — tap to call'
+  } else {
+    title = (payload.notification && payload.notification.title) || 'Blood Help'
+    body = (payload.notification && payload.notification.body) || ''
+  }
   return self.registration.showNotification(title, {
     body: body,
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
-    data: payload.data || {},
+    data: d,
     requireInteraction: true,
   })
 })
