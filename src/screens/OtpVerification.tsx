@@ -1,6 +1,7 @@
-import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../components/Button";
+import { ScreenHeader } from "../components/ScreenHeader";
+import { LanguageToggle } from "../components/LanguageToggle";
 import type { Lang } from "../i18n";
 
 const OTP_LENGTH = 6;
@@ -101,28 +102,6 @@ export function OtpVerification({
     };
     const copy = strings[lang];
 
-    const tabBase: CSSProperties = {
-        fontFamily: "var(--font-sans)",
-        fontSize: "13px",
-        fontWeight: 600,
-        lineHeight: 1,
-        border: "none",
-        borderRadius: "var(--radius-pill)",
-        padding: "7px 12px",
-        cursor: "pointer",
-        transition: "background 120ms ease, color 120ms ease",
-    };
-    const activeTab: CSSProperties = {
-        ...tabBase,
-        background: "var(--color-primary)",
-        color: "#fff",
-    };
-    const idleTab: CSSProperties = {
-        ...tabBase,
-        background: "transparent",
-        color: "var(--text-secondary)",
-    };
-
     const handleChange = (i: number, raw: string) => {
         const digit = raw.replace(/\D/g, "").slice(-1);
         const arr = code.padEnd(OTP_LENGTH, " ").split("");
@@ -153,86 +132,11 @@ export function OtpVerification({
         <div className="phone-entry-stage">
             <div className="phone-entry-card">
                 {/* Top bar: back arrow + language toggle */}
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "24px 20px 0",
-                    }}
-                >
-                    <button
-                        type="button"
-                        onClick={onBack}
-                        aria-label="Back"
-                        style={{
-                            width: 40,
-                            height: 40,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background: "none",
-                            border: "none",
-                            borderRadius: 12,
-                            cursor: "pointer",
-                            color: "var(--text-primary)",
-                            padding: 0,
-                            marginLeft: -8,
-                        }}
-                    >
-                        <svg
-                            width="22"
-                            height="22"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            style={{ display: "block" }}
-                        >
-                            <line
-                                x1="19"
-                                y1="12"
-                                x2="5"
-                                y2="12"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                            />
-                            <polyline
-                                points="12 19 5 12 12 5"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                fill="none"
-                            />
-                        </svg>
-                    </button>
-
-                    <div
-                        style={{
-                            display: "inline-flex",
-                            background: "#fff",
-                            border: "1px solid var(--border-card)",
-                            borderRadius: "var(--radius-pill)",
-                            padding: 3,
-                            gap: 2,
-                        }}
-                    >
-                        <button
-                            type="button"
-                            onClick={() => onLangChange("my")}
-                            style={isMy ? activeTab : idleTab}
-                        >
-                            မြန်မာ
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => onLangChange("en")}
-                            style={isMy ? idleTab : activeTab}
-                        >
-                            ENG
-                        </button>
-                    </div>
-                </div>
+                <ScreenHeader
+                    variant="nav"
+                    onBack={onBack}
+                    right={<LanguageToggle lang={lang} onChange={onLangChange} />}
+                />
 
                 {/* Content */}
                 <div

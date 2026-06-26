@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { Button } from '../components/Button'
 import { Input } from '../components/Input'
 import { BloodTypeSelector } from '../components/BloodTypeSelector'
+import { ScreenHeader } from '../components/ScreenHeader'
+import { LanguageToggle } from '../components/LanguageToggle'
 import type { BloodType } from '../blood'
 import { AlertDialog } from '../components/AlertDialog'
 import { getCurrentPosition, coarsenCoordinates } from '../geolocation'
@@ -99,20 +101,6 @@ export function CreateRequest({
   }
   const copy = strings[lang]
 
-  const tabBase: CSSProperties = {
-    fontFamily: 'var(--font-sans)',
-    fontSize: '13px',
-    fontWeight: 600,
-    lineHeight: 1,
-    border: 'none',
-    borderRadius: 'var(--radius-pill)',
-    padding: '7px 12px',
-    cursor: 'pointer',
-    transition: 'background 120ms ease, color 120ms ease',
-  }
-  const activeTab: CSSProperties = { ...tabBase, background: 'var(--color-primary)', color: '#fff' }
-  const idleTab: CSSProperties = { ...tabBase, background: 'transparent', color: 'var(--text-secondary)' }
-
   const fieldLabelStyle: CSSProperties = {
     margin: 0,
     fontFamily: bodyFont,
@@ -184,85 +172,13 @@ export function CreateRequest({
     <div className="phone-entry-stage">
       <div className="phone-entry-card" style={{ height: '100dvh' }}>
         {/* Nav bar */}
-        <div
-          style={{
-            flex: 'none',
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '20px 20px 16px',
-            borderBottom: '1px solid var(--border-card)',
-          }}
-        >
-          <button
-            type="button"
-            onClick={onBack}
-            aria-label="Back"
-            style={{
-              flexShrink: 0,
-              width: 40,
-              height: 40,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'none',
-              border: 'none',
-              borderRadius: 12,
-              cursor: 'pointer',
-              color: 'var(--text-primary)',
-              padding: 0,
-              marginRight: 8,
-            }}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
-              <line x1="19" y1="12" x2="5" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <polyline
-                points="12 19 5 12 12 5"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-            </svg>
-          </button>
-          <h2
-            style={{
-              flex: 1,
-              textAlign: 'center',
-              padding: '0 12px',
-              margin: 0,
-              fontFamily: bodyFont,
-              fontSize: 18,
-              fontWeight: 600,
-              lineHeight: isMy ? 1.55 : 1.3,
-              color: 'var(--text-primary)',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {copy.navTitle}
-          </h2>
-          <div
-            style={{
-              display: 'inline-flex',
-              background: '#fff',
-              border: '1px solid var(--border-card)',
-              borderRadius: 'var(--radius-pill)',
-              padding: 3,
-              gap: 2,
-              flex: 'none',
-            }}
-          >
-            <button type="button" onClick={() => onLangChange('my')} style={isMy ? activeTab : idleTab}>
-              မြန်မာ
-            </button>
-            <button type="button" onClick={() => onLangChange('en')} style={isMy ? idleTab : activeTab}>
-              ENG
-            </button>
-          </div>
-        </div>
+        <ScreenHeader
+          variant="nav"
+          onBack={onBack}
+          title={copy.navTitle}
+          right={<LanguageToggle lang={lang} onChange={onLangChange} />}
+          divider
+        />
 
         {/* Scrollable form */}
         <div

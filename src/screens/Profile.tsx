@@ -3,6 +3,8 @@ import QRCode from 'react-qr-code'
 import { Switch } from '../components/Switch'
 import { Badge } from '../components/Badge'
 import { BottomNav } from '../components/BottomNav'
+import { ScreenHeader } from '../components/ScreenHeader'
+import { LanguageToggle } from '../components/LanguageToggle'
 import type { Tab } from '../components/BottomNav'
 import type { BloodType } from '../blood'
 import type { Lang } from '../i18n'
@@ -128,42 +130,21 @@ export function Profile({
     },
   }[lang]
 
-  const tabBase = {
-    fontFamily: 'var(--font-sans)',
-    fontSize: 13,
-    fontWeight: 600,
-    lineHeight: 1,
-    border: 'none',
-    borderRadius: 'var(--radius-pill)',
-    padding: '7px 13px',
-    cursor: 'pointer',
-    transition: 'background 120ms ease, color 120ms ease',
-  }
-  const activeTab = { ...tabBase, background: 'var(--color-primary)', color: '#fff' }
-  const idleTab = { ...tabBase, background: 'transparent', color: 'var(--text-secondary)' }
-
   const divider = <div style={{ height: 1, background: 'var(--border-card)', margin: '0 16px' }} />
 
   return (
     <div className="phone-entry-stage">
       <div className="phone-entry-card">
 
+        {/* Top bar */}
+        <ScreenHeader variant="brand" align="left" />
+
         {/* Scrollable content */}
         <div className="bh-scroll" style={{
           flex: 1, minHeight: 0, overflowY: 'auto',
-          padding: '30px 20px 24px',
+          padding: '8px 20px 24px',
           display: 'flex', flexDirection: 'column', gap: 22,
         }}>
-
-          {/* App title */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <svg width="22" height="26" viewBox="0 0 24 28" fill="none" style={{ display: 'block' }}>
-              <path d="M12 1.5s9 9 9 15.5a9 9 0 0 1-18 0C3 10.5 12 1.5 12 1.5z" fill="var(--color-primary)" />
-            </svg>
-            <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-              Blood Help
-            </span>
-          </div>
 
           {/* Avatar + name + blood badge */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
@@ -352,14 +333,7 @@ export function Profile({
                 <span style={{ flex: 1, minWidth: 0, fontFamily: langFont, fontSize: 16, lineHeight: 1.4, color: 'var(--text-primary)' }}>
                   {t.languageLabel}
                 </span>
-                <div style={{ display: 'inline-flex', flexShrink: 0, background: 'var(--color-bg)', border: '1px solid var(--border-card)', borderRadius: 'var(--radius-pill)', padding: 3, gap: 2 }}>
-                  <button type="button" onClick={() => onLangChange('my')} style={isMy ? activeTab : idleTab}>
-                    မြန်မာ
-                  </button>
-                  <button type="button" onClick={() => onLangChange('en')} style={isMy ? idleTab : activeTab}>
-                    ENG
-                  </button>
-                </div>
+                <LanguageToggle lang={lang} onChange={onLangChange} track="bg" />
               </div>
               {divider}
 

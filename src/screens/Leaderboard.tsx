@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { BottomNav } from "../components/BottomNav";
+import { ScreenHeader } from "../components/ScreenHeader";
 import type { Tab } from "../components/BottomNav";
 import type { Lang } from "../i18n";
 import { formatNumber } from "../i18n";
@@ -192,45 +193,7 @@ export function Leaderboard({
         <div className="phone-entry-stage">
             <div className="phone-entry-card" style={{ height: "100dvh" }}>
                 {/* Header */}
-                <div
-                    style={{
-                        flex: "none",
-                        padding: "26px 20px 14px",
-                        background: "var(--color-bg)",
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 8,
-                        }}
-                    >
-                        <svg
-                            width="22"
-                            height="26"
-                            viewBox="0 0 24 28"
-                            fill="none"
-                            style={{ display: "block" }}
-                        >
-                            <path
-                                d="M12 1.5s9 9 9 15.5a9 9 0 0 1-18 0C3 10.5 12 1.5 12 1.5z"
-                                fill="var(--color-primary)"
-                            />
-                        </svg>
-                        <span
-                            style={{
-                                fontSize: 18,
-                                fontWeight: 600,
-                                color: "var(--text-primary)",
-                                letterSpacing: "-0.01em",
-                            }}
-                        >
-                            Blood Help
-                        </span>
-                    </div>
-                </div>
+                <ScreenHeader variant="brand" align="left" />
 
                 {/* Scrollable body */}
                 <div

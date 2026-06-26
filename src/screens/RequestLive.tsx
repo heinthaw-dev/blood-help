@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
+import { ScreenHeader } from '../components/ScreenHeader'
 import { AlertDialog } from '../components/AlertDialog'
 import type { Lang } from '../i18n'
 import { formatNumber } from '../i18n'
@@ -443,45 +444,22 @@ export function RequestLive({
       <div className="phone-entry-card" style={{ position: 'relative' }}>
 
         {/* ── Header ── */}
-        <div style={{ flex: 'none', padding: '20px 20px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button
-              type="button"
-              onClick={onBack}
-              aria-label="Minimize — keeps request open"
-              style={{
-                flexShrink: 0, width: 36, height: 36, borderRadius: '999px',
-                background: 'none', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--text-secondary)',
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
+        <ScreenHeader variant="nav" onBack={onBack} title="သွေး တောင်းခံချက်" />
 
-            <div style={{ flex: 1, minWidth: 0, textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 17, fontWeight: 600, lineHeight: 1.3, color: 'var(--text-primary)' }}>
-                သွေး တောင်းခံချက်
-              </div>
-              {showProgress && (
-                <div style={{ marginTop: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <span style={{ fontFamily: 'var(--font-burmese)', fontSize: 12, fontWeight: 600, color: 'var(--color-primary)' }}>
-                    {toMyanmarDigits(collected)} / {toMyanmarDigits(unitsNeeded)} unit ရရှိပြီး
-                  </span>
-                </div>
-              )}
+        {/* Progress + blood type + township (screen content below the header) */}
+        <div style={{ flex: 'none', padding: '0 20px' }}>
+          {showProgress && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <span style={{ fontFamily: 'var(--font-burmese)', fontSize: 12, fontWeight: 600, color: 'var(--color-primary)' }}>
+                {toMyanmarDigits(collected)} / {toMyanmarDigits(unitsNeeded)} unit ရရှိပြီး
+              </span>
             </div>
-
-            {/* Spacer balancing the back button */}
-            <span style={{ flexShrink: 0, width: 36, height: 36 }} aria-hidden="true" />
-          </div>
+          )}
 
           {/* Blood type + township row */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-            marginTop: 14, paddingBottom: 14, borderBottom: '0.5px solid var(--border-card)',
+            marginTop: showProgress ? 14 : 0, paddingBottom: 14, borderBottom: '0.5px solid var(--border-card)',
           }}>
             <Badge size="lg">{bloodType}</Badge>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 14, color: 'var(--text-secondary)' }}>

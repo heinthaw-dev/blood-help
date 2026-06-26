@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react'
 import { useState } from 'react'
+import { ScreenHeader } from '../components/ScreenHeader'
+import { LanguageToggle } from '../components/LanguageToggle'
 import type { Lang } from '../i18n'
 
 /** Which action the user picked to get started. They can do both later. */
@@ -42,20 +44,6 @@ export function IntentChoice({ lang, onLangChange, onChoose }: IntentChoiceProps
     },
   }
   const copy = strings[lang]
-
-  const tabBase: CSSProperties = {
-    fontFamily: 'var(--font-sans)',
-    fontSize: '13px',
-    fontWeight: 600,
-    lineHeight: 1,
-    border: 'none',
-    borderRadius: 'var(--radius-pill)',
-    padding: '7px 12px',
-    cursor: 'pointer',
-    transition: 'background 120ms ease, color 120ms ease',
-  }
-  const activeTab: CSSProperties = { ...tabBase, background: 'var(--color-primary)', color: '#fff' }
-  const idleTab: CSSProperties = { ...tabBase, background: 'transparent', color: 'var(--text-secondary)' }
 
   const cardStyle = (id: Intent): CSSProperties => ({
     display: 'flex',
@@ -119,32 +107,7 @@ export function IntentChoice({ lang, onLangChange, onChoose }: IntentChoiceProps
     <div className="phone-entry-stage">
       <div className="phone-entry-card">
         {/* Top bar: language toggle only */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            padding: '24px 20px 0',
-          }}
-        >
-          <div
-            style={{
-              display: 'inline-flex',
-              background: '#fff',
-              border: '1px solid var(--border-card)',
-              borderRadius: 'var(--radius-pill)',
-              padding: 3,
-              gap: 2,
-            }}
-          >
-            <button type="button" onClick={() => onLangChange('my')} style={isMy ? activeTab : idleTab}>
-              မြန်မာ
-            </button>
-            <button type="button" onClick={() => onLangChange('en')} style={isMy ? idleTab : activeTab}>
-              ENG
-            </button>
-          </div>
-        </div>
+        <ScreenHeader variant="nav" right={<LanguageToggle lang={lang} onChange={onLangChange} />} />
 
         {/* Content */}
         <div

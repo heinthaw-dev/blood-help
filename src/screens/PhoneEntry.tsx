@@ -1,6 +1,8 @@
 import type { CSSProperties } from 'react'
 import { useState } from 'react'
 import { Button } from '../components/Button'
+import { ScreenHeader } from '../components/ScreenHeader'
+import { LanguageToggle } from '../components/LanguageToggle'
 import type { Lang } from '../i18n'
 
 const STRINGS: Record<Lang, { title: string; subtitle: string; cta: string; reassure: string }> = {
@@ -42,20 +44,6 @@ export function PhoneEntry({ lang, onLangChange, onSend }: PhoneEntryProps) {
 
   const digits = phone.replace(/\D/g, '')
   const sendDisabled = digits.length < 9
-
-  const tabBase: CSSProperties = {
-    fontFamily: 'var(--font-sans)',
-    fontSize: '13px',
-    fontWeight: 600,
-    lineHeight: 1,
-    border: 'none',
-    borderRadius: 'var(--radius-pill)',
-    padding: '7px 12px',
-    cursor: 'pointer',
-    transition: 'background 120ms ease, color 120ms ease',
-  }
-  const activeTab: CSSProperties = { ...tabBase, background: 'var(--color-primary)', color: '#fff' }
-  const idleTab: CSSProperties = { ...tabBase, background: 'transparent', color: 'var(--text-secondary)' }
 
   const titleStyle: CSSProperties = {
     margin: 0,
@@ -101,52 +89,8 @@ export function PhoneEntry({ lang, onLangChange, onSend }: PhoneEntryProps) {
   return (
     <div className="phone-entry-stage">
       <div className="phone-entry-card">
-        {/* top bar: wordmark + language toggle */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '24px 20px 0',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <svg width="22" height="26" viewBox="0 0 24 28" fill="none" style={{ display: 'block' }}>
-              <path
-                d="M12 1.5s9 9 9 15.5a9 9 0 0 1-18 0C3 10.5 12 1.5 12 1.5z"
-                fill="var(--color-primary)"
-              />
-            </svg>
-            <span
-              style={{
-                fontSize: 18,
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                letterSpacing: '-0.01em',
-              }}
-            >
-              Blood Help
-            </span>
-          </div>
-
-          <div
-            style={{
-              display: 'inline-flex',
-              background: '#fff',
-              border: '1px solid var(--border-card)',
-              borderRadius: 'var(--radius-pill)',
-              padding: 3,
-              gap: 2,
-            }}
-          >
-            <button type="button" onClick={() => onLangChange('my')} style={isMy ? activeTab : idleTab}>
-              မြန်မာ
-            </button>
-            <button type="button" onClick={() => onLangChange('en')} style={isMy ? idleTab : activeTab}>
-              ENG
-            </button>
-          </div>
-        </div>
+        {/* Top bar: wordmark + language toggle */}
+        <ScreenHeader variant="brand" align="left" right={<LanguageToggle lang={lang} onChange={onLangChange} />} />
 
         {/* content */}
         <div

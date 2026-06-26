@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { Badge } from '../components/Badge'
 import { Switch } from '../components/Switch'
 import { BottomNav } from '../components/BottomNav'
+import { ScreenHeader } from '../components/ScreenHeader'
 import { IncomingRequestAlert } from '../components/IncomingRequestAlert'
 import type { Tab } from '../components/BottomNav'
 import type { BloodType } from '../blood'
@@ -367,27 +368,16 @@ export function Home({
       <div className="phone-entry-card" style={{ position: 'relative' }}>
 
         {/* Top bar */}
-        <div style={{
-          flex: 'none',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '22px 20px 14px',
-          background: 'var(--color-bg)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <svg width="22" height="26" viewBox="0 0 24 28" fill="none" style={{ display: 'block' }}>
-              <path d="M12 1.5s9 9 9 15.5a9 9 0 0 1-18 0C3 10.5 12 1.5 12 1.5z" fill="var(--color-primary)" />
+        <ScreenHeader
+          variant="brand"
+          align="left"
+          right={
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.5 21a1.7 1.7 0 0 1-3 0" />
             </svg>
-            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-              Blood Help
-            </span>
-          </div>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
-            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.5 21a1.7 1.7 0 0 1-3 0" />
-          </svg>
-        </div>
+          }
+        />
 
         {/* Scrollable content */}
         <div style={{
