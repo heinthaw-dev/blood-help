@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9
 Plan: 09-03 complete — all plans done
 Status: Verifying phase goal
-Last activity: 2026-06-27 -- Completed quick task 260627-7gx: added Notifications screen + shared header bell on all 3 tab screens
+Last activity: 2026-06-27 -- Completed quick task 260627-k3p: extracted shared Card component; routed all 9 card surfaces through it (resolves §2)
 
 Progress: [██████████] 100%
 
@@ -91,6 +91,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260626-r5y | Redesign donor FCM alert modal to "Incoming Request Alert" (centered two-state modal, gated phone reveal) | 2026-06-26 | beb448b | [260626-r5y-redesign-donor-fcm-alert-modal-to-incomi](./quick/260626-r5y-redesign-donor-fcm-alert-modal-to-incomi/) |
 | 260627-0lt | Extract shared ScreenHeader + LanguageToggle; route all 9 screens (behavior-preserving; resolves ui-consistency-report §1, §6) | 2026-06-27 | a49379a | [260627-0lt-extract-shared-screenheader-and-language](./quick/260627-0lt-extract-shared-screenheader-and-language/) |
 | 260627-7gx | Add Notifications screen + shared header bell on Home/Leaderboard/Profile | 2026-06-27 | 3d14dc1 | [260627-7gx-add-notifications-screen-and-shared-head](./quick/260627-7gx-add-notifications-screen-and-shared-head/) |
+| 260627-k3p | Extract shared Card component; route all 9 card surfaces through it (resolves ui-consistency-report §2) | 2026-06-27 | a9a117c | [260627-k3p-extract-card-component-route-all-surfaces](./quick/260627-k3p-extract-card-component-route-all-surfaces/) |
 
 ## Deferred Items
 
