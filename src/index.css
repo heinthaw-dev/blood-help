@@ -195,6 +195,27 @@
 }
 
 /* ============================================================================
+   Incoming Request Alert — centered modal entrance + blood-type token ring pulse.
+   rgba(209,62,47,...) is --color-primary (#D13E2F) expressed with an alpha that
+   fades to 0; box-shadow spread needs the rgba form, so it can't reference the
+   bare hex token directly.
+   ============================================================================ */
+@keyframes bh-ring-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(209, 62, 47, 0.28); }
+  70%  { box-shadow: 0 0 0 14px rgba(209, 62, 47, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(209, 62, 47, 0); }
+}
+@keyframes bh-modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.bh-ring-pulse { animation: bh-ring-pulse 2.2s ease-out infinite; }
+.bh-modal-in   { animation: bh-modal-in 180ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .bh-ring-pulse, .bh-modal-in { animation: none !important; }
+}
+
+/* ============================================================================
    Screen layout — mobile-first, full-bleed.
    Mobile (default): the screen fills the device viewport edge-to-edge, no
    backdrop or frame. Desktop (>=480px): show the centered phone-style frame
