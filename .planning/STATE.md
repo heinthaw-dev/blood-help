@@ -4,8 +4,8 @@ milestone: v2.0
 milestone_name: Backend Core
 status: complete
 stopped_at: v2.0 milestone complete — all 4 phases shipped, E2E loop verified
-last_updated: "2026-06-25T00:00:00.000Z"
-last_activity: 2026-06-25 -- Completed quick task 260625-vps: added vercel.json (Part C) on feat/fcm-frontend
+last_updated: "2026-06-27T00:00:00.000Z"
+last_activity: 2026-06-27 -- Completed quick task 260627-p07: rebuilt Donor Thank You screen with push opt-in states
 progress:
   total_phases: 4
   completed_phases: 4
@@ -92,6 +92,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260627-0lt | Extract shared ScreenHeader + LanguageToggle; route all 9 screens (behavior-preserving; resolves ui-consistency-report §1, §6) | 2026-06-27 | a49379a | [260627-0lt-extract-shared-screenheader-and-language](./quick/260627-0lt-extract-shared-screenheader-and-language/) |
 | 260627-7gx | Add Notifications screen + shared header bell on Home/Leaderboard/Profile | 2026-06-27 | 3d14dc1 | [260627-7gx-add-notifications-screen-and-shared-head](./quick/260627-7gx-add-notifications-screen-and-shared-head/) |
 | 260627-k3p | Extract shared Card component; route all 9 card surfaces through it (resolves ui-consistency-report §2) | 2026-06-27 | a9a117c | [260627-k3p-extract-card-component-route-all-surfaces](./quick/260627-k3p-extract-card-component-route-all-surfaces/) |
+| 260627-p07 | Rebuild Donor Thank You screen to new Claude Design with push-enable states (idle/needsInstall/enabled), wired to real lib/push; removed double-prompt | 2026-06-27 | bf5da7b | [260627-p07-rebuild-donor-thank-you-screen-to-new-cl](./quick/260627-p07-rebuild-donor-thank-you-screen-to-new-cl/) |
 
 ## Deferred Items
 
@@ -105,6 +106,6 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 
 ## Session Continuity
 
-Last session: 2026-06-24T00:00:00.000Z
-Stopped at: Quick task 260624-vxw complete — pre-visible emergency-callable donors live
-Resume with: Test callable donors section on two devices; then run code-quality-refactor agent (standing preference)
+Last session: 2026-06-27T00:00:00.000Z
+Stopped at: Quick task 260627-p07 complete — Donor Thank You screen rebuilt with push opt-in states (build + lint green)
+Resume with: Manually test the three thank-you push states (enable / iOS-install / already-enabled); then run code-quality-refactor agent (standing preference)
