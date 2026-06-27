@@ -489,7 +489,7 @@ export function RequestLive({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {/* Section header — neutral grey treatment (design skill: green = "Will help", grey = "Can call") */}
               <div style={{ paddingBottom: 2 }}>
-                <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 15, fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}>
+                <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 18, fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}>
                   ခေါ်ဆိုနိုင်သောသွေးလှူရှင်များ
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-hint)', marginTop: 1 }}>
@@ -501,7 +501,7 @@ export function RequestLive({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Badge>{donor.blood_type}</Badge>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 15, fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}>
+                      <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}>
                         {donor.name}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 3, fontSize: 13, color: 'var(--text-hint)', fontFamily: 'var(--font-burmese)' }}>
@@ -531,7 +531,7 @@ export function RequestLive({
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-hint)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
                   <path d="M12 2.7s6 6 6 10.3a6 6 0 0 1-12 0c0-4.3 6-10.3 6-10.3z" />
                 </svg>
-                <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 15, lineHeight: 1.65, color: 'var(--text-secondary)', maxWidth: 260 }}>
+                <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 16, lineHeight: 1.65, color: 'var(--text-secondary)', maxWidth: 260 }}>
                   {lang === 'my'
                     ? 'သွေးလှူရှင်များ တုံ့ပြန်မှုကို စောင့်ဆဲဖြစ်သည်'
                     : 'Waiting for donors to respond'}
@@ -557,7 +557,7 @@ export function RequestLive({
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: 'var(--font-burmese)', fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
+                        <span style={{ fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>
                           {responder.name}
                         </span>
                         <span style={{
@@ -685,7 +685,7 @@ export function RequestLive({
                     </svg>
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 15, fontWeight: 600, lineHeight: 1.45, color: 'var(--color-primary)' }}>
+                    <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 18, fontWeight: 600, lineHeight: 1.45, color: 'var(--color-primary)' }}>
                       ဒီအက်ပ်မှ သွေးလှူရှင်ထံမှ
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--color-primary-press)', opacity: 0.8, marginTop: 1 }}>
@@ -721,7 +721,7 @@ export function RequestLive({
                     </svg>
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 15, fontWeight: 500, lineHeight: 1.45, color: 'var(--text-primary)' }}>
+                    <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 500, lineHeight: 1.45, color: 'var(--text-primary)' }}>
                       အပြင်မှ ရရှိသည်
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 1 }}>
@@ -871,7 +871,7 @@ export function RequestLive({
             <div style={{ marginTop: 22, fontFamily: 'var(--font-burmese)', fontSize: 22, fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)', maxWidth: 300 }}>
               {cl.title}
             </div>
-            <div style={{ marginTop: 10, fontFamily: 'var(--font-burmese)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', maxWidth: 300 }}>
+            <div style={{ marginTop: 10, fontFamily: 'var(--font-burmese)', fontSize: 16, lineHeight: 1.7, color: 'var(--text-secondary)', maxWidth: 300 }}>
               {cl.body}
             </div>
             <div style={{ marginTop: 5, fontSize: 13, lineHeight: 1.5, color: 'var(--text-hint)', maxWidth: 300 }}>

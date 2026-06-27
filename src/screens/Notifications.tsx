@@ -49,7 +49,7 @@ export function Notifications({ lang, onBack }: NotificationsProps) {
               maxWidth: 280,
               textAlign: 'center',
               fontFamily: bodyFont,
-              fontSize: 15,
+              fontSize: 16,
               lineHeight: 1.6,
               color: 'var(--text-secondary)',
             }}

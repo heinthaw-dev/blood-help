@@ -21,7 +21,7 @@ function DonorQR({ code }: { code: string }) {
       value={code.toUpperCase()}
       size={168}
       bgColor="#ffffff"
-      fgColor="#1A1A1A"
+      fgColor="var(--color-ink-900)"
       style={{ display: 'block' }}
     />
   )
@@ -86,7 +86,7 @@ export function Profile({
 
   const t = {
     my: {
-      donatedLine: 'လှူဒါန်းမှု ' + count + ' ကြိမ်',
+      donatedLine: donationCount > 0 ? 'လှူဒါန်းမှု ' + count + ' ကြိမ်' : 'ယခု app တွင် လှုဒါန်းထားခြင်း မရှိသေးပါ။',
       lastLine: lastDonation ? 'နောက်ဆုံး လှူဒါန်းသည့်ရက် — ' + lastDonation : 'နောက်ဆုံး လှူဒါန်းသည့်ရက် — —',
       cooldownLine: 'နောက်တစ်ကြိမ် လှူဒါန်းနိုင်သည့်ရက် — ၂၀၂၆ ဇွန် ၂၃',
       qrTitle: 'သင့် QR ကုဒ်',
@@ -103,7 +103,7 @@ export function Profile({
       logoutLabel: 'ထွက်ရန်',
     },
     en: {
-      donatedLine: 'Donated ' + count + ' times',
+      donatedLine: donationCount > 0 ? 'Donated ' + count + ' times' : 'there is no previous donations',
       lastLine: lastDonation ? 'Last donation — ' + lastDonation : 'Last donation — —',
       cooldownLine: 'Eligible to donate again — 23 Jun 2026',
       qrTitle: 'Your QR Code',
@@ -134,7 +134,7 @@ export function Profile({
         <div className="bh-scroll" style={{
           flex: 1, minHeight: 0, overflowY: 'auto',
           padding: '8px 20px 24px',
-          display: 'flex', flexDirection: 'column', gap: 22,
+          display: 'flex', flexDirection: 'column', gap: 20,
         }}>
 
           {/* Avatar + name + blood badge */}
@@ -182,7 +182,7 @@ export function Profile({
                 </svg>
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: langFont, fontSize: 15, fontWeight: 500, lineHeight: 1.4, color: 'var(--text-primary)' }}>
+                <div style={{ fontFamily: langFont, fontSize: 16, fontWeight: 500, lineHeight: 1.4, color: 'var(--text-primary)' }}>
                   {t.lastLine}
                 </div>
               </div>

@@ -21,7 +21,7 @@ export function BloodTypeSelector({ value, onChange }: BloodTypeSelectorProps) {
     borderRadius: 'var(--radius-pill)',
     cursor: 'pointer',
     fontFamily: 'var(--font-sans)',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: 600,
     lineHeight: 1,
     transition: 'background 120ms ease, color 120ms ease, border-color 120ms ease',

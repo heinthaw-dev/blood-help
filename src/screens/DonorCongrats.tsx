@@ -167,7 +167,7 @@ export function DonorCongrats({ lang, donationCount, onDone, onLeaderboard }: Do
           style={{
             margin: '14px 0 0',
             fontFamily: bodyFont,
-            fontSize: '14.5px',
+            fontSize: '14px',
             lineHeight: 1.85,
             color: 'var(--text-secondary)',
             maxWidth: '300px',
@@ -208,7 +208,7 @@ export function DonorCongrats({ lang, donationCount, onDone, onLeaderboard }: Do
             <span
               style={{
                 fontFamily: bodyFont,
-                fontSize: '15px',
+                fontSize: 16,
                 fontWeight: 600,
                 lineHeight: 1.5,
                 color: 'var(--text-primary)',
@@ -218,7 +218,7 @@ export function DonorCongrats({ lang, donationCount, onDone, onLeaderboard }: Do
             </span>
           </div>
           {s.countSub && (
-            <span style={{ fontSize: '12.5px', lineHeight: 1.4, color: 'var(--text-hint)' }}>
+            <span style={{ fontSize: '12px', lineHeight: 1.4, color: 'var(--text-hint)' }}>
               {s.countSub}
             </span>
           )}

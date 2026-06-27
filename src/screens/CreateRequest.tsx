@@ -104,7 +104,7 @@ export function CreateRequest({
   const fieldLabelStyle: CSSProperties = {
     margin: 0,
     fontFamily: bodyFont,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: 500,
     lineHeight: lh,
     color: 'var(--text-primary)',
@@ -145,7 +145,7 @@ export function CreateRequest({
     borderRadius: 10,
     cursor: 'pointer',
     fontFamily: bodyFont,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: 500,
     lineHeight: 1,
     transition: 'background 120ms ease, color 120ms ease',
@@ -193,7 +193,7 @@ export function CreateRequest({
             style={{
               margin: 0,
               fontFamily: bodyFont,
-              fontSize: 15,
+              fontSize: 16,
               fontWeight: 400,
               lineHeight: lh,
               color: 'var(--text-secondary)',
@@ -342,7 +342,7 @@ export function CreateRequest({
               style={{
                 margin: 0,
                 fontFamily: bodyFont,
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: 500,
                 color: '#fff',
                 textAlign: 'center',

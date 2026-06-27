@@ -172,7 +172,7 @@ export function IncomingRequestAlert({
     background: 'transparent',
     color: 'var(--text-secondary)',
     fontFamily: bodyFont,
-    fontSize: 14.5,
+    fontSize: 14,
     fontWeight: 500,
     lineHeight: 1,
     cursor: 'pointer',
@@ -248,7 +248,7 @@ export function IncomingRequestAlert({
                 }}
               >
                 {r.icon}
-                <div style={{ flex: 1, minWidth: 0, fontFamily: bodyFont, fontSize: 14.5, fontWeight: 500, lineHeight: 1.5, color: 'var(--text-primary)' }}>
+                <div style={{ flex: 1, minWidth: 0, fontFamily: bodyFont, fontSize: 14, fontWeight: 500, lineHeight: 1.5, color: 'var(--text-primary)' }}>
                   {r.text}
                 </div>
               </div>
@@ -299,7 +299,7 @@ export function IncomingRequestAlert({
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flex: 'none', marginTop: 2 }}>
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            <div style={{ flex: 1, minWidth: 0, fontFamily: bodyFont, fontSize: 13.5, fontWeight: 500, lineHeight: 1.5, color: 'var(--color-success)' }}>
+            <div style={{ flex: 1, minWidth: 0, fontFamily: bodyFont, fontSize: 14, fontWeight: 500, lineHeight: 1.5, color: 'var(--color-success)' }}>
               {t.helpingNote}
             </div>
           </div>

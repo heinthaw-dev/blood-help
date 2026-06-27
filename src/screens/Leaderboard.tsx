@@ -54,7 +54,7 @@ const MEDALS = {
     silver: {
         ring: "#AEB3BA",
         avatarBg: "#F2F3F5",
-        avatarColor: "#6E6E6E",
+        avatarColor: "var(--color-ink-500)",
         cardBg: "var(--surface-card)",
         cardBorder: "var(--border-card)",
         cardShadow: "none",
@@ -136,9 +136,9 @@ export function Leaderboard({
         my: {
             title: "လူ့အသက် ကယ်တင်ခဲ့သူများ",
             subtitle:
-                "လှူဒါန်းမှုတိုင်းသည် တစ်စုံတစ်ဦးအတွက် ဒုတိယအခွင့်အရေး ဖြစ်ပါသည်",
-            impactPrefix: "ကျွန်ုပ်တို့ စုပေါင်း၍ အသက် ",
-            impactSuffix: " ခု ကယ်တင်ခဲ့ပါသည်",
+                "လှူဒါန်းမှုတိုင်းသည် တစ်စုံတစ်ဦးအတွက် ဒုတိယအခွင့်အရေး ဖြစ်ပါသည်။",
+            impactPrefix: "ကျွန်ုပ်တို့ စုစုပေါင်း သွေးလှုဒါန်းမှု ",
+            impactSuffix: " ကြိမ် ပြုလုပ်ခဲ့ပြီးပါပြီ။",
             lowData: "ပထမဆုံး သွေးလှူရှင် ဖြစ်လိုက်ပါ။",
             topDonor: "ထိပ်ဆုံး သွေးလှူရှင်",
             allDonors: "သွေးလှူရှင်များ အားလုံး",
@@ -185,7 +185,11 @@ export function Leaderboard({
         <div className="phone-entry-stage">
             <div className="phone-entry-card" style={{ height: "100dvh" }}>
                 {/* Header */}
-                <ScreenHeader variant="brand" align="left" right={<NotificationBell onClick={onOpenNotifications} />} />
+                <ScreenHeader
+                    variant="brand"
+                    align="left"
+                    right={<NotificationBell onClick={onOpenNotifications} />}
+                />
 
                 {/* Scrollable body */}
                 <div
@@ -199,18 +203,6 @@ export function Leaderboard({
                 >
                     {/* Title block */}
                     <div style={{ textAlign: "center", padding: "6px 4px 0" }}>
-                        <h1
-                            style={{
-                                margin: 0,
-                                fontFamily: bodyFont,
-                                fontSize: 23,
-                                fontWeight: 600,
-                                lineHeight: 1.35,
-                                color: "var(--text-primary)",
-                            }}
-                        >
-                            {t.title}
-                        </h1>
                         <p
                             style={{
                                 margin: "12px auto 0",
@@ -328,7 +320,7 @@ export function Leaderboard({
                                     style={{
                                         minWidth: 0,
                                         fontFamily: bodyFont,
-                                        fontSize: 15,
+                                        fontSize: 16,
                                         lineHeight: 1.5,
                                         color: "var(--text-primary)",
                                     }}
@@ -530,7 +522,9 @@ export function Leaderboard({
                                                     )}
                                                 </div>
                                                 <div style={{ marginTop: 6 }}>
-                                                    <Badge>{row.bloodType}</Badge>
+                                                    <Badge>
+                                                        {row.bloodType}
+                                                    </Badge>
                                                 </div>
                                             </div>
 
@@ -539,14 +533,15 @@ export function Leaderboard({
                                                 style={{
                                                     flex: "none",
                                                     textAlign: "right",
+                                                    whiteSpace: "nowrap",
                                                 }}
                                             >
-                                                <div
+                                                <span
                                                     style={{
                                                         fontFamily: burmeseFont,
                                                         fontSize: isFirst
-                                                            ? 28
-                                                            : 24,
+                                                            ? 22
+                                                            : 17,
                                                         fontWeight: 600,
                                                         lineHeight: 1,
                                                         color: "var(--text-primary)",
@@ -556,17 +551,17 @@ export function Leaderboard({
                                                         row.count,
                                                         lang,
                                                     )}
-                                                </div>
-                                                <div
+                                                </span>
+                                                <span
                                                     style={{
                                                         fontFamily: burmeseFont,
                                                         fontSize: 13,
                                                         color: "var(--text-secondary)",
-                                                        marginTop: 3,
                                                     }}
                                                 >
+                                                    {" "}
                                                     {t.times}
-                                                </div>
+                                                </span>
                                             </div>
                                         </Card>
                                     );
@@ -587,7 +582,7 @@ export function Leaderboard({
                                         <span
                                             style={{
                                                 fontFamily: bodyFont,
-                                                fontSize: 16,
+                                                fontSize: 18,
                                                 fontWeight: 600,
                                                 color: "var(--text-primary)",
                                             }}
@@ -607,8 +602,16 @@ export function Leaderboard({
                                             <Card
                                                 key={row.profileId}
                                                 padding="sm"
-                                                background={row.isUser ? "var(--color-primary-tint)" : undefined}
-                                                borderColor={row.isUser ? "transparent" : undefined}
+                                                background={
+                                                    row.isUser
+                                                        ? "var(--color-primary-tint)"
+                                                        : undefined
+                                                }
+                                                borderColor={
+                                                    row.isUser
+                                                        ? "transparent"
+                                                        : undefined
+                                                }
                                                 style={{
                                                     display: "flex",
                                                     alignItems: "center",
@@ -623,7 +626,7 @@ export function Leaderboard({
                                                         textAlign: "center",
                                                         fontFamily:
                                                             "var(--font-sans)",
-                                                        fontSize: 15,
+                                                        fontSize: 16,
                                                         fontWeight: 700,
                                                         lineHeight: 1,
                                                         color: "var(--text-hint)",
@@ -646,7 +649,7 @@ export function Leaderboard({
                                                         justifyContent:
                                                             "center",
                                                         fontFamily: burmeseFont,
-                                                        fontSize: 15,
+                                                        fontSize: 16,
                                                         fontWeight: 600,
                                                         color: row.isUser
                                                             ? "var(--color-primary)"
@@ -689,7 +692,9 @@ export function Leaderboard({
                                                             {t.you}
                                                         </span>
                                                     )}
-                                                    <Badge>{row.bloodType}</Badge>
+                                                    <Badge>
+                                                        {row.bloodType}
+                                                    </Badge>
                                                 </div>
                                                 {/* count */}
                                                 <div

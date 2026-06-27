@@ -198,7 +198,7 @@ export function DonorThankYou({ lang, onLangChange, bloodType, supabaseId, onCon
           </div>
 
           {/* Warm message */}
-          <p style={{ margin: '24px 0 0', fontFamily: bodyFont, fontSize: '15px', lineHeight: 1.75, color: 'var(--text-secondary)', maxWidth: '300px' }}>
+          <p style={{ margin: '24px 0 0', fontFamily: bodyFont, fontSize: 16, lineHeight: 1.75, color: 'var(--text-secondary)', maxWidth: '300px' }}>
             {s.body}
           </p>
         </div>
@@ -229,7 +229,7 @@ export function DonorThankYou({ lang, onLangChange, bloodType, supabaseId, onCon
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
-              <p style={{ margin: 0, flex: 1, minWidth: 0, textAlign: 'left', fontFamily: bodyFont, fontSize: '15px', fontWeight: 600, lineHeight: 1.5, color: 'var(--color-success)' }}>
+              <p style={{ margin: 0, flex: 1, minWidth: 0, textAlign: 'left', fontFamily: bodyFont, fontSize: 16, fontWeight: 600, lineHeight: 1.5, color: 'var(--color-success)' }}>
                 {s.enabledLabel}
               </p>
             </Card>
@@ -251,7 +251,7 @@ export function DonorThankYou({ lang, onLangChange, bloodType, supabaseId, onCon
                 >
                   <BellIcon size={20} color="var(--color-primary)" />
                 </div>
-                <p style={{ margin: 0, flex: 1, minWidth: 0, textAlign: 'left', fontFamily: bodyFont, fontSize: '14.5px', fontWeight: 500, lineHeight: 1.6, color: 'var(--text-primary)' }}>
+                <p style={{ margin: 0, flex: 1, minWidth: 0, textAlign: 'left', fontFamily: bodyFont, fontSize: '14px', fontWeight: 500, lineHeight: 1.6, color: 'var(--text-primary)' }}>
                   {s.enablePrompt}
                 </p>
               </div>
@@ -286,7 +286,7 @@ export function DonorThankYou({ lang, onLangChange, bloodType, supabaseId, onCon
                     <path d="m8 8 4-4 4 4" />
                     <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
                   </svg>
-                  <p style={{ margin: 0, flex: 1, minWidth: 0, fontFamily: bodyFont, fontSize: '13.5px', fontWeight: 500, lineHeight: 1.55, color: 'var(--text-primary)' }}>
+                  <p style={{ margin: 0, flex: 1, minWidth: 0, fontFamily: bodyFont, fontSize: '14px', fontWeight: 500, lineHeight: 1.55, color: 'var(--text-primary)' }}>
                     {s.installGuide}
                   </p>
                 </div>
@@ -308,7 +308,7 @@ export function DonorThankYou({ lang, onLangChange, bloodType, supabaseId, onCon
               border: 'none',
               background: 'transparent',
               fontFamily: bodyFont,
-              fontSize: '15px',
+              fontSize: 16,
               fontWeight: 500,
               lineHeight: 1.4,
               color: continueHover ? 'var(--text-primary)' : 'var(--text-secondary)',

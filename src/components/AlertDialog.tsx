@@ -72,7 +72,7 @@ export function AlertDialog({
           style={{
             margin: '12px 0 0',
             fontFamily: bodyFont,
-            fontSize: 15,
+            fontSize: 16,
             fontWeight: 400,
             lineHeight: 1.6,
             color: 'var(--text-secondary)',

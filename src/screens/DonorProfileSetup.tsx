@@ -129,7 +129,7 @@ export function DonorProfileSetup({
   const fieldLabelStyle: CSSProperties = {
     margin: 0,
     fontFamily: bodyFont,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: 500,
     lineHeight: lh,
     color: 'var(--text-primary)',
@@ -162,7 +162,7 @@ export function DonorProfileSetup({
             style={{
               margin: 0,
               fontFamily: bodyFont,
-              fontSize: 15,
+              fontSize: 16,
               fontWeight: 400,
               lineHeight: lh,
               color: 'var(--text-secondary)',
@@ -279,7 +279,7 @@ export function DonorProfileSetup({
               style={{
                 margin: 0,
                 fontFamily: bodyFont,
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: 500,
                 color: '#fff',
                 textAlign: 'center',

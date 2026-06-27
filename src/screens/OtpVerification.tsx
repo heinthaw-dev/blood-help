@@ -165,7 +165,7 @@ export function OtpVerification({
                         style={{
                             margin: "12px 0 0",
                             fontFamily: bodyFont,
-                            fontSize: 15,
+                            fontSize: 16,
                             fontWeight: 400,
                             lineHeight: lh,
                             color: "var(--text-secondary)",
@@ -181,7 +181,7 @@ export function OtpVerification({
                                 padding: 0,
                                 cursor: "pointer",
                                 fontFamily: bodyFont,
-                                fontSize: 15,
+                                fontSize: 16,
                                 fontWeight: 500,
                                 color: "var(--color-primary)",
                             }}
@@ -233,7 +233,7 @@ export function OtpVerification({
                                             background: error
                                                 ? "var(--color-primary-tint)"
                                                 : "var(--surface-card)",
-                                            border: `1.5px solid ${borderColor}`,
+                                            border: `1px solid ${borderColor}`,
                                             borderRadius: "var(--radius-input)",
                                             outline: "none",
                                             transition:
@@ -268,7 +268,7 @@ export function OtpVerification({
                             style={{
                                 margin: "20px 0 0",
                                 fontFamily: bodyFont,
-                                fontSize: 15,
+                                fontSize: 16,
                                 fontWeight: 400,
                                 lineHeight: lh,
                                 color: "var(--text-secondary)",
@@ -281,7 +281,7 @@ export function OtpVerification({
                             style={{
                                 margin: "20px 0 0",
                                 fontFamily: bodyFont,
-                                fontSize: 15,
+                                fontSize: 16,
                                 fontWeight: 400,
                                 lineHeight: lh,
                                 color: "var(--text-secondary)",
@@ -297,7 +297,7 @@ export function OtpVerification({
                                     padding: 0,
                                     cursor: "pointer",
                                     fontFamily: bodyFont,
-                                    fontSize: 15,
+                                    fontSize: 16,
                                     fontWeight: 500,
                                     color: "var(--color-primary)",
                                 }}
