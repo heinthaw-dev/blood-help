@@ -900,6 +900,7 @@ function App() {
         return (
             <DonorThankYou
                 lang={lang}
+                onLangChange={setLang}
                 bloodType={user.bloodType}
                 supabaseId={user.supabaseId}
                 onContinue={() => setScreen("profile")}

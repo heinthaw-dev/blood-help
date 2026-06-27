@@ -3,12 +3,14 @@ import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { ScreenHeader } from '../components/ScreenHeader'
+import { LanguageToggle } from '../components/LanguageToggle'
 import { pushSupported, registerPushToken } from '../lib/push'
 import type { BloodType } from '../blood'
 import type { Lang } from '../i18n'
 
 export interface DonorThankYouProps {
   lang: Lang
+  onLangChange: (lang: Lang) => void
   bloodType: BloodType
   /** Donor's profile id (auth uid) — required to register the FCM token. */
   supabaseId: string | null
@@ -65,7 +67,7 @@ function isIosSafariTab(): boolean {
  *
  * Port of Donor Thank You.dc.html, wired to the real push infra in lib/push.
  */
-export function DonorThankYou({ lang, bloodType, supabaseId, onContinue }: DonorThankYouProps) {
+export function DonorThankYou({ lang, onLangChange, bloodType, supabaseId, onContinue }: DonorThankYouProps) {
   const bodyFont = lang === 'my' ? 'var(--font-burmese)' : 'var(--font-sans)'
 
   // Derived-from-environment initial state (client-only SPA — both are known at
@@ -134,8 +136,8 @@ export function DonorThankYou({ lang, bloodType, supabaseId, onContinue }: Donor
         className="phone-entry-card"
         style={{ display: 'flex', flexDirection: 'column', fontFamily: bodyFont }}
       >
-        {/* Top bar: centered wordmark */}
-        <ScreenHeader variant="brand" align="center" />
+        {/* Top bar: left wordmark + language toggle (matches Phone Entry) */}
+        <ScreenHeader variant="brand" align="left" right={<LanguageToggle lang={lang} onChange={onLangChange} />} />
 
         {/* Main content — flows from the top, centered horizontally */}
         <div
