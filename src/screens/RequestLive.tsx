@@ -49,7 +49,12 @@ function toMyanmarDigits(n: number): string {
 }
 
 /** Great-circle distance in metres between two lat/lng points (Haversine). */
-function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+function haversineMeters(
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number,
+): number {
     const R = 6371000;
     const toRad = (d: number) => (d * Math.PI) / 180;
     const dLat = toRad(lat2 - lat1);
@@ -384,7 +389,8 @@ export function RequestLive({
     // so we fetch the donor's lat/lng from the donors table and compute distance
     // against the requester's known coordinates. Same approach as IncomingRequestAlert.
     useEffect(() => {
-        if (!fcmRequesterAlert || !requestId || lat == null || lng == null) return;
+        if (!fcmRequesterAlert || !requestId || lat == null || lng == null)
+            return;
         let cancelled = false;
 
         async function computeDistance() {
@@ -410,7 +416,12 @@ export function RequestLive({
                 return;
 
             setFcmDistance(
-                haversineMeters(lat as number, lng as number, donor.lat, donor.lng),
+                haversineMeters(
+                    lat as number,
+                    lng as number,
+                    donor.lat,
+                    donor.lng,
+                ),
             );
         }
 
@@ -566,7 +577,7 @@ export function RequestLive({
                 <ScreenHeader
                     variant="nav"
                     onBack={onBack}
-                    title="သွေး တောင်းခံချက်"
+                    title="အနီးအနားရှိ သွေးလှူရှင်စာရင်း"
                 />
 
                 {/* Progress + blood type + township (screen content below the header) */}
@@ -957,9 +968,7 @@ export function RequestLive({
                                             gap: 12,
                                         }}
                                     >
-                                        <Badge>
-                                            {responder.blood_type}
-                                        </Badge>
+                                        <Badge>{responder.blood_type}</Badge>
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div
                                                 style={{
@@ -1163,7 +1172,7 @@ export function RequestLive({
                             ? 'QR ကုဒ် ဖတ်ရှုရန် ကင်မရာ ခွင့်ပြုချက် လိုအပ်ပါသည်။ ဘရောက်ဇာမေးပါက "Allow" နှိပ်ပါ။'
                             : 'Camera access is needed to scan the donor QR code. Tap "Allow" when your browser asks.'
                     }
-                    confirmLabel={lang === "my" ? "ဆက်လက်မည်" : "Continue"}
+                    confirmLabel={lang === "my" ? "ဆက်လုပ်မည်" : "Continue"}
                     cancelLabel={lang === "my" ? "မလုပ်တော့ပါ" : "Cancel"}
                     onConfirm={() => {
                         setCameraWarningOpen(false);
@@ -1528,14 +1537,6 @@ export function RequestLive({
                                     >
                                         သွေးလှူရှင်၏ ကုဒ်
                                     </div>
-                                    <div
-                                        style={{
-                                            fontSize: 12,
-                                            color: "var(--text-secondary)",
-                                        }}
-                                    >
-                                        Scan or enter the donor's code
-                                    </div>
                                 </div>
                             </div>
 
@@ -1700,18 +1701,6 @@ export function RequestLive({
                                 သွေးလှူရှင်၏ QR ကို စကင်ဖတ်ပါ (သို့) ၅-လုံးကုဒ်
                                 ရိုက်ထည့်ပါ။ ဤတောင်းခံချက်သို့
                                 တုံ့ပြန်ထားသူများသာ။
-                                <span
-                                    style={{
-                                        display: "block",
-                                        fontFamily: "var(--font-sans)",
-                                        color: "var(--text-hint)",
-                                        marginTop: 3,
-                                    }}
-                                >
-                                    Scan the donor's QR or enter their 5-char
-                                    code — only valid for donors who responded
-                                    to this request.
-                                </span>
                             </p>
 
                             <Button
@@ -1791,17 +1780,6 @@ export function RequestLive({
                             }}
                         >
                             {cl.body}
-                        </div>
-                        <div
-                            style={{
-                                marginTop: 5,
-                                fontSize: 13,
-                                lineHeight: 1.5,
-                                color: "var(--text-hint)",
-                                maxWidth: 300,
-                            }}
-                        >
-                            {cl.bodyEn}
                         </div>
 
                         <div
@@ -1914,35 +1892,20 @@ export function RequestLive({
                                 }}
                             />
 
-                            {/* Donor avatar + name */}
+                            {/* Donor card — matches donor list card layout */}
                             <div
                                 style={{
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: 14,
+                                    gap: 12,
                                     marginBottom: 18,
                                 }}
                             >
-                                <div
-                                    style={{
-                                        flexShrink: 0,
-                                        width: 52,
-                                        height: 52,
-                                        borderRadius: "999px",
-                                        background: "var(--color-success-tint)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        fontFamily: "var(--font-burmese)",
-                                        fontSize: 20,
-                                        fontWeight: 600,
-                                        color: "var(--color-success)",
-                                    }}
-                                >
-                                    {fcmRequesterAlert.responderName.charAt(0)}
-                                </div>
+                                <Badge>
+                                    {fcmRequesterAlert.responderBloodType}
+                                </Badge>
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    {/* Name + "Will help" badge — matches donor list card row 1 */}
+                                    {/* Name + "Will help" badge */}
                                     <div
                                         style={{
                                             display: "flex",
@@ -1960,9 +1923,7 @@ export function RequestLive({
                                                 color: "var(--text-primary)",
                                             }}
                                         >
-                                            {
-                                                fcmRequesterAlert.responderName
-                                            }
+                                            {fcmRequesterAlert.responderName}
                                         </span>
                                         <span
                                             style={{
@@ -1995,8 +1956,7 @@ export function RequestLive({
                                             marginTop: 5,
                                             fontSize: 13,
                                             color: "var(--text-hint)",
-                                            fontFamily:
-                                                "var(--font-burmese)",
+                                            fontFamily: "var(--font-burmese)",
                                         }}
                                     >
                                         {fcmDistance != null && (
@@ -2032,18 +1992,6 @@ export function RequestLive({
                                                 )}
                                             </span>
                                         )}
-                                    </div>
-                                    {/* Blood type — below the contact row */}
-                                    <div
-                                        style={{
-                                            marginTop: 6,
-                                        }}
-                                    >
-                                        <Badge>
-                                            {
-                                                fcmRequesterAlert.responderBloodType
-                                            }
-                                        </Badge>
                                     </div>
                                 </div>
                             </div>

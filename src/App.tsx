@@ -47,6 +47,7 @@ interface UserState {
     emergencyCallable: boolean;
     donationCount: number;
     lastDonation: string | null;
+    availableAfter: string | null;
     donorSetupComplete: boolean;
     donorCode: string;
     supabaseId: string | null;
@@ -64,6 +65,7 @@ const DEFAULT_USER: UserState = {
     emergencyCallable: false,
     donationCount: 0,
     lastDonation: null,
+    availableAfter: null,
     donorSetupComplete: false,
     donorCode: "K7M2Q",
     supabaseId: null,
@@ -206,6 +208,7 @@ function App() {
                 donor: {
                     blood_type: string; is_available: boolean; emergency_callable: boolean;
                     donation_count: number; last_donation_date: string | null;
+                    available_after: string | null;
                     donor_code: string; lat: number | null; lng: number | null;
                 } | null;
                 activeRequest: {
@@ -233,6 +236,7 @@ function App() {
                 showNumber: donor?.emergency_callable ?? false,
                 donationCount: donor?.donation_count ?? 0,
                 lastDonation: donor?.last_donation_date ?? null,
+                availableAfter: donor?.available_after ?? null,
                 donorSetupComplete: donor !== null,
                 donorCode: donor?.donor_code ?? "",
                 lat: donor?.lat ?? null,
@@ -417,14 +421,25 @@ function App() {
                     table: "donations",
                     filter: `donor_id=eq.${uid}`,
                 },
-                (payload) => {
+                async (payload) => {
                     // Mark this donation as seen so check-on-open (D-12) skips it on next load.
                     localStorage.setItem(
                         "bloodhelp.lastSeenDonationAt",
                         (payload.new as { created_at?: string }).created_at ?? new Date().toISOString(),
                     );
-                    // Optimistically increment donation count (D-11 open question 3).
-                    setUser((u) => ({ ...u, donationCount: u.donationCount + 1 }));
+                    // Refetch donor row to get accurate donation_count, last_donation_date,
+                    // and the newly-written available_after (payload doesn't carry donor fields).
+                    const { data: donor } = await supabase
+                        .from("donors")
+                        .select("donation_count, last_donation_date, available_after")
+                        .eq("profile_id", uid)
+                        .maybeSingle();
+                    setUser((u) => ({
+                        ...u,
+                        donationCount: donor?.donation_count ?? u.donationCount + 1,
+                        lastDonation: donor?.last_donation_date ?? u.lastDonation,
+                        availableAfter: donor?.available_after ?? u.availableAfter,
+                    }));
                     // Congrats takeover — interrupts whatever screen the donor is on (D-11).
                     setScreen("donor-congrats");
                 },
@@ -1030,9 +1045,10 @@ function App() {
                     bloodType={user.bloodType}
                     donationCount={user.donationCount}
                     lastDonation={user.lastDonation}
+                    availableAfter={user.availableAfter}
                     isDonor={user.donorSetupComplete}
                     donorCode={user.donorCode}
-                    showCooldown={user.donationCount > 0}
+                    showCooldown={user.availableAfter !== null}
                     available={user.available}
                     onAvailableChange={handleAvailableChange}
                     emergencyCallable={user.emergencyCallable}
