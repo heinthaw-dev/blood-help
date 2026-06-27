@@ -380,9 +380,9 @@ export function Home({
             availOn: "အသင့်ရှိသည်",
             availOff: "မရရှိနိုင်ပါ",
             setupTitle: "သွေးလှူရှင် အချက်အလက် ဖြည့်ပါ",
-            activeTitle: "သင့်တောင်းခံချက် ဆောင်ရွက်ဆဲ ဖြစ်သည်",
+            activeTitle: "သင့်တောင်းခံချက် ဆောင်ရွက်နေဆဲ ဖြစ်ပါသည်",
             activityLine:
-                "အနီးနားရှိ သွေးလှူနိုင်သူများ မြင်နိုင်ပါပြီ — တုံ့ပြန်မှု စောင့်ဆဲ",
+                "အနီးနားရှိ သွေးအလှုရှင်များအား တွေ့ရှိပါပြီ — သူတို့ထံမှ တုံ့ပြန်မှု စောင့်ဆိုင်းဆဲပါ",
             viewBtn: "ကြည့်ရန်",
             requestBtn: "သွေး တောင်းခံရန်",
             feedTitle: "အနီးနားရှိ တောင်းခံချက်များ",
@@ -431,7 +431,7 @@ export function Home({
                         gap: 20,
                     }}
                 >
-                    {/* Availability row OR donor-setup nudge */}
+                    {/* Availability row OR donor-setup nudge (hidden during an active request to reduce cognitive load) */}
                     {donorReady ? (
                         <Card
                             padding="md"
@@ -502,7 +502,7 @@ export function Home({
                                 ariaLabel={t.availTitle}
                             />
                         </Card>
-                    ) : (
+                    ) : hasOpenRequest ? null : (
                         <button
                             type="button"
                             onClick={onFinishSetup}
@@ -763,7 +763,8 @@ export function Home({
                         </Button>
                     )}
 
-                    {/* Nearby requests section */}
+                    {/* Nearby requests section — hidden until donor profile is complete */}
+                    {donorReady && (
                     <div
                         style={{
                             display: "flex",
@@ -844,6 +845,7 @@ export function Home({
                             )}
                         </div>
                     </div>
+                    )}
                 </div>
 
                 {/* Bottom nav */}

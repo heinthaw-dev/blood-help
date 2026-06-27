@@ -266,30 +266,32 @@ export function Profile({
             </div>
             <div style={{ background: 'var(--surface-card)', border: '1px solid var(--border-card)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
 
-              {/* Available toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16 }}>
-                <span style={{ flex: 1, minWidth: 0, fontFamily: langFont, fontSize: 16, lineHeight: 1.4, color: 'var(--text-primary)' }}>
-                  {t.availLabel}
-                </span>
-                <Switch checked={available} onChange={onAvailableChange} ariaLabel={t.availLabel} />
-              </div>
-              {divider}
-
-              {/* Emergency callable toggle */}
-              <div style={{ padding: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-                  <span style={{ flex: 1, minWidth: 0, fontFamily: langFont, fontSize: 16, lineHeight: 1.45, color: 'var(--text-primary)' }}>
-                    {t.emergencyLabel}
-                  </span>
-                  <div style={{ flexShrink: 0, marginTop: 1 }}>
-                    <Switch checked={emergencyCallable} onChange={onEmergencyChange} ariaLabel={t.emergencyLabel} />
+              {/* Available + Emergency toggles — only shown to users who completed donor setup */}
+              {isDonor && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16 }}>
+                    <span style={{ flex: 1, minWidth: 0, fontFamily: langFont, fontSize: 16, lineHeight: 1.4, color: 'var(--text-primary)' }}>
+                      {t.availLabel}
+                    </span>
+                    <Switch checked={available} onChange={onAvailableChange} ariaLabel={t.availLabel} />
                   </div>
-                </div>
-                <div style={{ fontFamily: langFont, fontSize: 13, lineHeight: 1.6, color: 'var(--text-secondary)', marginTop: 8 }}>
-                  {t.emergencyHelp}
-                </div>
-              </div>
-              {divider}
+                  {divider}
+                  <div style={{ padding: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                      <span style={{ flex: 1, minWidth: 0, fontFamily: langFont, fontSize: 16, lineHeight: 1.45, color: 'var(--text-primary)' }}>
+                        {t.emergencyLabel}
+                      </span>
+                      <div style={{ flexShrink: 0, marginTop: 1 }}>
+                        <Switch checked={emergencyCallable} onChange={onEmergencyChange} ariaLabel={t.emergencyLabel} />
+                      </div>
+                    </div>
+                    <div style={{ fontFamily: langFont, fontSize: 13, lineHeight: 1.6, color: 'var(--text-secondary)', marginTop: 8 }}>
+                      {t.emergencyHelp}
+                    </div>
+                  </div>
+                  {divider}
+                </>
+              )}
 
               {/* Language segmented control */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16 }}>

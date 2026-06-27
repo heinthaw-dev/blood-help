@@ -99,7 +99,7 @@ export function IncomingRequestAlert({
       lockHint: "'ကူညီမည်' ကို နှိပ်၍ ဖုန်းနံပါတ်ကို ကြည့်ပါ",
       helpingNote: 'သင် ကူညီနေပါသည် — တောင်းခံသူထံ အကြောင်းကြားပြီးပါပြီ',
       help: 'ကူညီမည်',
-      decline: 'ယခု မကူညီနိုင်ပါ',
+      decline: 'ယခု မကူညီနိုင်သေးပါ',
       call: 'ဖုန်းခေါ်ရန်',
       phoneLoading: 'ဖုန်းနံပါတ် ရယူနေသည်…',
       close: 'ပိတ်ရန်',
@@ -223,7 +223,7 @@ export function IncomingRequestAlert({
         {/* Headline */}
         <div style={{ textAlign: 'center', marginTop: 16 }}>
           {alert.urgency === 'urgent' && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--color-primary)', color: '#fff', borderRadius: 'var(--radius-pill)', padding: '4px 11px', fontFamily: bodyFont, fontSize: 12, fontWeight: 600, lineHeight: 1, marginBottom: 10 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--color-primary)', color: '#fff', borderRadius: 'var(--radius-pill)', padding: '6px 14px', fontFamily: bodyFont, fontSize: 12, fontWeight: 600, lineHeight: 1.3, marginBottom: 10 }}>
               <span style={{ width: 5, height: 5, borderRadius: 999, background: '#fff' }} />
               {t.urgent}
             </div>

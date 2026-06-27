@@ -109,6 +109,7 @@ interface FcmDonorAlert {
 }
 
 interface FcmRequesterAlert {
+    requestId: string
     responderName: string
     responderPhone: string
     responderBloodType: string
@@ -304,6 +305,7 @@ function App() {
                         window.history.replaceState({}, "", "/");
                     } else if (fcmType === "requester_alert") {
                         setFcmRequesterAlert({
+                            requestId: urlParams.get("request_id") ?? "",
                             responderName: urlParams.get("responder_name") ?? "",
                             responderPhone: urlParams.get("responder_phone") ?? "",
                             responderBloodType: urlParams.get("responder_blood_type") ?? "",
@@ -342,6 +344,7 @@ function App() {
                 setScreen("home");
             } else if (d.fcm_type === "requester_alert") {
                 setFcmRequesterAlert({
+                    requestId: d.request_id ?? "",
                     responderName: d.responder_name ?? "",
                     responderPhone: d.responder_phone ?? "",
                     responderBloodType: d.responder_blood_type ?? "",
@@ -372,6 +375,7 @@ function App() {
                 setScreen("home");
             } else if (d.fcm_type === "requester_alert") {
                 setFcmRequesterAlert({
+                    requestId: d.request_id ?? "",
                     responderName: d.responder_name ?? "",
                     responderPhone: d.responder_phone ?? "",
                     responderBloodType: d.responder_blood_type ?? "",

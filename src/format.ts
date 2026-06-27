@@ -20,6 +20,23 @@ export function formatPhone(e164: string): string {
   return local.replace(/^(\d{2})(\d{4})(\d{3})(\d{3})$/, '$1-$2-$3-$4')
 }
 
+/**
+ * E.164 (+959XXXXXXXXX) → display "+959-XXX-XXX-XXX", keeping the international
+ * +95 prefix (unlike formatPhone, which renders the local 09- form). Used where a
+ * donor's contact number is shown in full international form.
+ */
+export function formatPhoneIntl(e164: string): string {
+  const m = e164.match(/^\+95(9\d{9,10})$/)
+  if (!m) return e164
+  const nat = m[1]                                   // '9' + 9 or 10 digits
+  if (nat.length === 10) {
+    // +959-XXX-XXX-XXX  (1 / 3 / 3 / 3)
+    return nat.replace(/^(9)(\d{3})(\d{3})(\d{3})$/, '+95$1-$2-$3-$4')
+  }
+  // 11 chars → +959-XXXX-XXX-XXX  (1 / 4 / 3 / 3), mirrors formatPhone's long grouping
+  return nat.replace(/^(9)(\d{4})(\d{3})(\d{3})$/, '+95$1-$2-$3-$4')
+}
+
 /** Format distance from meters to a human-readable label with Burmese numerals. */
 export function formatDistanceLabel(distMeters: number, lang: Lang): string {
   const km = distMeters / 1000
