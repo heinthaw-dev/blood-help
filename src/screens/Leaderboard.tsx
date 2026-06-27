@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
+import { Badge } from "../components/Badge";
 import { BottomNav } from "../components/BottomNav";
 import { Card } from "../components/Card";
 import { ScreenHeader } from "../components/ScreenHeader";
@@ -166,20 +167,6 @@ export function Leaderboard({
 
     const top3 = rows.slice(0, 3);
     const rest = rows.slice(3);
-
-    // Shared pill style for the blood-type chip.
-    const bloodPill: CSSProperties = {
-        flex: "none",
-        display: "inline-flex",
-        fontFamily: "var(--font-sans)",
-        fontSize: 12,
-        fontWeight: 600,
-        lineHeight: 1,
-        color: "var(--color-primary)",
-        background: "var(--color-primary-tint)",
-        borderRadius: "var(--radius-pill)",
-        padding: "5px 9px",
-    };
 
     const youPill: CSSProperties = {
         flex: "none",
@@ -542,13 +529,8 @@ export function Leaderboard({
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div
-                                                    style={{
-                                                        ...bloodPill,
-                                                        marginTop: 6,
-                                                    }}
-                                                >
-                                                    {row.bloodType}
+                                                <div style={{ marginTop: 6 }}>
+                                                    <Badge>{row.bloodType}</Badge>
                                                 </div>
                                             </div>
 
@@ -707,14 +689,7 @@ export function Leaderboard({
                                                             {t.you}
                                                         </span>
                                                     )}
-                                                    <span
-                                                        style={{
-                                                            ...bloodPill,
-                                                            padding: "4px 8px",
-                                                        }}
-                                                    >
-                                                        {row.bloodType}
-                                                    </span>
+                                                    <Badge>{row.bloodType}</Badge>
                                                 </div>
                                                 {/* count */}
                                                 <div

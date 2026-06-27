@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import type { CSSProperties } from 'react'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
+import { CallButton } from '../components/CallButton'
 import { Card } from '../components/Card'
 import { ScreenHeader } from '../components/ScreenHeader'
 import { AlertDialog } from '../components/AlertDialog'
@@ -61,41 +61,6 @@ const WRITE_ERROR_STRINGS = {
     retry: 'Retry',
     dismiss: 'Dismiss',
   },
-}
-
-function PhoneIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
-      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
-    </svg>
-  )
-}
-
-/** Round red call button (tel link) with hover/press states. */
-function CallButton({ href, onClick }: { href: string; onClick?: () => void }) {
-  const [hover, setHover] = useState(false)
-  const [active, setActive] = useState(false)
-  const bg = active ? 'var(--color-primary-press)' : hover ? 'var(--color-primary-hover)' : 'var(--color-primary)'
-  return (
-    <a
-      href={href}
-      aria-label="ဖုန်းခေါ်ရန်"
-      onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => { setHover(false); setActive(false) }}
-      onMouseDown={() => setActive(true)}
-      onMouseUp={() => setActive(false)}
-      style={{
-        flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        width: 48, height: 48, borderRadius: '999px', background: bg,
-        textDecoration: 'none', cursor: 'pointer', boxShadow: 'var(--shadow-cta)',
-        transition: 'background 120ms ease, transform 80ms ease',
-        transform: active ? 'scale(0.97)' : 'none',
-      }}
-    >
-      <PhoneIcon />
-    </a>
-  )
 }
 
 // ---- props ----
@@ -423,23 +388,6 @@ export function RequestLive({
   }
   const cl = closedData[closed ?? 'fulfilled']
 
-  const confirmBtnStyle: CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: 54,
-    border: 'none',
-    borderRadius: 'var(--radius-button)',
-    fontFamily: 'var(--font-burmese)',
-    fontSize: 16,
-    fontWeight: 600,
-    cursor: confirmReady ? 'pointer' : 'not-allowed',
-    transition: 'background 120ms ease',
-    background: confirmReady ? 'var(--color-primary)' : 'var(--border-field)',
-    color: confirmReady ? '#fff' : 'var(--text-hint)',
-  }
-
   return (
     <div className="phone-entry-stage">
       <div className="phone-entry-card" style={{ position: 'relative' }}>
@@ -647,7 +595,18 @@ export function RequestLive({
           borderTop: '1px solid var(--border-card)',
           boxShadow: '0 -4px 16px rgba(26,26,26,.05)',
         }}>
-          <ResolveBarButton onClick={() => setSheet('resolve')} />
+          <Button
+            fullWidth
+            tone="success"
+            onClick={() => setSheet('resolve')}
+            icon={
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            }
+          >
+            သွေး ရရှိပြီး — တောင်းခံချက် ပိတ်ရန်
+          </Button>
         </div>
 
         {/* ── Toast ── */}
@@ -884,14 +843,13 @@ export function RequestLive({
                 </span>
               </p>
 
-              <button
-                type="button"
-                onClick={() => void handleConfirmInApp()}
+              <Button
+                fullWidth
                 disabled={!confirmReady}
-                style={confirmBtnStyle}
+                onClick={() => void handleConfirmInApp()}
               >
                 အတည်ပြုမည်
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -990,22 +948,9 @@ export function RequestLive({
             </div>
 
             {/* Call CTA */}
-            <a
-              href={`tel:${fcmRequesterAlert.responderPhone}`}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                width: '100%', height: 54, textDecoration: 'none',
-                borderRadius: 'var(--radius-button)',
-                background: 'var(--color-primary)', color: '#fff',
-                fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 600,
-                boxShadow: 'var(--shadow-cta)',
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
-              </svg>
+            <CallButton shape="bar" href={`tel:${fcmRequesterAlert.responderPhone}`}>
               {lang === 'my' ? 'ဖုန်းခေါ်ရန်' : 'Call donor'}
-            </a>
+            </CallButton>
 
             {/* Dismiss — shows normal RequestLive donor list */}
             <button
@@ -1026,37 +971,6 @@ export function RequestLive({
 
       </div>
     </div>
-  )
-}
-
-/** Full-width green "blood received → close request" CTA with hover/press states. */
-function ResolveBarButton({ onClick }: { onClick: () => void }) {
-  const [hover, setHover] = useState(false)
-  const [active, setActive] = useState(false)
-  const bg = active ? 'var(--color-success-press)' : hover ? 'var(--color-success-hover)' : 'var(--color-success)'
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => { setHover(false); setActive(false) }}
-      onMouseDown={() => setActive(true)}
-      onMouseUp={() => setActive(false)}
-      style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
-        width: '100%', height: 54, border: 'none', borderRadius: 'var(--radius-button)',
-        background: bg, color: '#fff',
-        fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 600, lineHeight: 1.2,
-        cursor: 'pointer', boxShadow: 'var(--shadow-cta-success)',
-        transition: 'background 120ms ease, transform 80ms ease',
-        transform: active ? 'scale(0.985)' : 'none',
-      }}
-    >
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-      သွေး ရရှိပြီး — တောင်းခံချက် ပိတ်ရန်
-    </button>
   )
 }
 

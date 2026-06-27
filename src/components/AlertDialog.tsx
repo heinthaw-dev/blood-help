@@ -86,7 +86,7 @@ export function AlertDialog({
             {confirmLabel}
           </Button>
           {cancelLabel && (
-            <Button variant="secondary" fullWidth height={50} onClick={onCancel}>
+            <Button tone="secondary" fullWidth height={50} onClick={onCancel}>
               {cancelLabel}
             </Button>
           )}

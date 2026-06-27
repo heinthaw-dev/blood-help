@@ -10,7 +10,7 @@ interface ScreenHeaderProps {
   title?: string
   /** Wordmark alignment for `brand` (default left). */
   align?: Align
-  /** Renders the standard 40px back button when provided (`nav`). */
+  /** Renders the standard 40px back button when provided. Works on both `brand` and `nav` variants. */
   onBack?: () => void
   /** Right-slot content — e.g. <LanguageToggle/>, the Home bell, or nothing. */
   right?: ReactNode
@@ -103,6 +103,7 @@ export function ScreenHeader({ variant, title, align = 'left', onBack, right, di
           gap: 8,
         }}
       >
+        {onBack && <BackButton onBack={onBack} />}
         <Wordmark />
         {right ?? null}
       </div>

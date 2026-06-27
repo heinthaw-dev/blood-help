@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { useEffect, useState } from 'react'
+import { Button } from './Button'
 import type { Lang } from '../i18n'
 import { formatNumber } from '../i18n'
 import { formatPhone, formatDistanceLabel } from '../format'
@@ -162,26 +163,7 @@ export function IncomingRequestAlert({
     })
   }
 
-  // Shared button styles.
-  const primaryBtn: CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    width: '100%',
-    height: 54,
-    border: 'none',
-    borderRadius: 'var(--radius-button)',
-    background: 'var(--color-primary)',
-    color: '#fff',
-    textDecoration: 'none',
-    fontFamily: bodyFont,
-    fontSize: 16,
-    fontWeight: 600,
-    lineHeight: 1,
-    cursor: 'pointer',
-    boxShadow: 'var(--shadow-cta)',
-  }
+  // Shared ghost-button style (kept inline — below the 54 px action-button threshold).
   const ghostBtn: CSSProperties = {
     width: '100%',
     height: 44,
@@ -332,16 +314,22 @@ export function IncomingRequestAlert({
                   response is already recorded, so the number activates as soon
                   as the fetch resolves. */}
               {details ? (
-                <a href={`tel:${details.phone}`} aria-label={t.call} style={primaryBtn}>
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flex: 'none' }}>
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
+                <Button
+                  fullWidth
+                  href={`tel:${details.phone}`}
+                  aria-label={t.call}
+                  icon={
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                  }
+                >
                   {t.call}
-                </a>
+                </Button>
               ) : (
-                <button type="button" disabled aria-label={t.phoneLoading} style={{ ...primaryBtn, opacity: 0.6, cursor: 'default' }}>
+                <Button fullWidth disabled aria-label={t.phoneLoading}>
                   {t.phoneLoading}
-                </button>
+                </Button>
               )}
               <button type="button" onClick={onClose} style={ghostBtn}>
                 {t.close}
@@ -349,12 +337,17 @@ export function IncomingRequestAlert({
             </>
           ) : (
             <>
-              <button type="button" onClick={handleHelp} style={primaryBtn}>
-                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flex: 'none' }}>
-                  <path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 0 0-7.1 7.1l1.7 1.7L12 21.5l7.1-7.1 1.7-1.7a5 5 0 0 0 0-7.1z" />
-                </svg>
+              <Button
+                fullWidth
+                onClick={handleHelp}
+                icon={
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 0 0-7.1 7.1l1.7 1.7L12 21.5l7.1-7.1 1.7-1.7a5 5 0 0 0 0-7.1z" />
+                  </svg>
+                }
+              >
                 {t.help}
-              </button>
+              </Button>
               <button type="button" onClick={onClose} style={ghostBtn}>
                 {t.decline}
               </button>

@@ -131,9 +131,10 @@ export function OtpVerification({
     return (
         <div className="phone-entry-stage">
             <div className="phone-entry-card">
-                {/* Top bar: back arrow + language toggle */}
+                {/* Top bar: wordmark + back arrow + language toggle */}
                 <ScreenHeader
-                    variant="nav"
+                    variant="brand"
+                    align="left"
                     onBack={onBack}
                     right={<LanguageToggle lang={lang} onChange={onLangChange} />}
                 />

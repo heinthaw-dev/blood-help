@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Badge } from '../components/Badge'
+import { Button } from '../components/Button'
+import { CallButton } from '../components/CallButton'
 import { Card } from '../components/Card'
 import { Switch } from '../components/Switch'
 import { BottomNav } from '../components/BottomNav'
@@ -61,7 +63,6 @@ interface RequestCardProps {
   req: NearbyRequest
   lang: Lang
   urgentLabel: string
-  callLabel: string
   helpLabel: string
   /** Whether the current donor has already responded to this request. */
   responded: boolean
@@ -69,7 +70,7 @@ interface RequestCardProps {
   onRespond: () => void
 }
 
-function RequestCard({ req, lang, urgentLabel, callLabel, helpLabel, responded, onRespond }: RequestCardProps) {
+function RequestCard({ req, lang, urgentLabel, helpLabel, responded, onRespond }: RequestCardProps) {
   return (
     <Card padding="md" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       {/* Blood type column (urgent tag + badge) */}
@@ -155,27 +156,7 @@ function RequestCard({ req, lang, urgentLabel, callLabel, helpLabel, responded, 
           not responded → "I'll help" pill;
           responded     → round red call button */}
       {responded ? (
-        <a
-          href={`tel:${req.phone}`}
-          aria-label={callLabel}
-          style={{
-            flexShrink: 0,
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 48,
-            height: 48,
-            borderRadius: '999px',
-            background: 'var(--color-primary)',
-            color: '#fff',
-            textDecoration: 'none',
-            boxShadow: 'var(--shadow-cta)',
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
-          </svg>
-        </a>
+        <CallButton href={`tel:${req.phone}`} />
       ) : (
         <button
           type="button"
@@ -315,23 +296,17 @@ export function Home({
   const t = {
     my: {
       availTitle: 'သွေးလှူရန် အသင့်ရှိသည်',
-      availOn:    'Available to donate · အသင့်ရှိသည်',
-      availOff:   'Available to donate · မရရှိနိုင်ပါ',
+      availOn:    'အသင့်ရှိသည်',
+      availOff:   'မရရှိနိုင်ပါ',
       setupTitle: 'သွေးလှူရှင် အချက်အလက် ဖြည့်ပါ',
-      setupSub:   'Finish your donor profile',
       activeTitle:'သင့်တောင်းခံချက် ဆောင်ရွက်ဆဲ ဖြစ်သည်',
-      activeSub:  'Your request is active',
       activityLine: 'အနီးနားရှိ သွေးလှူနိုင်သူများ မြင်နိုင်ပါပြီ — တုံ့ပြန်မှု စောင့်ဆဲ',
-      activitySub:  'Nearby donors can see your request — waiting for responses',
       viewBtn:    'ကြည့်ရန်',
       requestBtn: 'သွေး တောင်းခံရန်',
       feedTitle:  'အနီးနားရှိ တောင်းခံချက်များ',
-      feedSub:    'Nearby requests',
       emptyTitle: 'အနီးနားတွင် သွေးလိုအပ်သူ မရှိသေးပါ။',
       emptySub:   'လိုအပ်သည့်အခါ ချက်ချင်း အကြောင်းကြားပါမည်။',
-      emptyHint:  "We'll alert you the moment someone does.",
       urgentLabel:'အရေးပေါ်',
-      callLabel:  'ဖုန်းခေါ်ရန်',
       helpLabel:  'ကူညီမည်',
     },
     en: {
@@ -339,20 +314,14 @@ export function Home({
       availOn:    'Tap to mark unavailable',
       availOff:   'Tap to mark available',
       setupTitle: 'Complete your donor profile',
-      setupSub:   'Finish your donor profile',
       activeTitle:'Your request is active',
-      activeSub:  'Your request is active',
       activityLine: 'Nearby donors can see your request — waiting for responses',
-      activitySub:  'Nearby donors can see your request — waiting for responses',
       viewBtn:    'View',
       requestBtn: 'Request Blood',
       feedTitle:  'Nearby Requests',
-      feedSub:    'Nearby requests',
       emptyTitle: 'No nearby blood requests yet.',
       emptySub:   "We'll alert you the moment someone needs help.",
-      emptyHint:  "You'll be notified immediately when someone nearby needs a donor.",
       urgentLabel:'Urgent',
-      callLabel:  'Call',
       helpLabel:  "I'll help",
     },
   }[lang]
@@ -443,9 +412,6 @@ export function Home({
                 <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 600, lineHeight: 1.5, color: 'var(--color-primary)' }}>
                   {t.setupTitle}
                 </div>
-                <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--color-primary-press)', opacity: 0.85, marginTop: 1 }}>
-                  {t.setupSub}
-                </div>
               </div>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
                 <polyline points="9 18 15 12 9 6" />
@@ -480,9 +446,6 @@ export function Home({
                   <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 16, fontWeight: 600, lineHeight: 1.5, color: 'var(--color-primary)' }}>
                     {t.activeTitle}
                   </div>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--color-primary-press)', opacity: 0.7, marginTop: 1 }}>
-                    {t.activeSub}
-                  </div>
                 </div>
               </div>
               <div style={{
@@ -500,9 +463,6 @@ export function Home({
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 14.5, lineHeight: 1.55, color: 'var(--text-primary)' }}>
                     {t.activityLine}
-                  </div>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 1 }}>
-                    {t.activitySub}
                   </div>
                 </div>
               </div>
@@ -540,58 +500,23 @@ export function Home({
                   </button>
                 </div>
               )}
-              <button
-                type="button"
+              <Button
+                fullWidth
+                style={{ marginTop: 14 }}
                 onClick={onViewRequest}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  width: '100%',
-                  height: 46,
-                  marginTop: 14,
-                  border: 'none',
-                  borderRadius: 'var(--radius-button)',
-                  background: 'var(--color-primary)',
-                  color: '#fff',
-                  fontFamily: 'var(--font-burmese)',
-                  fontSize: 15,
-                  fontWeight: 600,
-                  lineHeight: 1,
-                  cursor: 'pointer',
-                }}
+                trailingIcon={
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                }
               >
                 {t.viewBtn}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </button>
+              </Button>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={onRequestBlood}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                height: 54,
-                border: 'none',
-                borderRadius: 'var(--radius-button)',
-                background: 'var(--color-primary)',
-                color: '#fff',
-                fontFamily: 'var(--font-burmese)',
-                fontSize: 16,
-                fontWeight: 600,
-                lineHeight: 1,
-                cursor: 'pointer',
-                boxShadow: 'var(--shadow-cta)',
-              }}
-            >
+            <Button fullWidth onClick={onRequestBlood}>
               {t.requestBtn}
-            </button>
+            </Button>
           )}
 
           {/* Nearby requests section */}
@@ -600,11 +525,6 @@ export function Home({
               <h2 style={{ margin: 0, fontFamily: 'var(--font-burmese)', fontSize: 18, fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}>
                 {t.feedTitle}
               </h2>
-              {lang === 'my' && (
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-hint)' }}>
-                  {t.feedSub}
-                </span>
-              )}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -619,7 +539,7 @@ export function Home({
                     {t.emptyTitle}
                   </div>
                   <div style={{ fontSize: 13, marginTop: 6, lineHeight: 1.55 }}>
-                    {t.emptyHint}
+                    {t.emptySub}
                   </div>
                 </div>
               ) : (
@@ -629,7 +549,6 @@ export function Home({
                     req={req}
                     lang={lang}
                     urgentLabel={t.urgentLabel}
-                    callLabel={t.callLabel}
                     helpLabel={t.helpLabel}
                     responded={respondedIds?.has(req.id) ?? false}
                     onRespond={() => onRespond?.(req.id)}

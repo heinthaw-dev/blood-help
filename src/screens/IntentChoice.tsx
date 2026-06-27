@@ -103,8 +103,8 @@ export function IntentChoice({ lang, onLangChange, onChoose }: IntentChoiceProps
   return (
     <div className="phone-entry-stage">
       <div className="phone-entry-card">
-        {/* Top bar: language toggle only */}
-        <ScreenHeader variant="nav" right={<LanguageToggle lang={lang} onChange={onLangChange} />} />
+        {/* Top bar: wordmark + language toggle */}
+        <ScreenHeader variant="brand" align="left" right={<LanguageToggle lang={lang} onChange={onLangChange} />} />
 
         {/* Content */}
         <div
