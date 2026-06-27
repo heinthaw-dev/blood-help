@@ -93,6 +93,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260627-7gx | Add Notifications screen + shared header bell on Home/Leaderboard/Profile | 2026-06-27 | 3d14dc1 | [260627-7gx-add-notifications-screen-and-shared-head](./quick/260627-7gx-add-notifications-screen-and-shared-head/) |
 | 260627-k3p | Extract shared Card component; route all 9 card surfaces through it (resolves ui-consistency-report §2) | 2026-06-27 | a9a117c | [260627-k3p-extract-card-component-route-all-surfaces](./quick/260627-k3p-extract-card-component-route-all-surfaces/) |
 | 260627-p07 | Rebuild Donor Thank You screen to new Claude Design with push-enable states (idle/needsInstall/enabled), wired to real lib/push; removed double-prompt | 2026-06-27 | bf5da7b | [260627-p07-rebuild-donor-thank-you-screen-to-new-cl](./quick/260627-p07-rebuild-donor-thank-you-screen-to-new-cl/) |
+| fast | Remove OTP screen header back button (left-aligned wordmark; change-number link remains) | 2026-06-27 | e508d7c | — (gsd:fast, no task dir) |
 
 ## Deferred Items
 
