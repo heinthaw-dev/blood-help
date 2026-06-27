@@ -703,9 +703,8 @@ function App() {
             lat: profile.lat,
             lng: profile.lng,
         }));
-        // Prompt for push permission so donor gets alerted on new nearby requests
-        maybeAskPush(uid);
-
+        // The Donor Thank You screen now owns the push opt-in (tap-to-enable),
+        // so we no longer pre-prompt here — avoids double-prompting the donor.
         setScreen("donor-thankyou");
     };
 
@@ -902,6 +901,7 @@ function App() {
             <DonorThankYou
                 lang={lang}
                 bloodType={user.bloodType}
+                supabaseId={user.supabaseId}
                 onContinue={() => setScreen("profile")}
             />
         );
