@@ -896,7 +896,7 @@ function App() {
             <CreateRequest
                 lang={lang}
                 onLangChange={setLang}
-                onBack={() => setScreen("profile")}
+                onBack={() => setScreen("intent")}
                 defaultPhone={phone}
                 onPosted={handlePosted}
             />
@@ -908,7 +908,7 @@ function App() {
             <DonorProfileSetup
                 lang={lang}
                 onLangChange={setLang}
-                onBack={() => setScreen("profile")}
+                onBack={() => setScreen("intent")}
                 defaultPhone={phone}
                 onSave={handleSaveDonor}
             />
