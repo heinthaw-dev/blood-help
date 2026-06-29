@@ -58,6 +58,10 @@ export function Button({
   const base: CSSProperties = {
     width: fullWidth ? '100%' : undefined,
     height,
+    // Pin the declared height: as a flex item in a column container (e.g. the
+    // Profile scroll area) the default flex-shrink:1 would squash the button
+    // below `height` when content overflows. No-op outside flex contexts.
+    flexShrink: 0,
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
