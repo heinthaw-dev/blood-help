@@ -4,8 +4,8 @@ milestone: v2.0
 milestone_name: Backend Core
 status: complete
 stopped_at: v2.0 milestone complete — all 4 phases shipped, E2E loop verified
-last_updated: "2026-06-27T00:00:00.000Z"
-last_activity: 2026-06-27 -- Completed quick task 260627-p07: rebuilt Donor Thank You screen with push opt-in states
+last_updated: "2026-06-29T11:53:30.756Z"
+last_activity: 2026-06-29 -- Completed quick task 260629-pjl: fixed logout button squash (flexShrink:0 in shared Button base)
 progress:
   total_phases: 4
   completed_phases: 4
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9
 Plan: 09-03 complete — all plans done
 Status: Verifying phase goal
-Last activity: 2026-06-27 -- Completed quick task 260627-k3p: extracted shared Card component; routed all 9 card surfaces through it (resolves §2)
+Last activity: 2026-06-29 -- Completed quick task 260629-pjl: fixed logout button squash (flexShrink:0 in shared Button base)
 
 Progress: [██████████] 100%
 
@@ -95,6 +95,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260627-p07 | Rebuild Donor Thank You screen to new Claude Design with push-enable states (idle/needsInstall/enabled), wired to real lib/push; removed double-prompt | 2026-06-27 | bf5da7b | [260627-p07-rebuild-donor-thank-you-screen-to-new-cl](./quick/260627-p07-rebuild-donor-thank-you-screen-to-new-cl/) |
 | fast | Remove OTP screen header back button (left-aligned wordmark; change-number link remains) | 2026-06-27 | e508d7c | — (gsd:fast, no task dir) |
 | fast | Donor Thank You header matches Phone Entry (left wordmark + language toggle) | 2026-06-27 | bd96737 | — (gsd:fast, no task dir) |
+| 260629-pjl | Fix logout button vertically squashed on Profile screen (flexShrink:0 in shared Button base) | 2026-06-29 | f378859 | [260629-pjl-fix-logout-button-vertically-squashed-on](./quick/260629-pjl-fix-logout-button-vertically-squashed-on/) |
 
 ## Deferred Items
 
