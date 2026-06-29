@@ -411,7 +411,7 @@ export function Home({
 
     return (
         <div className="phone-entry-stage">
-            <div className="phone-entry-card" style={{ position: "relative" }}>
+            <div className="phone-entry-card" style={{ height: "100dvh", position: "relative" }}>
                 {/* Top bar */}
                 <ScreenHeader
                     variant="brand"
@@ -425,7 +425,7 @@ export function Home({
                         flex: 1,
                         minHeight: 0,
                         overflowY: "auto",
-                        padding: "0 20px 24px",
+                        padding: "0 12px 24px",
                         display: "flex",
                         flexDirection: "column",
                         gap: 20,

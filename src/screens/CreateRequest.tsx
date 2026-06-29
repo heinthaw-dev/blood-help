@@ -186,7 +186,7 @@ export function CreateRequest({
             flex: 1,
             overflowY: 'auto',
             scrollbarWidth: 'none',
-            padding: '20px 24px 0',
+            padding: '20px 12px 0',
           }}
         >
           <p
@@ -303,7 +303,7 @@ export function CreateRequest({
         <div
           style={{
             flex: 'none',
-            padding: '12px 24px 28px',
+            padding: '12px 12px 28px',
             background: 'var(--color-bg)',
             boxShadow: '0 -1px 0 var(--border-card)',
           }}

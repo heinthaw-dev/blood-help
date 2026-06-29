@@ -581,7 +581,7 @@ export function RequestLive({
                 />
 
                 {/* Progress + blood type + township (screen content below the header) */}
-                <div style={{ flex: "none", padding: "0 20px" }}>
+                <div style={{ flex: "none", padding: "0 12px" }}>
                     {showProgress && (
                         <div
                             style={{
@@ -655,7 +655,7 @@ export function RequestLive({
                         flex: 1,
                         minHeight: 0,
                         overflowY: "auto",
-                        padding: "16px 20px 20px",
+                        padding: "16px 12px 20px",
                         display: "flex",
                         flexDirection: "column",
                         gap: 14,
@@ -912,7 +912,7 @@ export function RequestLive({
                             <div
                                 style={{
                                     textAlign: "center",
-                                    padding: "36px 20px 24px",
+                                    padding: "36px 12px 24px",
                                     display: "flex",
                                     flexDirection: "column",
                                     alignItems: "center",
@@ -1076,7 +1076,7 @@ export function RequestLive({
                     style={{
                         flex: "none",
                         padding:
-                            "12px 20px calc(16px + env(safe-area-inset-bottom))",
+                            "12px 12px calc(16px + env(safe-area-inset-bottom))",
                         background: "var(--surface-card)",
                         borderTop: "1px solid var(--border-card)",
                         boxShadow: "0 -4px 16px rgba(26,26,26,.05)",
@@ -1101,7 +1101,7 @@ export function RequestLive({
                             </svg>
                         }
                     >
-                        သွေး ရရှိပြီး — တောင်းခံချက် ပိတ်ရန်
+                        သွေးရရှိပြီးပါက တောင်းခံချက်အား ပိတ်ရန်
                     </Button>
                 </div>
 
@@ -1208,7 +1208,7 @@ export function RequestLive({
                                 position: "relative",
                                 background: "var(--surface-card)",
                                 borderRadius: "20px 20px 0 0",
-                                padding: "8px 20px 24px",
+                                padding: "8px 12px 24px",
                             }}
                         >
                             <div
@@ -1230,15 +1230,6 @@ export function RequestLive({
                                 }}
                             >
                                 သွေး ဘယ်ကနေ ရရှိပါသလဲ?
-                            </div>
-                            <div
-                                style={{
-                                    fontSize: 13,
-                                    color: "var(--text-secondary)",
-                                    marginTop: 3,
-                                }}
-                            >
-                                Where did you get the blood?
                             </div>
                             <div
                                 style={{
@@ -1306,16 +1297,6 @@ export function RequestLive({
                                             }}
                                         >
                                             ဒီအက်ပ်မှ သွေးလှူရှင်ထံမှ
-                                        </div>
-                                        <div
-                                            style={{
-                                                fontSize: 12,
-                                                color: "var(--color-primary-press)",
-                                                opacity: 0.8,
-                                                marginTop: 1,
-                                            }}
-                                        >
-                                            From a donor in this app
                                         </div>
                                     </div>
                                     <svg
@@ -1403,15 +1384,6 @@ export function RequestLive({
                                         >
                                             အပြင်မှ ရရှိသည်
                                         </div>
-                                        <div
-                                            style={{
-                                                fontSize: 12,
-                                                color: "var(--text-secondary)",
-                                                marginTop: 1,
-                                            }}
-                                        >
-                                            Got it outside the app
-                                        </div>
                                     </div>
                                 </button>
 
@@ -1475,7 +1447,7 @@ export function RequestLive({
                                 position: "relative",
                                 background: "var(--surface-card)",
                                 borderRadius: "20px 20px 0 0",
-                                padding: "8px 20px 24px",
+                                padding: "8px 12px 24px",
                             }}
                         >
                             <div
@@ -1879,7 +1851,7 @@ export function RequestLive({
                                 position: "relative",
                                 background: "var(--surface-card)",
                                 borderRadius: "20px 20px 0 0",
-                                padding: "8px 20px 32px",
+                                padding: "8px 12px 32px",
                             }}
                         >
                             <div

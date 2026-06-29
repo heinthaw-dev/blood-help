@@ -125,8 +125,8 @@ export function DonorThankYou({
 
     const t = {
         my: {
-            headline: "ကျေးဇူးတင်ပါတယ်!",
-            subheadline: "တစ်စုံတစ်ယောက်၏ အသက်ကို ကယ်တင်နိုင်ပါပြီ",
+            headline: "ကျေးဇူးတင်ပါတယ်။",
+            subheadline: "တစ်စုံတစ်ယောက်၏ အသက်ကို ကယ်တင်နိုင်ပါပြီ။",
             bloodTypeLabel: "သင့်သွေးအုပ်စု —",
             body: "သွေးလှူရှင်အဖြစ် ပါဝင်ခဲ့သည့်အတွက် ကျေးဇူးအများကြီး တင်ပါသည်။ သင့်အနီးနားတွင် ကိုက်ညီသော သွေးအုပ်စု လိုအပ်သည့်အခါ ချက်ချင်း အကြောင်းကြားပေးပါမည် ဖြစ်ပါသည်။",
             enablePrompt:
@@ -134,7 +134,7 @@ export function DonorThankYou({
             enableCta: "အသိပေးချက်များ ဖွင့်ရန်",
             installGuide:
                 "အသိပေးချက်များ ရယူရန် Blood Help ကို Home Screen သို့ ထည့်ပါ",
-            enabledLabel: "အသိပေးချက်များ ဖွင့်ပြီးပါပြီ",
+            enabledLabel: "အသိပေးချက်များ ဖွင့်ထားပြီးပါပြီ",
             continueCta: "သင့် အချက်အလက်များကို စစ်ဆေးရန်",
         },
         en: {
@@ -181,7 +181,7 @@ export function DonorThankYou({
                         flexDirection: "column",
                         alignItems: "center",
                         textAlign: "center",
-                        padding: "24px 24px 12px",
+                        padding: "24px 12px 12px",
                     }}
                 >
                     {/* Heart icon */}
@@ -218,8 +218,8 @@ export function DonorThankYou({
                         style={{
                             margin: 0,
                             fontFamily: bodyFont,
-                            fontSize: "30px",
-                            fontWeight: 600,
+                            fontSize: "26px",
+                            fontWeight: 400,
                             lineHeight: 1.3,
                             color: "var(--text-primary)",
                         }}
@@ -232,7 +232,7 @@ export function DonorThankYou({
                         style={{
                             margin: "18px 0 0",
                             fontFamily: bodyFont,
-                            fontSize: "18px",
+                            fontSize: "16px",
                             fontWeight: 500,
                             lineHeight: 1.55,
                             color: "var(--text-secondary)",
@@ -279,7 +279,7 @@ export function DonorThankYou({
                 </div>
 
                 {/* Notification opt-in block (primary action) */}
-                <div style={{ flex: "none", padding: "0 24px 24px" }}>
+                <div style={{ flex: "none", padding: "0 12px 24px" }}>
                     {enabled ? (
                         /* Enabled: green success card */
                         <Card

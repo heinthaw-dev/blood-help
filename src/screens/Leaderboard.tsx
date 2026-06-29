@@ -198,7 +198,7 @@ export function Leaderboard({
                         minHeight: 0,
                         overflowY: "auto",
                         scrollbarWidth: "none",
-                        padding: "4px 20px 24px",
+                        padding: "4px 12px 24px",
                     }}
                 >
                     {/* Title block */}
@@ -221,7 +221,7 @@ export function Leaderboard({
                         <div
                             style={{
                                 textAlign: "center",
-                                padding: "48px 24px",
+                                padding: "48px 12px",
                                 fontFamily: bodyFont,
                                 fontSize: 14,
                                 color: "var(--text-hint)",
@@ -237,7 +237,7 @@ export function Leaderboard({
                                 flexDirection: "column",
                                 alignItems: "center",
                                 textAlign: "center",
-                                padding: "48px 24px 24px",
+                                padding: "48px 12px 24px",
                             }}
                         >
                             <div

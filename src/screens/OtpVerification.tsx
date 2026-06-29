@@ -81,10 +81,12 @@ export function OtpVerification({
             title: "ကုဒ် ထည့်ပါ",
             subtitle:
                 phoneDisplay + " သို့ ဂဏန်း ၆ လုံး ကုဒ်ကို ပို့လိုက်ပါပြီ။ ",
-            change: "ပြောင်းရန်",
+            change: "ဖုန်းနံပတ် ပြောင်းရန်",
             resendWaiting:
-                "ကုဒ် မရဘူးလား? " + countdown + "s နောက် ပြန်ပို့နိုင်သည်",
-            resendPrefix: "ကုဒ် မရဘူးလား? ",
+                "ကုဒ် မရရှိပါက " +
+                countdown +
+                " စက္ကန့်ကြာလျှင် ပြန်ပို့နိုင်ပါသည်။",
+            resendPrefix: "ကုဒ် မရရှိပါက ",
             resendLink: "ကုဒ် ပြန်ပို့ရန်",
             cta: "အတည်ပြုရန်",
             errorMsg: "ကုဒ် မှားနေပါသည်။ ထပ်မံ ကြိုးစားပါ။",
@@ -135,7 +137,9 @@ export function OtpVerification({
                 <ScreenHeader
                     variant="brand"
                     align="left"
-                    right={<LanguageToggle lang={lang} onChange={onLangChange} />}
+                    right={
+                        <LanguageToggle lang={lang} onChange={onLangChange} />
+                    }
                 />
 
                 {/* Content */}
@@ -145,10 +149,10 @@ export function OtpVerification({
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",
-                        padding: "28px 24px",
+                        padding: "28px 12px",
                     }}
                 >
-                    <h1
+                    {/* <h1
                         style={{
                             margin: 0,
                             fontFamily: bodyFont,
@@ -160,7 +164,7 @@ export function OtpVerification({
                         }}
                     >
                         {copy.title}
-                    </h1>
+                    </h1> */}
                     <p
                         style={{
                             margin: "12px 0 0",
@@ -316,16 +320,21 @@ export function OtpVerification({
                             onClick={handleVerify}
                         >
                             {verifying ? (
-                                <span style={{
-                                    display: 'inline-block',
-                                    width: 20,
-                                    height: 20,
-                                    borderRadius: '50%',
-                                    border: '2.5px solid rgba(255,255,255,0.35)',
-                                    borderTopColor: '#fff',
-                                    animation: 'bh-spin 0.8s linear infinite',
-                                }} />
-                            ) : copy.cta}
+                                <span
+                                    style={{
+                                        display: "inline-block",
+                                        width: 20,
+                                        height: 20,
+                                        borderRadius: "50%",
+                                        border: "2.5px solid rgba(255,255,255,0.35)",
+                                        borderTopColor: "#fff",
+                                        animation:
+                                            "bh-spin 0.8s linear infinite",
+                                    }}
+                                />
+                            ) : (
+                                copy.cta
+                            )}
                         </Button>
                     </div>
                 </div>

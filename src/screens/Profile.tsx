@@ -57,8 +57,34 @@ export interface ProfileProps {
     onOpenNotifications: () => void;
 }
 
-const EN_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const MY_MONTHS = ["ဇန်နဝါရီ","ဖေဖော်ဝါရီ","မတ်","ဧပြီ","မေ","ဇွန်","ဇူလိုင်","သြဂုတ်","စက်တင်ဘာ","အောက်တိုဘာ","နိုဝင်ဘာ","ဒီဇင်ဘာ"];
+const EN_MONTHS = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+];
+const MY_MONTHS = [
+    "ဇန်နဝါရီ",
+    "ဖေဖော်ဝါရီ",
+    "မတ်",
+    "ဧပြီ",
+    "မေ",
+    "ဇွန်",
+    "ဇူလိုင်",
+    "သြဂုတ်",
+    "စက်တင်ဘာ",
+    "အောက်တိုဘာ",
+    "နိုဝင်ဘာ",
+    "ဒီဇင်ဘာ",
+];
 
 /** Format a YYYY-MM-DD date string for display, e.g. "23 Aug 2026" / "၂၀၂၆ သြဂုတ် ၂၃". */
 function formatDate(iso: string, lang: Lang): string {
@@ -108,10 +134,12 @@ export function Profile({
                     ? "လှူဒါန်းမှု " + count + " ကြိမ်"
                     : "ယခု app တွင် သွေးလှုဒါန်းထားခြင်း မရှိသေးပါ။",
             lastLine: lastDonation
-                ? "နောက်ဆုံး လှူဒါန်းသည့်ရက် — " + lastDonation
+                ? "နောက်ဆုံး လှူဒါန်းသည့်ရက် — " +
+                  formatDate(lastDonation, "my")
                 : "နောက်ဆုံး လှူဒါန်းသည့်ရက် — —",
             cooldownLine: availableAfter
-                ? "နောက်တစ်ကြိမ် လှူဒါန်းနိုင်သည့်ရက် — " + formatDate(availableAfter, "my")
+                ? "နောက်တစ်ကြိမ် လှူဒါန်းနိုင်သည့်ရက် — " +
+                  formatDate(availableAfter, "my")
                 : "နောက်တစ်ကြိမ် လှူဒါန်းနိုင်သည့်ရက် — —",
             qrTitle: "သင့် QR ကုဒ်",
             qrCaption:
@@ -135,10 +163,11 @@ export function Profile({
                     ? "Donated " + count + " times"
                     : "there is no previous donations",
             lastLine: lastDonation
-                ? "Last donation — " + lastDonation
+                ? "Last donation — " + formatDate(lastDonation, "en")
                 : "Last donation — —",
             cooldownLine: availableAfter
-                ? "Eligible to donate again — " + formatDate(availableAfter, "en")
+                ? "Eligible to donate again — " +
+                  formatDate(availableAfter, "en")
                 : "Eligible to donate again — —",
             qrTitle: "Your QR Code",
             qrCaption: "Show this to the requester to confirm your donation",
@@ -168,7 +197,7 @@ export function Profile({
 
     return (
         <div className="phone-entry-stage">
-            <div className="phone-entry-card">
+            <div className="phone-entry-card" style={{ height: "100dvh" }}>
                 {/* Top bar */}
                 <ScreenHeader
                     variant="brand"
@@ -183,7 +212,7 @@ export function Profile({
                         flex: 1,
                         minHeight: 0,
                         overflowY: "auto",
-                        padding: "8px 20px 24px",
+                        padding: "8px 12px 24px",
                         display: "flex",
                         flexDirection: "column",
                         gap: 20,
@@ -347,8 +376,8 @@ export function Profile({
                             <div
                                 style={{
                                     display: "flex",
-                                    alignItems: "flex-start",
-                                    gap: 8,
+                                    alignItems: "center",
+                                    gap: 26,
                                     padding: "10px 12px",
                                     background: "var(--color-bg)",
                                     borderRadius: 10,
@@ -755,7 +784,12 @@ export function Profile({
                     </div>
 
                     {/* Log out */}
-                    <Button tone="danger" fullWidth onClick={onLogout}>
+                    <Button
+                        tone="danger"
+                        fullWidth
+                        height={54}
+                        onClick={onLogout}
+                    >
                         {t.logoutLabel}
                     </Button>
                 </div>

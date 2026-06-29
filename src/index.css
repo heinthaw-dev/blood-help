@@ -66,7 +66,7 @@
   --spacing-10: 40px;
 
   /* Layout conventions */
-  --spacing-screen:  20px; /* edge padding of a mobile screen */
+  --spacing-screen:  12px; /* edge padding of a mobile screen */
   --spacing-card:    16px; /* inner padding of a card */
   --spacing-card-gap: 12px; /* gap between cards */
   --spacing-section: 28px; /* gap between sections (24–32px) */
@@ -242,12 +242,11 @@ body,
 
 .phone-entry-card {
   flex: 1;
-  min-height: 100dvh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;
   background: var(--color-bg);
-  overflow: hidden;
 }
 
 @media (min-width: 480px) {

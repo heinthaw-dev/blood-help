@@ -124,7 +124,7 @@ export function IntentChoice({
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",
-                        padding: "28px 24px 36px",
+                        padding: "28px 12px 36px",
                     }}
                 >
                     {/* <h1

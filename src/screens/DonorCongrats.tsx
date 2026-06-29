@@ -68,7 +68,7 @@ export function DonorCongrats({
 
     const t = {
         my: {
-            headline: "ကျေးဇူးအထူး တင်ပါသည်!",
+            headline: "ကျေးဇူးအထူး တင်ပါသည်။",
             subheadline:
                 "သင့်သွေးဖြင့် အသက်တစ်ချောင်းကို ကယ်တင်ပေးနိုင်ခဲ့ပါပြီ။",
             supporting:
@@ -107,7 +107,7 @@ export function DonorCongrats({
                         alignItems: "center",
                         justifyContent: "center",
                         textAlign: "center",
-                        padding: "40px 30px",
+                        padding: "40px 12px",
                     }}
                 >
                     {/* Animated heart motif */}
@@ -213,8 +213,8 @@ export function DonorCongrats({
                         style={{
                             margin: 0,
                             fontFamily: bodyFont,
-                            fontSize: "28px",
-                            fontWeight: 600,
+                            fontSize: "26px",
+                            fontWeight: 400,
                             lineHeight: 1.4,
                             color: "var(--text-primary)",
                         }}

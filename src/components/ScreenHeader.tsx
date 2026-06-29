@@ -22,7 +22,7 @@ interface ScreenHeaderProps {
 }
 
 /** Single owned header padding for every screen. */
-const HEADER_PADDING = '24px 20px 16px'
+const HEADER_PADDING = '24px 12px 16px'
 
 /** Blood Help blood-drop + wordmark — identical across all brand screens. */
 function Wordmark() {

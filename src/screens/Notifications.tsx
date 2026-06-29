@@ -40,7 +40,7 @@ export function Notifications({ lang, onBack }: NotificationsProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: 24,
+            padding: '24px 12px',
           }}
         >
           <p
