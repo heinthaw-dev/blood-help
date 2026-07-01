@@ -4,8 +4,8 @@ milestone: v2.0
 milestone_name: Backend Core
 status: complete
 stopped_at: v2.0 milestone complete — all 4 phases shipped, E2E loop verified
-last_updated: "2026-06-30T00:00:00.000Z"
-last_activity: 2026-06-30 -- Completed quick task 260630-43p: rewrote README.md as top-tier project gate (overview, user flows w/ screenshots, tech stack)
+last_updated: "2026-07-01T00:00:00.000Z"
+last_activity: 2026-07-01 -- Synced planning artifacts to reality — marked all v2.0 requirements complete, corrected v3.0 status (PUSH-01–04 shipped early; DNOR-03/PRIV-01/PRIV-02 remain)
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-20)
 
 **Core value:** A person can post a blood request and have nearby, blood-compatible donors actually receive a push alert and call them back — turning an hours-long search into help within minutes.
-**Current focus:** Phase 9 — confirmation + lifecycle
+**Current focus:** v2.0 complete — no active phase. Candidate v3.0 work: DNOR-03 (close-loop donor notice), PRIV-01 (data purge on close), PRIV-02 (reveal logging + rate-limit)
 
 ## Current Position
 
-Phase: 9
+Phase: 9 (last roadmapped) — complete
 Plan: 09-03 complete — all plans done
-Status: Verifying phase goal
-Last activity: 2026-06-30 -- Completed quick task 260630-43p: rewrote README.md as top-tier project gate (overview, user flows w/ screenshots, tech stack)
+Status: v2.0 milestone complete — all phases shipped & verified; no active phase
+Last activity: 2026-07-01 -- Synced planning artifacts to reality (REQUIREMENTS.md + STATE.md): v2.0 marked complete, v3.0 push status corrected
 
 Progress: [██████████] 100%
 
@@ -102,9 +102,10 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| Push | FCM push (PUSH-01 through PUSH-04, DNOR-03) | Deferred to v3.0 | 2026-06-20 |
+| Push | FCM push loop PUSH-01–04 (donor alert + requester notice) | ✅ Shipped early via quick tasks + edge fns | 2026-06-25 |
+| Push | DNOR-03 — resolution notice to responding donors on close | Deferred to v3.0 (not started) | 2026-06-20 |
 | Privacy | Personal data purge on request close (PRIV-01) | Deferred to v3 | 2026-06-20 |
-| Privacy | Gated, logged, rate-limited phone reveal (PRIV-02) | Deferred to v3 | 2026-06-20 |
+| Privacy | Phone reveal logging + rate-limiting (PRIV-02 remainder) | Deferred to v3 (gating/masking already shipped) | 2026-06-20 |
 | Auth | Real SMS OTP via Twilio | Deferred to v4 | 2026-06-20 |
 | i18n | react-i18next library | Not blocking backend | 2026-06-20 |
 

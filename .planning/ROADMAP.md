@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 UI Milestone** - Phases 1-5 (shipped 2026-06-20)
-- ✅ **v2.0 Backend Core** - Phases 6-8 complete (2026-06-22) — Phase 9 (Confirmation + Lifecycle) is the remaining item
+- ✅ **v2.0 Backend Core** - Phases 6-9 complete (2026-06-24) — all backend loop phases shipped & E2E verified
 
 ## Phases
 
