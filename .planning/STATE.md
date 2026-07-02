@@ -5,7 +5,7 @@ milestone_name: Backend Core
 status: complete
 stopped_at: v2.0 milestone complete — all 4 phases shipped, E2E loop verified
 last_updated: "2026-07-03T00:00:00.000Z"
-last_activity: 2026-07-03 -- iOS PWA onboarding phase 2 — quick 260703-pia: enablePush (renamed from registerPushToken) + promptAndroidInstall action layer (76e8ab0)
+last_activity: 2026-07-03 -- iOS PWA onboarding phase 3 — quick 260703-pnu: PushNudge onboarding component (usePwaState-driven, Card+Button) (a9787ba)
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-20)
 
 **Core value:** A person can post a blood request and have nearby, blood-compatible donors actually receive a push alert and call them back — turning an hours-long search into help within minutes.
-**Current focus:** iOS PWA install/push onboarding (new feature, via quick tasks) — phases 1–2 done (detection lib + push/install action layer). Next: wire pwa.ts import in main.tsx + onboarding UI. v3.0 items (DNOR-03, PRIV-01, PRIV-02 remainder) parked.
+**Current focus:** iOS PWA install/push onboarding (new feature, via quick tasks) — phases 1–3 done (detection lib + action layer + PushNudge UI). Next: wire PushNudge into Home + import ./lib/pwa in main.tsx. v3.0 items (DNOR-03, PRIV-01, PRIV-02 remainder) parked.
 
 ## Current Position
 
 Phase: 9 (last roadmapped) — complete
 Plan: 09-03 complete — all plans done
 Status: v2.0 milestone complete — all phases shipped & verified; iOS PWA onboarding feature in progress (quick tasks)
-Last activity: 2026-07-03 -- iOS PWA onboarding phase 2 — quick 260703-pia: enablePush + promptAndroidInstall action layer
+Last activity: 2026-07-03 -- iOS PWA onboarding phase 3 — quick 260703-pnu: PushNudge onboarding component
 
 Progress: [██████████] 100%
 
@@ -99,6 +99,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260630-43p | Design top-tier README.md — replace Vite boilerplate with overview, problem/advantages, donor + requester user flows (screenshots), tech stack, getting started, roadmap | 2026-06-30 | a043a72 | [260630-43p-design-top-tier-readme](./quick/260630-43p-design-top-tier-readme/) |
 | 260702-ipw | iOS PWA install/push detection lib — src/lib/pwa.ts + usePwaState hook (pure detection, no UI); phase 1 of iOS onboarding feature | 2026-07-02 | da18ab8 | [260702-ipw-ios-pwa-detection-hook](./quick/260702-ipw-ios-pwa-detection-hook/) |
 | 260703-pia | Push + install action layer — enablePush (renamed from registerPushToken, 6 call sites) + promptAndroidInstall; controllerchange guard; phase 2 of iOS onboarding | 2026-07-03 | 76e8ab0 | [260703-pia-push-install-actions](./quick/260703-pia-push-install-actions/) |
+| 260703-pnu | PushNudge onboarding component — usePwaState-driven Card+Button nudge (iOS add-to-home / open-in-Safari / enable-push, Android install); Burmese-first; phase 3 of iOS onboarding | 2026-07-03 | a9787ba | [260703-pnu-push-nudge-ui](./quick/260703-pnu-push-nudge-ui/) |
 
 ## Deferred Items
 

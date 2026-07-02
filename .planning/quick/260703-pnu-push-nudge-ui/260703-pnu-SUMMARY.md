@@ -1,7 +1,7 @@
 # Summary 260703-pnu — PushNudge UI
 
 **Date:** 2026-07-03
-**Commit:** PENDING
+**Commit:** a9787ba
 
 ## What shipped
 
