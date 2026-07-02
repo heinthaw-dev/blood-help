@@ -93,6 +93,17 @@ export function getDeferredInstallPrompt(): BeforeInstallPromptEvent | null {
   return deferredInstallPrompt
 }
 
+/**
+ * Clear the captured install prompt after it has been fired. The event is
+ * single-use — once `.prompt()` is called it cannot be reused, so we drop it and
+ * notify subscribers (flipping `canInstallAndroid` to false). A later
+ * `beforeinstallprompt` can re-arm it.
+ */
+export function clearDeferredInstallPrompt(): void {
+  deferredInstallPrompt = null
+  notifySubscribers()
+}
+
 // ---------------------------------------------------------------------------
 // Pure detection
 // ---------------------------------------------------------------------------

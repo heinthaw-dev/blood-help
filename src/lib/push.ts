@@ -1,8 +1,12 @@
 import { getToken } from 'firebase/messaging'
 import { messaging, VAPID_KEY } from './firebase'
 import { supabase } from './supabase'
+import { clearDeferredInstallPrompt, getDeferredInstallPrompt } from './pwa'
 
 export type PushResult = 'granted' | 'denied' | 'unsupported' | 'error'
+
+/** Outcome of firing the captured Android install prompt. */
+export type InstallOutcome = 'accepted' | 'dismissed' | 'unavailable'
 
 /** True if this browser environment supports web push. */
 export function pushSupported(): boolean {
@@ -15,11 +19,15 @@ export function pushSupported(): boolean {
 }
 
 /**
- * Request push notification permission, get the FCM device token, and upsert
- * it into device_tokens keyed on fcm_token (unique). Safe to call repeatedly —
- * silently re-registers if permission was already granted.
+ * Request push permission and — ONLY if granted — register the FCM device token
+ * against the app's existing service worker, then upsert it into device_tokens.
+ *
+ * Must be user-initiated (a tap): it may show the permission prompt, so never
+ * call it on page load. Safe to call repeatedly — if permission is already
+ * granted it silently re-registers (the token can rotate after an SW update)
+ * without prompting.
  */
-export async function registerPushToken(profileId: string): Promise<PushResult> {
+export async function enablePush(profileId: string): Promise<PushResult> {
   if (!pushSupported()) {
     console.warn('[Push] unsupported — missing Notification/serviceWorker/PushManager')
     return 'unsupported'
@@ -31,6 +39,7 @@ export async function registerPushToken(profileId: string): Promise<PushResult> 
     console.log('[Push] permission result:', permission)
     if (permission !== 'granted') return 'denied'
 
+    // Reuse the app's single (merged Firebase) service worker — do not register a second one.
     console.log('[Push] waiting for service worker...')
     const swReg = await navigator.serviceWorker.ready
     console.log('[Push] SW ready:', swReg.active?.scriptURL)
@@ -66,5 +75,28 @@ export async function registerPushToken(profileId: string): Promise<PushResult> 
   } catch (err) {
     console.error('[Push] registration failed:', err)
     return 'error'
+  }
+}
+
+/**
+ * Fire the Android/Chromium install prompt captured at import time by pwa.ts.
+ * Returns 'unavailable' when no prompt was captured (iOS, already installed, or
+ * the browser never offered one). The prompt is single-use, so it is cleared
+ * afterwards — a fresh `beforeinstallprompt` may re-arm it later.
+ */
+export async function promptAndroidInstall(): Promise<InstallOutcome> {
+  const deferred = getDeferredInstallPrompt()
+  if (!deferred) {
+    console.log('[Push] no captured install prompt — install unavailable')
+    return 'unavailable'
+  }
+
+  try {
+    await deferred.prompt()
+    const { outcome } = await deferred.userChoice
+    console.log('[Push] Android install prompt outcome:', outcome)
+    return outcome
+  } finally {
+    clearDeferredInstallPrompt()
   }
 }

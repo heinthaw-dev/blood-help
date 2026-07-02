@@ -18,7 +18,7 @@ import { AlertDialog } from "./components/AlertDialog";
 import type { Tab } from "./components/BottomNav";
 import { getSession } from "./auth";
 import { supabase } from "./lib/supabase";
-import { registerPushToken, pushSupported } from "./lib/push";
+import { enablePush, pushSupported } from "./lib/push";
 import { onMessage } from "firebase/messaging";
 import { messaging } from "./lib/firebase";
 import type { BloodType } from "./blood";
@@ -396,7 +396,10 @@ function App() {
     useEffect(() => {
         if (!navigator.serviceWorker) return;
         function handleControllerChange() {
-            if (user.supabaseId) void registerPushToken(user.supabaseId);
+            // Only silently refresh the token if permission is already granted —
+            // never let an SW controller change on first load trigger a prompt.
+            if (user.supabaseId && Notification.permission === "granted")
+                void enablePush(user.supabaseId);
         }
         navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
         return () => {
@@ -767,7 +770,7 @@ function App() {
     const maybeAskPush = (profileId: string) => {
         if (!pushSupported()) return;
         if (Notification.permission === "granted") {
-            void registerPushToken(profileId);
+            void enablePush(profileId);
             return;
         }
         if (Notification.permission === "default") {
@@ -973,7 +976,7 @@ function App() {
                     cancelLabel={lang === "my" ? "နောက်မှ" : "Not now"}
                     onConfirm={() => {
                         setPushDialogOpen(false);
-                        if (pendingPushProfileId) void registerPushToken(pendingPushProfileId);
+                        if (pendingPushProfileId) void enablePush(pendingPushProfileId);
                     }}
                     onCancel={() => setPushDialogOpen(false)}
                 />
@@ -1027,7 +1030,7 @@ function App() {
                     cancelLabel={lang === "my" ? "နောက်မှ" : "Not now"}
                     onConfirm={() => {
                         setPushDialogOpen(false);
-                        if (pendingPushProfileId) void registerPushToken(pendingPushProfileId);
+                        if (pendingPushProfileId) void enablePush(pendingPushProfileId);
                     }}
                     onCancel={() => setPushDialogOpen(false)}
                 />

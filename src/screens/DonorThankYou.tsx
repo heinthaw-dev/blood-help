@@ -4,7 +4,7 @@ import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { LanguageToggle } from "../components/LanguageToggle";
-import { pushSupported, registerPushToken } from "../lib/push";
+import { pushSupported, enablePush } from "../lib/push";
 import type { BloodType } from "../blood";
 import type { Lang } from "../i18n";
 
@@ -107,7 +107,7 @@ export function DonorThankYou({
         const granted =
             typeof Notification !== "undefined" &&
             Notification.permission === "granted";
-        if (granted && supabaseId) void registerPushToken(supabaseId);
+        if (granted && supabaseId) void enablePush(supabaseId);
     }, [supabaseId]);
 
     // canEnable: not already on, and the device can actually receive web push here.
@@ -116,7 +116,7 @@ export function DonorThankYou({
     /** Request push permission + register the FCM token (tap only). */
     const handleEnable = async () => {
         if (!supabaseId) return;
-        const result = await registerPushToken(supabaseId);
+        const result = await enablePush(supabaseId);
         if (result === "granted") {
             setEnabled(true);
             setIsAllowed(true);
