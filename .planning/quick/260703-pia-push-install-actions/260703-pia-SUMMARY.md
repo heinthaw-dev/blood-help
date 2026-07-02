@@ -1,7 +1,7 @@
 # Summary 260703-pia — push + install actions
 
 **Date:** 2026-07-03
-**Commit:** da18ab8-follow (see git log — feat commit on main)
+**Commit:** 76e8ab0
 
 ## What shipped
 
