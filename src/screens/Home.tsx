@@ -8,6 +8,7 @@ import { BottomNav } from "../components/BottomNav";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { NotificationBell } from "../components/NotificationBell";
 import { IncomingRequestAlert } from "../components/IncomingRequestAlert";
+import { PushNudge } from "../components/PushNudge";
 import type { Tab } from "../components/BottomNav";
 import type { BloodType } from "../blood";
 import { COMPATIBLE_REQUEST_TYPES } from "../blood";
@@ -293,6 +294,10 @@ export interface HomeProps {
     fcmDonorAlert?: FcmDonorAlert | null;
     /** Clears the FCM donor alert (after dismiss or "Will Help"). */
     onDismissFcmDonorAlert?: () => void;
+    /** Whether the donor dismissed the alert opt-in nudge this session. */
+    pushNudgeDismissed?: boolean;
+    /** Dismiss the Home alert opt-in nudge for this session. */
+    onDismissPushNudge?: () => void;
 }
 
 /**
@@ -321,6 +326,8 @@ export function Home({
     onExtend,
     fcmDonorAlert = null,
     onDismissFcmDonorAlert,
+    pushNudgeDismissed = false,
+    onDismissPushNudge,
 }: HomeProps) {
     const [requests, setRequests] = useState<NearbyRequest[]>([]);
 
@@ -431,6 +438,16 @@ export function Home({
                         gap: 20,
                     }}
                 >
+                    {/* Alert opt-in nudge for donors who skipped it — self-hides when
+                        alerts are already on / unavailable; dismissible this session. */}
+                    {donorReady && !pushNudgeDismissed && (
+                        <PushNudge
+                            lang={lang}
+                            supabaseId={currentUserId}
+                            onDismiss={onDismissPushNudge}
+                        />
+                    )}
+
                     {/* Availability row OR donor-setup nudge (hidden during an active request to reduce cognitive load) */}
                     {donorReady ? (
                         <Card

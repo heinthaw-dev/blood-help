@@ -12,6 +12,8 @@ export interface PushNudgeProps {
   supabaseId: string | null
   /** Optional spacing/layout override applied to the rendered card. */
   style?: CSSProperties
+  /** When provided, an actionable nudge shows a dismiss (×) in the corner. */
+  onDismiss?: () => void
 }
 
 // ── Icons (inline, token-tinted) ───────────────────────────────────────────
@@ -109,6 +111,7 @@ function NudgeShell({
   action,
   footer,
   style,
+  onDismiss,
 }: {
   icon: ReactNode
   chipBg: string
@@ -117,9 +120,40 @@ function NudgeShell({
   action?: ReactNode
   footer?: ReactNode
   style?: CSSProperties
+  onDismiss?: () => void
 }) {
   return (
-    <Card padding="lg" style={{ boxShadow: 'var(--shadow-card)', ...style }}>
+    <Card
+      padding="lg"
+      style={{ boxShadow: 'var(--shadow-card)', position: 'relative', ...style }}
+    >
+      {onDismiss && (
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Dismiss"
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            width: 30,
+            height: 30,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--text-hint)',
+          }}
+        >
+          <Glyph size={16} color="currentColor">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </Glyph>
+        </button>
+      )}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 13 }}>
         <IconChip bg={chipBg}>{icon}</IconChip>
         <p
@@ -128,6 +162,7 @@ function NudgeShell({
             flex: 1,
             minWidth: 0,
             textAlign: 'left',
+            paddingRight: onDismiss ? 22 : 0,
             fontFamily: bodyFont,
             fontSize: 14,
             fontWeight: 500,
@@ -208,7 +243,7 @@ const STRINGS: Record<
  * Burmese-first copy, driven by `lang`. Drop it anywhere — it returns null when
  * there is nothing to prompt.
  */
-export function PushNudge({ lang, supabaseId, style }: PushNudgeProps) {
+export function PushNudge({ lang, supabaseId, style, onDismiss }: PushNudgeProps) {
   const { state } = usePwaState()
   const [succeeded, setSucceeded] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -275,6 +310,7 @@ export function PushNudge({ lang, supabaseId, style }: PushNudgeProps) {
           text={s.addToHome}
           bodyFont={bodyFont}
           style={style}
+          onDismiss={onDismiss}
           footer={
             <div
               style={{
@@ -302,6 +338,7 @@ export function PushNudge({ lang, supabaseId, style }: PushNudgeProps) {
           text={s.openInSafari}
           bodyFont={bodyFont}
           style={style}
+          onDismiss={onDismiss}
           action={
             <Button
               type="button"
@@ -325,6 +362,7 @@ export function PushNudge({ lang, supabaseId, style }: PushNudgeProps) {
           text={s.enablePrompt}
           bodyFont={bodyFont}
           style={style}
+          onDismiss={onDismiss}
           action={
             <Button
               type="button"
@@ -348,6 +386,7 @@ export function PushNudge({ lang, supabaseId, style }: PushNudgeProps) {
           text={s.installPrompt}
           bodyFont={bodyFont}
           style={style}
+          onDismiss={onDismiss}
           action={
             <Button
               type="button"

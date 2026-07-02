@@ -155,6 +155,8 @@ function App() {
     const [screen, setScreen] = useState<Screen>("phone");
     /** The tab to return to when leaving the notifications screen. */
     const [notificationsReturn, setNotificationsReturn] = useState<Screen>("home");
+    /** Donor dismissed the Home alert nudge this session — re-offered on next launch. */
+    const [pushNudgeDismissed, setPushNudgeDismissed] = useState(false);
     const [phone, setPhone] = useState("");
     const [user, setUser] = useState<UserState>(DEFAULT_USER);
     const [requestDraft, setRequestDraft] = useState<RequestDraft | null>(null);
@@ -925,7 +927,7 @@ function App() {
                 onLangChange={setLang}
                 bloodType={user.bloodType}
                 supabaseId={user.supabaseId}
-                onContinue={() => setScreen("profile")}
+                onContinue={() => setScreen("home")}
             />
         );
     }
@@ -1001,6 +1003,8 @@ function App() {
                     donorLat={user.lat}
                     donorLng={user.lng}
                     currentUserId={user.supabaseId}
+                    pushNudgeDismissed={pushNudgeDismissed}
+                    onDismissPushNudge={() => setPushNudgeDismissed(true)}
                     donorBloodType={user.bloodType}
                     respondedIds={respondedIds}
                     onRespond={handleRespond}
