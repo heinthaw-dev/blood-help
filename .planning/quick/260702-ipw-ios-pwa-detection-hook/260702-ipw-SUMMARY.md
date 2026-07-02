@@ -1,7 +1,7 @@
 # Summary 260702-ipw — iOS PWA install/push detection lib
 
 **Date:** 2026-07-02
-**Commit:** (see git log — feat commit on main)
+**Commit:** da18ab8
 
 ## What shipped
 

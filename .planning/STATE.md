@@ -4,8 +4,8 @@ milestone: v2.0
 milestone_name: Backend Core
 status: complete
 stopped_at: v2.0 milestone complete — all 4 phases shipped, E2E loop verified
-last_updated: "2026-07-01T00:00:00.000Z"
-last_activity: 2026-07-01 -- Synced planning artifacts to reality — marked all v2.0 requirements complete, corrected v3.0 status (PUSH-01–04 shipped early; DNOR-03/PRIV-01/PRIV-02 remain)
+last_updated: "2026-07-02T00:00:00.000Z"
+last_activity: 2026-07-02 -- Started iOS PWA onboarding feature — quick 260702-ipw: src/lib/pwa.ts install/push detection + usePwaState hook (da18ab8)
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-20)
 
 **Core value:** A person can post a blood request and have nearby, blood-compatible donors actually receive a push alert and call them back — turning an hours-long search into help within minutes.
-**Current focus:** v2.0 complete — no active phase. Candidate v3.0 work: DNOR-03 (close-loop donor notice), PRIV-01 (data purge on close), PRIV-02 (reveal logging + rate-limit)
+**Current focus:** iOS PWA install/push onboarding (new feature, building via quick tasks) — phase 1 (detection lib) done. v3.0 items (DNOR-03, PRIV-01, PRIV-02 remainder) parked.
 
 ## Current Position
 
 Phase: 9 (last roadmapped) — complete
 Plan: 09-03 complete — all plans done
-Status: v2.0 milestone complete — all phases shipped & verified; no active phase
-Last activity: 2026-07-01 -- Synced planning artifacts to reality (REQUIREMENTS.md + STATE.md): v2.0 marked complete, v3.0 push status corrected
+Status: v2.0 milestone complete — all phases shipped & verified; iOS PWA onboarding feature started (quick tasks)
+Last activity: 2026-07-02 -- Started iOS PWA onboarding feature — quick 260702-ipw: PWA detection lib + usePwaState hook
 
 Progress: [██████████] 100%
 
@@ -97,6 +97,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | fast | Donor Thank You header matches Phone Entry (left wordmark + language toggle) | 2026-06-27 | bd96737 | — (gsd:fast, no task dir) |
 | 260629-pjl | Fix logout button vertically squashed on Profile screen (flexShrink:0 in shared Button base) | 2026-06-29 | f378859 | [260629-pjl-fix-logout-button-vertically-squashed-on](./quick/260629-pjl-fix-logout-button-vertically-squashed-on/) |
 | 260630-43p | Design top-tier README.md — replace Vite boilerplate with overview, problem/advantages, donor + requester user flows (screenshots), tech stack, getting started, roadmap | 2026-06-30 | a043a72 | [260630-43p-design-top-tier-readme](./quick/260630-43p-design-top-tier-readme/) |
+| 260702-ipw | iOS PWA install/push detection lib — src/lib/pwa.ts + usePwaState hook (pure detection, no UI); phase 1 of iOS onboarding feature | 2026-07-02 | da18ab8 | [260702-ipw-ios-pwa-detection-hook](./quick/260702-ipw-ios-pwa-detection-hook/) |
 
 ## Deferred Items
 
