@@ -1,7 +1,7 @@
 # Summary 260703-wir — wire PushNudge into the app
 
 **Date:** 2026-07-03
-**Commit:** PENDING
+**Commit:** 0483354
 
 ## What shipped
 
