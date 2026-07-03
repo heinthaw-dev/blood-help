@@ -249,7 +249,7 @@ export function RequestLive({
             }
         },
         onError(err) {
-            console.warn("QR scan error:", err);
+            if (import.meta.env.DEV) console.warn("QR scan error:", err);
         },
     });
 
@@ -323,12 +323,6 @@ export function RequestLive({
         let cancelled = false;
 
         async function fetchCallableDonors() {
-            console.log(
-                "[callable_donors] calling RPC with requestId:",
-                requestId,
-                "currentUserId:",
-                currentUserId,
-            );
             const { data, error } = await supabase.rpc(
                 "callable_donors_for_request",
                 {
@@ -336,7 +330,7 @@ export function RequestLive({
                 },
             );
             if (error) {
-                console.error(
+                if (import.meta.env.DEV) console.error(
                     "[callable_donors] RPC error:",
                     error.code,
                     error.message,
@@ -346,7 +340,7 @@ export function RequestLive({
                 return;
             }
             if (cancelled) return;
-            console.log("[callable_donors] result:", data?.length, "rows");
+            if (import.meta.env.DEV) console.log("[callable_donors] result:", data?.length, "rows");
             setCallableDonors(data ?? []);
         }
 

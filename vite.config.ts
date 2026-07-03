@@ -5,6 +5,13 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  esbuild: {
+    // Strip console.log/debug in production; keep console.warn/error for monitoring
+    // 'pure' is valid esbuild but not in Vite's ESBuildOptions type
+    ...(process.env.NODE_ENV === 'production'
+      ? { pure: ['console.log', 'console.debug', 'console.info'] }
+      : {}),
+  } as Record<string, unknown>,
   plugins: [
     react(),
     tailwindcss(),
