@@ -28,6 +28,13 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging()
 
+// Known blood types for notification content validation
+var VALID_BLOOD = ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+']
+
+function truncate(str, max) {
+  return typeof str === 'string' ? str.slice(0, max) : ''
+}
+
 // Background message handler — shows notification when app is not focused.
 // Messages are sent data-only (no FCM notification field) to avoid the compat SDK
 // showing an automatic notification AND this handler showing another — resulting in duplicates.
@@ -35,11 +42,13 @@ messaging.onBackgroundMessage(function (payload) {
   var d = payload.data || {}
   var title, body
   if (d.fcm_type === 'donor_alert') {
-    title = (d.urgency === 'urgent' ? '🚨 ' : '') + 'Blood ' + d.blood_type + ' Needed'
-    body = d.address || ''
+    var bloodType = VALID_BLOOD.indexOf(d.blood_type) !== -1 ? d.blood_type : '???'
+    title = (d.urgency === 'urgent' ? '\u{1F6A8} ' : '') + 'Blood ' + bloodType + ' Needed'
+    body = truncate(d.address, 120) || ''
   } else if (d.fcm_type === 'requester_alert') {
-    title = (d.responder_name || 'A donor') + ' will help! 🩸'
-    body = 'Blood type ' + (d.responder_blood_type || '') + ' — tap to call'
+    var name = truncate(d.responder_name, 50) || 'A donor'
+    title = name + ' will help! \u{1FA78}'
+    body = 'Blood type ' + (truncate(d.responder_blood_type, 5) || '') + ' — tap to call'
   } else {
     title = (payload.notification && payload.notification.title) || 'Blood Help'
     body = (payload.notification && payload.notification.body) || ''
@@ -63,9 +72,11 @@ self.addEventListener('notificationclick', function (event) {
   event.notification.close()
   var data = event.notification.data || {}
 
-  // Build fallback URL for cold-start path (openWindow)
+  // Build fallback URL for cold-start path (openWindow) — only include known, safe keys
   var params = new URLSearchParams()
-  Object.keys(data).forEach(function (k) {
+  var ALLOWED_KEYS = ['fcm_type', 'request_id', 'blood_type', 'urgency', 'address',
+                      'responder_name', 'responder_phone', 'responder_blood_type']
+  ALLOWED_KEYS.forEach(function (k) {
     if (typeof data[k] === 'string') params.set(k, data[k])
   })
   var path = params.toString() ? '/?' + params.toString() : '/'
