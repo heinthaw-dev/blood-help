@@ -50,15 +50,6 @@ export function PhoneEntry({ lang, onLangChange, onSend }: PhoneEntryProps) {
     const digits = phone.replace(/\D/g, "");
     const sendDisabled = digits.length < 9;
 
-    const titleStyle: CSSProperties = {
-        margin: 0,
-        fontFamily: burmeseFont,
-        fontSize: "26px",
-        fontWeight: 600,
-        lineHeight: isMy ? 1.65 : 1.3,
-        color: "var(--text-primary)",
-        letterSpacing: isMy ? "normal" : "-0.01em",
-    };
     const subtitleStyle: CSSProperties = {
         margin: "14px 0 0",
         fontFamily: burmeseFont,
@@ -113,7 +104,6 @@ export function PhoneEntry({ lang, onLangChange, onSend }: PhoneEntryProps) {
                         padding: "28px 12px",
                     }}
                 >
-                    {/* <h1 style={titleStyle}>{copy.title}</h1> */}
                     <p style={subtitleStyle}>{copy.subtitle}</p>
 
                     <div style={{ marginTop: 32 }}>

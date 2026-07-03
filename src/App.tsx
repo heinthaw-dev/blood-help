@@ -103,6 +103,26 @@ const WRITE_ERROR_STRINGS = {
 /** 4-hour window before expiry at which the extend banner appears (D-17). */
 const EXTEND_WARN_MS = 4 * 60 * 60 * 1000;
 
+/** ISO timestamp `hours` from now. Module-scope so the clock read stays off the render path. */
+function isoHoursFromNow(hours: number): string {
+    return new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+}
+
+/**
+ * True when an active, not-yet-extended request is within the extend-warning
+ * window of expiry (D-17). Module-scope helper — keeps the Date.now() read out of
+ * the component render path (mirrors formatTimeAgo in Home).
+ */
+function isWithinExtendWindow(
+    expiresAt: string | null,
+    extended: boolean,
+    hasActiveRequest: boolean,
+): boolean {
+    if (!expiresAt || extended || !hasActiveRequest) return false;
+    const msLeft = new Date(expiresAt).getTime() - Date.now();
+    return msLeft > 0 && msLeft < EXTEND_WARN_MS;
+}
+
 interface FcmDonorAlert {
     requestId: string
     bloodType: string
@@ -530,9 +550,7 @@ function App() {
         const uid = user.supabaseId;
         if (!uid) return; // should never happen post-auth
 
-        const expiresAt = new Date(
-            Date.now() + 24 * 60 * 60 * 1000,
-        ).toISOString();
+        const expiresAt = isoHoursFromNow(24);
         const errStrings = WRITE_ERROR_STRINGS[lang];
 
         // Bare .insert() without chaining .select() or .single() (Pitfall 1)
@@ -854,11 +872,11 @@ function App() {
 
     // D-17: client-side expiring-soon computation — show extend banner when within 4h of expiry,
     // status is active (requestDraft !== null), and the request has not yet been extended (D-19 once-only).
-    const showExtendBanner = (() => {
-        if (!activeRequestExpiresAt || activeRequestExtended || requestDraft === null) return false;
-        const msLeft = new Date(activeRequestExpiresAt).getTime() - Date.now();
-        return msLeft > 0 && msLeft < EXTEND_WARN_MS;
-    })();
+    const showExtendBanner = isWithinExtendWindow(
+        activeRequestExpiresAt,
+        activeRequestExtended,
+        requestDraft !== null,
+    );
 
     const handleLogout = () => {
         // signOut errors are intentionally ignored — the local session is cleared regardless of

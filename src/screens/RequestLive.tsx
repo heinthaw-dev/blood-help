@@ -193,11 +193,15 @@ export function RequestLive({
     const [toast, setToast] = useState<ToastMsg | null>(null);
     const [code, setCode] = useState("");
     const [collected, setCollected] = useState(initCollected);
-    // Sync from parent when App.tsx hydrates the real DB value after the component has mounted
-    // (e.g., navigating away and back resets initCollected to the current App.tsx state).
-    useEffect(() => {
+    // Sync from parent when App.tsx hydrates the real DB value after mount (e.g.,
+    // navigating away and back). Adjust during render by tracking the previous prop
+    // instead of an effect (react-hooks/set-state-in-effect) — React re-renders
+    // immediately, so there is no extra commit or stale flash.
+    const [prevInitCollected, setPrevInitCollected] = useState(initCollected);
+    if (initCollected !== prevInitCollected) {
+        setPrevInitCollected(initCollected);
         setCollected(initCollected);
-    }, [initCollected]);
+    }
     /** Write-error dialog state — shown on confirm_donation transport failures. */
     const [writeError, setWriteError] = useState<{
         title: string;

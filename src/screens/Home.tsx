@@ -332,21 +332,23 @@ export function Home({
     const [requests, setRequests] = useState<NearbyRequest[]>([]);
 
     useEffect(() => {
-        // Pitfall 6: guard on null coords — render empty state without calling RPC
-        // Use explicit null/undefined checks to avoid silently suppressing feed if coords are 0 (WR-04)
-        if (
-            donorLat === null ||
-            donorLat === undefined ||
-            donorLng === null ||
-            donorLng === undefined ||
-            !donorBloodType
-        ) {
-            setRequests([]);
-            return;
-        }
-
         let cancelled = false;
         async function loadFeed() {
+            // Pitfall 6: guard on null coords — reset to empty without calling the RPC.
+            // Explicit null/undefined checks so coords of 0 don't suppress the feed (WR-04).
+            // Kept inside loadFeed (not the effect body) so the reset isn't a synchronous
+            // setState in the effect (react-hooks/set-state-in-effect).
+            if (
+                donorLat === null ||
+                donorLat === undefined ||
+                donorLng === null ||
+                donorLng === undefined ||
+                !donorBloodType
+            ) {
+                if (!cancelled) setRequests([]);
+                return;
+            }
+
             const { data, error } = await supabase.rpc(
                 "requests_within_radius",
                 {
