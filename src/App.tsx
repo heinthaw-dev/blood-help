@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { PhoneEntry } from "./screens/PhoneEntry";
+
+// ── FCM deep-link URL param validation constants ────────────────────────────────
+const VALID_BLOOD_TYPES = new Set(['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'])
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 import { OtpVerification } from "./screens/OtpVerification";
 import { IntentChoice } from "./screens/IntentChoice";
 import type { Intent } from "./screens/IntentChoice";
@@ -221,7 +225,7 @@ function App() {
             });
 
             if (error) {
-                console.error('[hydrate-user] edge function error:', error.message);
+                if (import.meta.env.DEV) console.error('[hydrate-user] edge function error:', error.message);
                 return false;
             }
 
@@ -322,24 +326,35 @@ function App() {
                     const urlParams = new URLSearchParams(window.location.search);
                     const fcmType = urlParams.get("fcm_type");
                     if (fcmType === "donor_alert") {
-                        setFcmDonorAlert({
-                            requestId: urlParams.get("request_id") ?? "",
-                            bloodType: urlParams.get("blood_type") ?? "",
-                            urgency: urlParams.get("urgency") ?? "",
-                            address: urlParams.get("address") ?? "",
-                        });
-                        window.history.replaceState({}, "", "/");
+                        const requestId = urlParams.get("request_id") ?? "";
+                        const bloodType = urlParams.get("blood_type") ?? "";
+                        if (UUID_RE.test(requestId) && VALID_BLOOD_TYPES.has(bloodType)) {
+                            setFcmDonorAlert({
+                                requestId,
+                                bloodType,
+                                urgency: urlParams.get("urgency") ?? "",
+                                address: (urlParams.get("address") ?? "").slice(0, 200),
+                            });
+                            window.history.replaceState({}, "", "/");
+                        } else {
+                            window.history.replaceState({}, "", "/");
+                        }
                     } else if (fcmType === "requester_alert") {
-                        setFcmRequesterAlert({
-                            requestId: urlParams.get("request_id") ?? "",
-                            responderName: urlParams.get("responder_name") ?? "",
-                            responderPhone: urlParams.get("responder_phone") ?? "",
-                            responderBloodType: urlParams.get("responder_blood_type") ?? "",
-                        });
-                        window.history.replaceState({}, "", "/");
-                        setScreen("request-live");
-                        setSessionLoading(false);
-                        return;
+                        const requestId = urlParams.get("request_id") ?? "";
+                        if (UUID_RE.test(requestId)) {
+                            setFcmRequesterAlert({
+                                requestId,
+                                responderName: (urlParams.get("responder_name") ?? "").slice(0, 50),
+                                responderPhone: (urlParams.get("responder_phone") ?? "").slice(0, 15),
+                                responderBloodType: (urlParams.get("responder_blood_type") ?? "").slice(0, 5),
+                            });
+                            window.history.replaceState({}, "", "/");
+                            setScreen("request-live");
+                            setSessionLoading(false);
+                            return;
+                        } else {
+                            window.history.replaceState({}, "", "/");
+                        }
                     }
                     setScreen("home");
                 }
@@ -361,19 +376,24 @@ function App() {
             const d = (event.data as { data?: Record<string, string> }).data ?? {};
 
             if (d.fcm_type === "donor_alert") {
+                const requestId = d.request_id ?? "";
+                const bloodType = d.blood_type ?? "";
+                if (!UUID_RE.test(requestId) || !VALID_BLOOD_TYPES.has(bloodType)) return;
                 setFcmDonorAlert({
-                    requestId: d.request_id ?? "",
-                    bloodType: d.blood_type ?? "",
+                    requestId,
+                    bloodType,
                     urgency: d.urgency ?? "",
-                    address: d.address ?? "",
+                    address: (d.address ?? "").slice(0, 200),
                 });
                 setScreen("home");
             } else if (d.fcm_type === "requester_alert") {
+                const requestId = d.request_id ?? "";
+                if (!UUID_RE.test(requestId)) return;
                 setFcmRequesterAlert({
-                    requestId: d.request_id ?? "",
-                    responderName: d.responder_name ?? "",
-                    responderPhone: d.responder_phone ?? "",
-                    responderBloodType: d.responder_blood_type ?? "",
+                    requestId,
+                    responderName: (d.responder_name ?? "").slice(0, 50),
+                    responderPhone: (d.responder_phone ?? "").slice(0, 15),
+                    responderBloodType: (d.responder_blood_type ?? "").slice(0, 5),
                 });
                 setScreen("request-live");
             }
@@ -392,19 +412,24 @@ function App() {
         const unsub = onMessage(messaging, (payload) => {
             const d = (payload.data ?? {}) as Record<string, string>;
             if (d.fcm_type === "donor_alert") {
+                const requestId = d.request_id ?? "";
+                const bloodType = d.blood_type ?? "";
+                if (!UUID_RE.test(requestId) || !VALID_BLOOD_TYPES.has(bloodType)) return;
                 setFcmDonorAlert({
-                    requestId: d.request_id ?? "",
-                    bloodType: d.blood_type ?? "",
+                    requestId,
+                    bloodType,
                     urgency: d.urgency ?? "",
-                    address: d.address ?? "",
+                    address: (d.address ?? "").slice(0, 200),
                 });
                 setScreen("home");
             } else if (d.fcm_type === "requester_alert") {
+                const requestId = d.request_id ?? "";
+                if (!UUID_RE.test(requestId)) return;
                 setFcmRequesterAlert({
-                    requestId: d.request_id ?? "",
-                    responderName: d.responder_name ?? "",
-                    responderPhone: d.responder_phone ?? "",
-                    responderBloodType: d.responder_blood_type ?? "",
+                    requestId,
+                    responderName: (d.responder_name ?? "").slice(0, 50),
+                    responderPhone: (d.responder_phone ?? "").slice(0, 15),
+                    responderBloodType: (d.responder_blood_type ?? "").slice(0, 5),
                 });
                 setScreen("request-live");
             }
@@ -499,10 +524,7 @@ function App() {
         } else {
             const signUp = await supabase.auth.signUp({ email, password });
             if (signUp.error || !signUp.data.user) {
-                console.error(
-                    "phone auth failed:",
-                    signUp.error?.message ?? signIn.error?.message,
-                );
+                if (import.meta.env.DEV) console.error("phone auth failed:", signUp.error?.message ?? signIn.error?.message);
                 setWriteError({
                     title: errStrings.genericTitle,
                     message: errStrings.genericMsg,
@@ -531,10 +553,7 @@ function App() {
                 { onConflict: "id" },
             );
             if (error)
-                console.error(
-                    "profile create on verify failed:",
-                    error.message,
-                );
+                if (import.meta.env.DEV) console.error("profile create on verify failed:", error.message);
             setScreen("intent");
         }
         } finally {
@@ -609,12 +628,11 @@ function App() {
                 urgency: draft.urgency,
                 address: draft.address,
             };
-            console.log('[FCM] invoking notify-donors →', notifyPayload);
+            if (import.meta.env.DEV) console.log('[FCM] invoking notify-donors');
             void supabase.functions.invoke("notify-donors", {
                 body: notifyPayload,
-            }).then(({ data, error }) => {
-                if (error) console.warn('[FCM] notify-donors error:', error.message);
-                else console.log('[FCM] notify-donors result:', data);
+            }).then(({ error }) => {
+                if (error && import.meta.env.DEV) console.warn('[FCM] notify-donors error:', error.message);
             });
         }
 
@@ -662,12 +680,11 @@ function App() {
             }
         } else {
             // Successful new response — Edge Function handles "first-only" check before sending FCM
-            console.log('[FCM] invoking notify-requester → requestId:', reqId, 'responderId:', uid);
+            if (import.meta.env.DEV) console.log('[FCM] invoking notify-requester');
             void supabase.functions.invoke("notify-requester", {
                 body: { requestId: reqId, responderId: uid },
-            }).then(({ data, error: fnErr }) => {
-                if (fnErr) console.warn('[FCM] notify-requester error:', fnErr.message);
-                else console.log('[FCM] notify-requester result:', data);
+            }).then(({ error: fnErr }) => {
+                if (fnErr && import.meta.env.DEV) console.warn('[FCM] notify-requester error:', fnErr.message);
             });
         }
     };
@@ -691,7 +708,7 @@ function App() {
         );
 
         if (profileErr) {
-            console.error("profile upsert error:", profileErr.message);
+            if (import.meta.env.DEV) console.error("profile upsert error:", profileErr.message);
             setWriteError({
                 title: errStrings.genericTitle,
                 message: errStrings.genericMsg,
@@ -716,7 +733,7 @@ function App() {
         );
 
         if (donorErr) {
-            console.error("donor upsert error:", donorErr.message);
+            if (import.meta.env.DEV) console.error("donor upsert error:", donorErr.message);
             setWriteError({
                 title: errStrings.genericTitle,
                 message: errStrings.genericMsg,
@@ -769,7 +786,7 @@ function App() {
             .from("donors")
             .update({ is_available: v, updated_at: new Date().toISOString() })
             .eq("profile_id", user.supabaseId);
-        if (error) console.error("availability update failed:", error.message);
+        if (error) if (import.meta.env.DEV) console.error("availability update failed:", error.message);
     };
 
     const handleEmergencyChange = async (v: boolean) => {
@@ -783,7 +800,7 @@ function App() {
             })
             .eq("profile_id", user.supabaseId);
         if (error)
-            console.error("emergency callable update failed:", error.message);
+            if (import.meta.env.DEV) console.error("emergency callable update failed:", error.message);
     };
 
     /** Show push permission pre-dialog if permission not yet granted; silently re-register if already granted. */
@@ -878,16 +895,34 @@ function App() {
         requestDraft !== null,
     );
 
-    const handleLogout = () => {
-        // signOut errors are intentionally ignored — the local session is cleared regardless of
-        // server response, so the user is effectively logged out from the app's perspective
+    const handleLogout = async () => {
+        // Delete FCM device token BEFORE signOut — RLS requires auth.uid() = profile_id
+        try {
+            const uid = user.supabaseId;
+            if (uid) {
+                await supabase.from('device_tokens').delete().eq('profile_id', uid);
+            }
+        } catch { /* best-effort cleanup */ }
+
+        // Clear Supabase session (async, errors ignored intentionally)
         void supabase.auth.signOut();
+
+        // Clear all Supabase-related localStorage keys (sb-* prefix)
+        try {
+            Object.keys(localStorage)
+                .filter(k => k.startsWith('sb-'))
+                .forEach(k => localStorage.removeItem(k));
+        } catch { /* localStorage may be unavailable in private mode */ }
+
+        // Clear app-specific localStorage keys
+        localStorage.removeItem("bloodhelp.lastSeenDonationAt");
+        localStorage.removeItem("bloodhelp.seenPhones");
+
+        // Clear React state
         setUser(DEFAULT_USER);
         setPhone("");
         clearActiveRequest();
-        setRespondedIds(new Set()); // clear responded card state so the next user on a shared device does not inherit it (privacy)
-        // D-12/T-09-03-04: clear the unseen-donation marker so a shared device does not leak one user's congrats to the next.
-        localStorage.removeItem("bloodhelp.lastSeenDonationAt");
+        setRespondedIds(new Set());
         setScreen("phone");
     };
 
