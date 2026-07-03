@@ -1,7 +1,7 @@
 # Summary 260703-grn — clear pre-existing build/lint reds
 
 **Date:** 2026-07-03
-**Commit:** PENDING
+**Commit:** 34bf6d2
 
 ## What shipped
 
