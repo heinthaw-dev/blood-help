@@ -514,24 +514,42 @@ function App() {
         // Establish a STABLE phone-keyed session: sign in if the account exists, else sign up.
         // Either way the same phone yields the same auth.uid() on every device, so RLS
         // (auth.uid() = owner) lets the user read/write their own rows anywhere.
+        //
+        // For NEW users signInWithPassword always returns 400 ("Invalid login credentials")
+        // before signUp succeeds — this is expected, not an error. The Supabase JS client
+        // auto-logs the 400 to the browser console; that's cosmetic and harmless.
         let uid: string | null = null;
         const signIn = await supabase.auth.signInWithPassword({
             email,
             password,
         });
         if (signIn.data.user) {
+            // Returning user — signIn succeeded on first try.
             uid = signIn.data.user.id;
         } else {
+            // New user (expected 400) or transient error — attempt signUp.
             const signUp = await supabase.auth.signUp({ email, password });
-            if (signUp.error || !signUp.data.user) {
-                if (import.meta.env.DEV) console.error("phone auth failed:", signUp.error?.message ?? signIn.error?.message);
+            if (signUp.data.user) {
+                uid = signUp.data.user.id;
+            } else if (signUp.error) {
+                // Both signIn and signUp failed — real error (network, Supabase outage, etc.)
+                if (import.meta.env.DEV) console.error("phone auth failed:", signUp.error.message);
                 setWriteError({
                     title: errStrings.genericTitle,
                     message: errStrings.genericMsg,
                 });
                 return;
             }
-            uid = signUp.data.user.id;
+            // Edge case: signUp returned no error but also no user (email confirmation required).
+            // Treat as failure since we can't proceed without a uid.
+            if (!uid) {
+                if (import.meta.env.DEV) console.error("phone auth: signUp returned no user and no error");
+                setWriteError({
+                    title: errStrings.genericTitle,
+                    message: errStrings.genericMsg,
+                });
+                return;
+            }
         }
 
         setUser((u) => ({ ...u, supabaseId: uid }));
