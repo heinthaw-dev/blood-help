@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9 (last roadmapped) — complete
 Plan: 09-03 complete — all plans done
 Status: v2.0 milestone complete — all phases shipped & verified; iOS PWA onboarding feature in progress (quick tasks)
-Last activity: 2026-07-03 -- Cleared 5 pre-existing build/lint reds (260703-grn) — tsc + eslint green
+Last activity: 2026-08-19 -- Completed quick task 260819-i0m: restored 3 deleted seed profiles/donors + checked in supabase/seed.sql (51 real accounts remain profile-less — see SUMMARY)
 
 Progress: [██████████] 100%
 
@@ -102,6 +102,8 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260703-pnu | PushNudge onboarding component — usePwaState-driven Card+Button nudge (iOS add-to-home / open-in-Safari / enable-push, Android install); Burmese-first; phase 3 of iOS onboarding | 2026-07-03 | a9787ba | [260703-pnu-push-nudge-ui](./quick/260703-pnu-push-nudge-ui/) |
 | 260703-wir | Wire PushNudge — thank-you primary action + quiet skip, Home donor nudge (dismissible), main.tsx capture arm; phase 4 of iOS onboarding | 2026-07-03 | 0483354 | [260703-wir-wire-pushnudge](./quick/260703-wir-wire-pushnudge/) |
 | 260703-grn | Clear pre-existing build/lint reds — dead titleStyle, Date.now→module helpers, 2× set-state-in-effect fixes; tsc + eslint green | 2026-07-03 | 34bf6d2 | [260703-grn-fix-build-lint-reds](./quick/260703-grn-fix-build-lint-reds/) |
+| 260819-hsx | Fix FCM push registration — CSP connect-src missing firebaseinstallations, SW-ready timeout guard, surface enablePush failure in PushNudge | 2026-08-19 | f881749 | [260819-hsx-fix-fcm-push-registration-csp-connect-sr](./quick/260819-hsx-fix-fcm-push-registration-csp-connect-sr/) |
+| 260819-i0m | Restore deleted seed profiles and donors — 3 dev seed rows + checked-in supabase/seed.sql for repeatability | 2026-08-19 | 0032dfa | [260819-i0m-restore-deleted-seed-profiles-and-donors](./quick/260819-i0m-restore-deleted-seed-profiles-and-donors/) |
 
 ## Deferred Items
 
