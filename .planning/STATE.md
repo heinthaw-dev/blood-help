@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9 (last roadmapped) — complete
 Plan: 09-03 complete — all plans done
 Status: v2.0 milestone complete — all phases shipped & verified; iOS PWA onboarding feature in progress (quick tasks)
-Last activity: 2026-08-19 -- Completed quick task 260819-lkq: QR scanner fixed (CSP blocked the zxing wasm fetch AND wasm compilation; binary now self-hosted)
+Last activity: 2026-08-19 -- Completed quick task 260819-me4: Android FCM token registration (no enablePush path existed on Android; also fixed multi-device token deletion)
 
 Progress: [██████████] 100%
 
@@ -105,6 +105,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260819-hsx | Fix FCM push registration — CSP connect-src missing firebaseinstallations, SW-ready timeout guard, surface enablePush failure in PushNudge | 2026-08-19 | f881749 | [260819-hsx-fix-fcm-push-registration-csp-connect-sr](./quick/260819-hsx-fix-fcm-push-registration-csp-connect-sr/) |
 | 260819-i0m | Restore deleted seed profiles and donors — 3 dev seed rows + checked-in supabase/seed.sql for repeatability | 2026-08-19 | 0032dfa | [260819-i0m-restore-deleted-seed-profiles-and-donors](./quick/260819-i0m-restore-deleted-seed-profiles-and-donors/) |
 | 260819-lkq | Fix QR scanner dead on Android+iOS — self-host zxing_reader.wasm, add 'wasm-unsafe-eval' + blob: to CSP, surface scanner errors | 2026-08-19 | b6f4914 | [260819-lkq-fix-qr-scanner-dead-on-android-ios-csp-b](./quick/260819-lkq-fix-qr-scanner-dead-on-android-ios-csp-b/) |
+| 260819-me4 | Fix Android FCM never registering a token — add android-enable-push state, register on session hydrate, prune dead tokens server-side instead of deleting other devices | 2026-08-19 | 48051b7 | [260819-me4-fix-android-fcm-never-registering-a-devi](./quick/260819-me4-fix-android-fcm-never-registering-a-devi/) |
 
 ## Deferred Items
 
