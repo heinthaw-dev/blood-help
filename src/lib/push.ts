@@ -1,7 +1,7 @@
 import { getToken } from 'firebase/messaging'
 import { messaging, VAPID_KEY } from './firebase'
 import { supabase } from './supabase'
-import { clearDeferredInstallPrompt, getDeferredInstallPrompt } from './pwa'
+import { clearDeferredInstallPrompt, detectPlatform, getDeferredInstallPrompt } from './pwa'
 
 export type PushResult = 'granted' | 'denied' | 'unsupported' | 'error'
 
@@ -74,17 +74,21 @@ export async function enablePush(profileId: string): Promise<PushResult> {
     })
     if (!token) return 'error'
 
-    // NOTE: do NOT delete the profile's other rows here. Every row is written
-    // with platform 'web', so a blanket delete-by-profile removes the user's
-    // OTHER devices — an iPhone and an Android phone on one account would
-    // ping-pong, each registration killing the other. Re-registering the same
-    // device is already idempotent via onConflict: 'fcm_token'; tokens orphaned
-    // by FCM rotation are pruned on the send path, where FCM reports
-    // registration-token-not-registered authoritatively.
+    // NOTE: do NOT delete the profile's other rows here. A blanket
+    // delete-by-profile removes the user's OTHER devices — an iPhone and an
+    // Android phone on one account would ping-pong, each registration killing
+    // the other. Re-registering the same device is already idempotent via
+    // onConflict: 'fcm_token'; tokens orphaned by FCM rotation are pruned on
+    // the send path, where FCM reports registration-token-not-registered
+    // authoritatively.
+    //
+    // platform records which device this token belongs to. Rows written before
+    // this existed all say 'web'; the upsert corrects them in place on the next
+    // registration, which happens on every app open for a granted device.
     const { error } = await supabase
       .from('device_tokens')
       .upsert(
-        { profile_id: profileId, fcm_token: token, platform: 'web' },
+        { profile_id: profileId, fcm_token: token, platform: detectPlatform() },
         { onConflict: 'fcm_token' },
       )
     // A failed write means there is no token to send to — do not report success.

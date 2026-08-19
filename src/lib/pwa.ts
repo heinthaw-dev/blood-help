@@ -119,6 +119,23 @@ function detectIOS(): boolean {
   )
 }
 
+/** OS family a device token was registered from — stored on `device_tokens.platform`. */
+export type DevicePlatform = 'ios' | 'android' | 'web'
+
+/**
+ * The OS family of the current device, for recording alongside an FCM token.
+ *
+ * Every row used to be written as the literal `'web'`, which made it impossible
+ * to tell one of a user's devices from another when debugging why alerts were
+ * not arriving. `'web'` is kept as the catch-all for desktop and anything
+ * unrecognised, so the value stays truthful rather than guessing.
+ */
+export function detectPlatform(): DevicePlatform {
+  if (detectIOS()) return 'ios'
+  if (typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)) return 'android'
+  return 'web'
+}
+
 /** True when running as an installed PWA (standalone display mode). */
 function detectStandalone(): boolean {
   if (typeof window === 'undefined') return false
