@@ -18,6 +18,7 @@ export type PwaState =
   | 'ios-open-in-safari' // iOS, but in Chrome/Firefox/etc — must switch to Safari to install
   | 'ios-add-to-home' // iOS Safari, not yet installed — show Add to Home Screen guidance
   | 'ios-enable-push' // iOS installed (standalone) but push not yet granted
+  | 'android-enable-push' // Android/desktop, push supported, permission not yet asked
   | 'granted' // push already granted — nothing to prompt
   | 'android-install' // a beforeinstallprompt was captured — offer one-tap install
   | 'hidden' // no onboarding step applies (unsupported, already handled, or desktop)
@@ -137,8 +138,15 @@ function detectStandalone(): boolean {
  *       not standalone + Safari     → `ios-add-to-home`
  *       standalone + no web push API (iOS < 16.4) → `hidden` (cannot push)
  *       standalone + not granted    → `ios-enable-push`
- *  3. Android/Chromium — a captured prompt + not installed → `android-install`.
- *  4. Otherwise `hidden` (desktop, already installed, or no step applies).
+ *  3. Android/Chromium — a captured prompt + not installed → `android-install`
+ *     (installing is the better first step; the install handler chains into the
+ *     permission request afterwards). Otherwise, if push is supported and has
+ *     not been asked for yet → `android-enable-push`.
+ *  4. Otherwise `hidden` (permission denied, unsupported, or no step applies).
+ *
+ * Note that `granted` means "the OS permission is granted", NOT "alerts work" —
+ * the FCM token can still be missing. Registering the token when a session
+ * appears is App.tsx's job, not this hook's; this only decides what to *show*.
  */
 function deriveState(caps: Omit<PwaCapabilities, 'state'>): PwaState {
   const { isIOS, isIOSNonSafari, isStandalone, canInstallAndroid, notifPermission } = caps
@@ -151,7 +159,14 @@ function deriveState(caps: Omit<PwaCapabilities, 'state'>): PwaState {
     return 'ios-enable-push'
   }
 
+  if (notifPermission === 'unsupported') return 'hidden'
+
   if (canInstallAndroid && !isStandalone) return 'android-install'
+
+  // Android/desktop with a usable Notification API that has not been asked yet.
+  // Without this the only non-iOS nudge was 'android-install', which never
+  // requested permission — so Android users had no path to a registered token.
+  if (notifPermission === 'default') return 'android-enable-push'
 
   return 'hidden'
 }

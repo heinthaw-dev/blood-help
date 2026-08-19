@@ -292,8 +292,12 @@ export function PushNudge({ lang, supabaseId, style, onDismiss }: PushNudgeProps
     </p>
   )
 
+  // Installing a PWA requests no notification permission and registers no token,
+  // so an accepted install must chain into enablePush before we can claim alerts
+  // are on. Previously this set succeeded on the install alone — a false green.
   const handleInstall = async () => {
-    if ((await promptAndroidInstall()) === 'accepted') setSucceeded(true)
+    if ((await promptAndroidInstall()) !== 'accepted') return
+    await handleEnable()
   }
 
   const handleCopyLink = async () => {
@@ -390,7 +394,10 @@ export function PushNudge({ lang, supabaseId, style, onDismiss }: PushNudgeProps
         />
       )
 
+    // Same card for both platforms — the only difference is how the user got
+    // here (iOS must install first; Android/desktop can enable straight away).
     case 'ios-enable-push':
+    case 'android-enable-push':
       return (
         <NudgeShell
           icon={<BellIcon size={20} color="var(--color-primary)" />}
