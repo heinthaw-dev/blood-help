@@ -441,16 +441,29 @@ function App() {
     // Firebase may generate a new token when the controlling SW changes — without this, the
     // stale token stays in device_tokens and messages are silently dropped.
     useEffect(() => {
+        const uid = user.supabaseId;
+        if (!uid) return;
+
+        // Only ever re-register when permission is ALREADY granted — with a
+        // standing grant Notification.requestPermission() resolves without
+        // prompting, so this never surprises the user with a dialog.
+        const registerIfGranted = () => {
+            if (!pushSupported() || Notification.permission !== "granted") return;
+            void enablePush(uid);
+        };
+
+        // Fire once now that the session is known. This is the general recovery
+        // for a granted-but-unregistered device: the SW calls clients.claim() on
+        // activate, so "controllerchange" lands during boot BEFORE initAuth has
+        // hydrated supabaseId — the listener alone reliably missed it, which is
+        // why Android (permission granted, no nudge shown) never got a token.
+        registerIfGranted();
+
+        // Still listen: Firebase can rotate the token when a new SW claims the page.
         if (!navigator.serviceWorker) return;
-        function handleControllerChange() {
-            // Only silently refresh the token if permission is already granted —
-            // never let an SW controller change on first load trigger a prompt.
-            if (user.supabaseId && Notification.permission === "granted")
-                void enablePush(user.supabaseId);
-        }
-        navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
+        navigator.serviceWorker.addEventListener("controllerchange", registerIfGranted);
         return () => {
-            navigator.serviceWorker.removeEventListener("controllerchange", handleControllerChange);
+            navigator.serviceWorker.removeEventListener("controllerchange", registerIfGranted);
         };
     }, [user.supabaseId]);
 
