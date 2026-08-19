@@ -4,6 +4,7 @@ import { initializeApp, cert, getApps } from 'npm:firebase-admin/app'
 import { getMessaging } from 'npm:firebase-admin/messaging'
 import { getCorsHeaders } from '../_shared/cors.ts'
 import { isValidUuid, sanitizeLength } from '../_shared/validate.ts'
+import { pruneDeadTokens } from '../_shared/prune.ts'
 
 serve(async (req) => {
   const CORS_HEADERS = getCorsHeaders(req.headers.get('Origin'))
@@ -121,16 +122,19 @@ serve(async (req) => {
     const responderPhone = profileRow?.phone ?? ''
     console.log('[notify-requester] responder resolved')
 
-    // Get the requester's most recently registered device token
-    const { data: tokenRow } = await supabase
+    // Every device the requester has registered — not just the newest. A user
+    // with a phone and a tablet must be alerted on both, and sending to a single
+    // stale token used to throw and 500 the whole call.
+    const { data: tokenRows } = await supabase
       .from('device_tokens')
       .select('fcm_token')
       .eq('profile_id', request.requester_id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
 
-    if (!tokenRow) {
+    const tokens: string[] = (tokenRows ?? [])
+      .map((r: { fcm_token: string }) => r.fcm_token)
+      .filter(Boolean)
+
+    if (tokens.length === 0) {
       return new Response(JSON.stringify({ sent: 0, reason: 'no_token' }), {
         headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
       })
@@ -144,8 +148,8 @@ serve(async (req) => {
       `&request_id=${encodeURIComponent(String(requestId))}`
 
     // Data-only message — see notify-donors for rationale (duplicate prevention).
-    await getMessaging().send({
-      token: tokenRow.fcm_token,
+    const result = await getMessaging().sendEachForMulticast({
+      tokens,
       data: {
         fcm_type: 'requester_alert',
         responder_name: sanitizeLength(responderName, 50),
@@ -158,8 +162,11 @@ serve(async (req) => {
       },
     })
 
-    console.log('[notify-requester] FCM sent successfully')
-    return new Response(JSON.stringify({ sent: 1 }), {
+    console.log('[notify-requester] FCM result — success:', result.successCount, 'failure:', result.failureCount)
+    if (result.failureCount > 0) {
+      await pruneDeadTokens(supabase, tokens, result.responses, '[notify-requester]')
+    }
+    return new Response(JSON.stringify({ sent: result.successCount, failed: result.failureCount }), {
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     })
   } catch {

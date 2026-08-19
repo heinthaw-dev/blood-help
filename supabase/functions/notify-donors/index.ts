@@ -4,6 +4,7 @@ import { initializeApp, cert, getApps } from 'npm:firebase-admin/app'
 import { getMessaging } from 'npm:firebase-admin/messaging'
 import { getCorsHeaders } from '../_shared/cors.ts'
 import { isValidUuid, isValidBloodType, isValidUrgency, sanitizeLength } from '../_shared/validate.ts'
+import { pruneDeadTokens } from '../_shared/prune.ts'
 
 /** Which donor blood types can donate TO a given requester blood type (inverse of COMPATIBLE_REQUEST_TYPES). */
 const COMPATIBLE_DONOR_TYPES: Record<string, string[]> = {
@@ -164,6 +165,9 @@ serve(async (req) => {
     console.log('[notify-donors] FCM result — success:', result.successCount, 'failure:', result.failureCount)
     if (result.failureCount > 0) {
       console.warn('[notify-donors] failures:', result.failureCount)
+      // Drop tokens FCM says are permanently dead. This replaces the client's
+      // old delete-by-profile cleanup, which also wiped the user's other devices.
+      await pruneDeadTokens(supabase, tokens, result.responses, '[notify-donors]')
     }
     return new Response(JSON.stringify({ sent: result.successCount, failed: result.failureCount }), {
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },

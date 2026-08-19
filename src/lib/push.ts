@@ -74,22 +74,24 @@ export async function enablePush(profileId: string): Promise<PushResult> {
     })
     if (!token) return 'error'
 
-    // Remove stale web tokens for this profile (e.g. token rotated after SW update).
-    // Without this, sendEachForMulticast would deliver two notifications to the same device.
-    await supabase
-      .from('device_tokens')
-      .delete()
-      .eq('profile_id', profileId)
-      .eq('platform', 'web')
-      .neq('fcm_token', token)
-
+    // NOTE: do NOT delete the profile's other rows here. Every row is written
+    // with platform 'web', so a blanket delete-by-profile removes the user's
+    // OTHER devices — an iPhone and an Android phone on one account would
+    // ping-pong, each registration killing the other. Re-registering the same
+    // device is already idempotent via onConflict: 'fcm_token'; tokens orphaned
+    // by FCM rotation are pruned on the send path, where FCM reports
+    // registration-token-not-registered authoritatively.
     const { error } = await supabase
       .from('device_tokens')
       .upsert(
         { profile_id: profileId, fcm_token: token, platform: 'web' },
         { onConflict: 'fcm_token' },
       )
-    if (error) console.error('[Push] upsert failed')
+    // A failed write means there is no token to send to — do not report success.
+    if (error) {
+      console.error('[Push] device_tokens upsert failed:', error.message)
+      return 'error'
+    }
 
     return 'granted'
   } catch (err) {
