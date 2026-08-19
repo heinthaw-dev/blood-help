@@ -12,6 +12,11 @@ import type { BloodType } from "../blood";
 import { COMPATIBLE_REQUEST_TYPES } from "../blood";
 import { formatDistanceLabel, formatPhoneIntl } from "../format";
 import { useZxing } from "react-zxing";
+// Self-hosted decoder binary. zxing-wasm otherwise fetches this from
+// fastly.jsdelivr.net at runtime, which our CSP blocks (default-src 'self') and
+// which would also break the scanner offline. The `?url` import makes Vite emit
+// it as a hashed same-origin asset, version-locked to the installed package.
+import zxingWasmUrl from "zxing-wasm/reader/zxing_reader.wasm?url";
 
 // ---- types ----
 
@@ -234,10 +239,14 @@ export function RequestLive({
     //
     // Configured with formats: ['qr_code'] so only QR codes are decoded.
     // On a valid 5-char Base32 decode, populates the code state so the confirm button enables.
-    // onError logs without crashing (camera denied / WASM failure).
-    // NOTE: react-zxing loads zxing_reader.wasm from jsDelivr CDN by default.
-    // For production PWA (offline use), pass a self-hosted wasmUrl — tracked as a follow-up.
+    // onError reports without crashing (camera denied / WASM failure).
+    //
+    // wasmUrl is REQUIRED, not an optimisation: useZxing awaits prepareWasm()
+    // *before* it calls getUserMedia, so a blocked wasm fetch means the camera
+    // never opens and no OS permission prompt ever appears. The default CDN URL
+    // is blocked by our CSP and unavailable offline.
     const { ref: zxingRef } = useZxing({
+        wasmUrl: zxingWasmUrl,
         formats: ["qr_code"],
         // Only run the camera while the QR sheet is open — releases camera on close and avoids
         // iOS Safari's requirement that getUserMedia is triggered close to a user gesture.
@@ -249,7 +258,14 @@ export function RequestLive({
             }
         },
         onError(err) {
-            if (import.meta.env.DEV) console.warn("QR scan error:", err);
+            // console.error, not console.log/warn-under-DEV: production builds
+            // strip log/debug/info, so a DEV-only branch made every shipped
+            // failure silent — the scanner looked merely unresponsive.
+            console.error("QR scan error:", err);
+            showToast(
+                "ကင်မရာ ဖွင့်၍ မရပါ။ ကုဒ်ကို လက်ဖြင့် ရိုက်ထည့်နိုင်ပါသည်။",
+                "Couldn't start the camera. You can type the code instead.",
+            );
         },
     });
 
