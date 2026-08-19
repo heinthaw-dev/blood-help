@@ -4,6 +4,7 @@ import { Card } from './Card'
 import { Button } from './Button'
 import { usePwaState } from '../lib/pwa'
 import { enablePush, promptAndroidInstall } from '../lib/push'
+import type { PushResult } from '../lib/push'
 import type { Lang } from '../i18n'
 
 export interface PushNudgeProps {
@@ -194,6 +195,8 @@ const STRINGS: Record<
     installPrompt: string
     installCta: string
     enabledLabel: string
+    enableDeniedError: string
+    enableFailedError: string
   }
 > = {
   my: {
@@ -211,6 +214,10 @@ const STRINGS: Record<
       'မြန်ဆန်စွာ အသုံးပြုနိုင်ရန်နှင့် အသိပေးချက်များ ရရှိရန် Blood Help ကို ထည့်သွင်းပါ။',
     installCta: 'ထည့်သွင်းရန်',
     enabledLabel: 'အသိပေးချက်များ ဖွင့်ထားပြီးပါပြီ',
+    enableDeniedError:
+      'အသိပေးချက်များကို ပိတ်ထားပါသည်။ ဖုန်း Settings ထဲတွင် Blood Help အတွက် Notifications ကို ဖွင့်ပေးပါ။',
+    enableFailedError:
+      'အသိပေးချက်များ ဖွင့်၍ မရသေးပါ။ အင်တာနက် ချိတ်ဆက်မှုကို စစ်ဆေးပြီး ထပ်မံ ကြိုးစားပါ။',
   },
   en: {
     addToHome: "To get alerts — tap Share below, then choose 'Add to Home Screen'.",
@@ -224,6 +231,10 @@ const STRINGS: Record<
     installPrompt: 'Install Blood Help for faster access and alerts.',
     installCta: 'Install',
     enabledLabel: 'Alerts are on',
+    enableDeniedError:
+      'Alerts are blocked. Turn on Notifications for Blood Help in your device settings.',
+    enableFailedError:
+      "We couldn't turn alerts on. Check your connection and try again.",
   },
 }
 
@@ -247,14 +258,39 @@ export function PushNudge({ lang, supabaseId, style, onDismiss }: PushNudgeProps
   const { state } = usePwaState()
   const [succeeded, setSucceeded] = useState(false)
   const [copied, setCopied] = useState(false)
+  // Non-'granted' outcome of the last enable attempt, or null when there is
+  // nothing to report. Without this the user taps, grants permission, and gets
+  // no feedback at all when token registration fails downstream.
+  const [enableError, setEnableError] = useState<Exclude<PushResult, 'granted'> | null>(null)
 
   const bodyFont = lang === 'my' ? 'var(--font-burmese)' : 'var(--font-sans)'
   const s = STRINGS[lang]
 
   const handleEnable = async () => {
     if (!supabaseId) return
-    if ((await enablePush(supabaseId)) === 'granted') setSucceeded(true)
+    setEnableError(null) // clear any prior failure so a retry starts clean
+    const result = await enablePush(supabaseId)
+    if (result === 'granted') setSucceeded(true)
+    else setEnableError(result)
   }
+
+  /** Bilingual line shown under the enable button after a failed attempt. */
+  const errorNotice = enableError && (
+    <p
+      role="alert"
+      style={{
+        margin: '10px 0 0',
+        textAlign: 'left',
+        fontFamily: bodyFont,
+        fontSize: 13,
+        fontWeight: 500,
+        lineHeight: 1.6,
+        color: 'var(--color-primary)',
+      }}
+    >
+      {enableError === 'denied' ? s.enableDeniedError : s.enableFailedError}
+    </p>
+  )
 
   const handleInstall = async () => {
     if ((await promptAndroidInstall()) === 'accepted') setSucceeded(true)
@@ -364,16 +400,19 @@ export function PushNudge({ lang, supabaseId, style, onDismiss }: PushNudgeProps
           style={style}
           onDismiss={onDismiss}
           action={
-            <Button
-              type="button"
-              fullWidth
-              onClick={handleEnable}
-              disabled={!supabaseId}
-              icon={<BellIcon size={19} color="#fff" />}
-              style={{ marginTop: 16, fontFamily: bodyFont }}
-            >
-              {s.enableCta}
-            </Button>
+            <>
+              <Button
+                type="button"
+                fullWidth
+                onClick={handleEnable}
+                disabled={!supabaseId}
+                icon={<BellIcon size={19} color="#fff" />}
+                style={{ marginTop: 16, fontFamily: bodyFont }}
+              >
+                {s.enableCta}
+              </Button>
+              {errorNotice}
+            </>
           }
         />
       )
