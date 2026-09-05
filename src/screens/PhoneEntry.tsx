@@ -27,10 +27,17 @@ const STRINGS: Record<
     },
 };
 
+/**
+ * Minimum digit count before "Send code" enables. Myanmar mobile numbers vary in
+ * length and do not all begin with 9 — the shortest valid national numbers are
+ * 7 digits (e.g. 5417941), so anything shorter is treated as an incomplete entry.
+ */
+const MIN_PHONE_DIGITS = 7;
+
 interface PhoneEntryProps {
     lang: Lang;
     onLangChange: (lang: Lang) => void;
-    /** Called with the normalized 9–13 digit national number when "Send code" is tapped. */
+    /** Called with the entered national number, stripped to digits only, when "Send code" is tapped. */
     onSend?: (digits: string) => void;
 }
 
@@ -48,7 +55,7 @@ export function PhoneEntry({ lang, onLangChange, onSend }: PhoneEntryProps) {
     const copy = STRINGS[lang];
 
     const digits = phone.replace(/\D/g, "");
-    const sendDisabled = digits.length < 9;
+    const sendDisabled = digits.length < MIN_PHONE_DIGITS;
 
     const subtitleStyle: CSSProperties = {
         margin: "14px 0 0",
