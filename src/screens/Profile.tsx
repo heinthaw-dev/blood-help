@@ -52,6 +52,8 @@ export interface ProfileProps {
     onEditProfile: () => void;
     onRegisterDonor: () => void;
     onLogout: () => void;
+    /** While true, the logout button shows a spinner and is disabled. */
+    loggingOut?: boolean;
     onNavigate: (tab: Tab) => void;
     /** Open the notifications screen (header bell). */
     onOpenNotifications: () => void;
@@ -119,6 +121,7 @@ export function Profile({
     onEditProfile,
     onRegisterDonor,
     onLogout,
+    loggingOut = false,
     onNavigate,
     onOpenNotifications,
 }: ProfileProps) {
@@ -785,12 +788,26 @@ export function Profile({
 
                     {/* Log out */}
                     <Button
-                        tone="danger"
                         fullWidth
                         height={54}
+                        disabled={loggingOut}
                         onClick={onLogout}
                     >
-                        {t.logoutLabel}
+                        {loggingOut ? (
+                            <span
+                                style={{
+                                    display: "inline-block",
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: "50%",
+                                    border: "2.5px solid rgba(255,255,255,0.35)",
+                                    borderTopColor: "#fff",
+                                    animation: "bh-spin 0.8s linear infinite",
+                                }}
+                            />
+                        ) : (
+                            t.logoutLabel
+                        )}
                     </Button>
                 </div>
 

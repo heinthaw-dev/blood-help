@@ -188,6 +188,8 @@ function App() {
     const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
     const [sessionLoading, setSessionLoading] = useState(true);
     const [verifying, setVerifying] = useState(false);
+    /** While true, the logout button shows a spinner and is disabled — set around handleLogout. */
+    const [loggingOut, setLoggingOut] = useState(false);
     const [writeError, setWriteError] = useState<{
         title: string;
         message: string;
@@ -927,34 +929,39 @@ function App() {
     );
 
     const handleLogout = async () => {
-        // Delete FCM device token BEFORE signOut — RLS requires auth.uid() = profile_id
+        setLoggingOut(true);
         try {
-            const uid = user.supabaseId;
-            if (uid) {
-                await supabase.from('device_tokens').delete().eq('profile_id', uid);
-            }
-        } catch { /* best-effort cleanup */ }
+            // Delete FCM device token BEFORE signOut — RLS requires auth.uid() = profile_id
+            try {
+                const uid = user.supabaseId;
+                if (uid) {
+                    await supabase.from('device_tokens').delete().eq('profile_id', uid);
+                }
+            } catch { /* best-effort cleanup */ }
 
-        // Clear Supabase session (async, errors ignored intentionally)
-        void supabase.auth.signOut();
+            // Clear Supabase session (async, errors ignored intentionally)
+            void supabase.auth.signOut();
 
-        // Clear all Supabase-related localStorage keys (sb-* prefix)
-        try {
-            Object.keys(localStorage)
-                .filter(k => k.startsWith('sb-'))
-                .forEach(k => localStorage.removeItem(k));
-        } catch { /* localStorage may be unavailable in private mode */ }
+            // Clear all Supabase-related localStorage keys (sb-* prefix)
+            try {
+                Object.keys(localStorage)
+                    .filter(k => k.startsWith('sb-'))
+                    .forEach(k => localStorage.removeItem(k));
+            } catch { /* localStorage may be unavailable in private mode */ }
 
-        // Clear app-specific localStorage keys
-        localStorage.removeItem("bloodhelp.lastSeenDonationAt");
-        localStorage.removeItem("bloodhelp.seenPhones");
+            // Clear app-specific localStorage keys
+            localStorage.removeItem("bloodhelp.lastSeenDonationAt");
+            localStorage.removeItem("bloodhelp.seenPhones");
 
-        // Clear React state
-        setUser(DEFAULT_USER);
-        setPhone("");
-        clearActiveRequest();
-        setRespondedIds(new Set());
-        setScreen("phone");
+            // Clear React state
+            setUser(DEFAULT_USER);
+            setPhone("");
+            clearActiveRequest();
+            setRespondedIds(new Set());
+            setScreen("phone");
+        } finally {
+            setLoggingOut(false);
+        }
     };
 
     if (screen === "otp") {
@@ -1147,6 +1154,7 @@ function App() {
                     onEditProfile={() => setScreen("donor-setup")}
                     onRegisterDonor={() => setScreen("donor-setup")}
                     onLogout={handleLogout}
+                    loggingOut={loggingOut}
                     onNavigate={handleNavigate}
                     onOpenNotifications={handleOpenNotifications}
                 />
