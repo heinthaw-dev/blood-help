@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9 (last roadmapped) — complete
 Plan: 09-03 complete — all plans done
 Status: v2.0 milestone complete — all phases shipped & verified; iOS PWA onboarding feature in progress (quick tasks)
-Last activity: 2026-09-06 -- Completed quick task 260906-fid: PhoneEntry 'Send code' now enables at 7 digits (was 9), no leading-9 requirement
+Last activity: 2026-09-06 -- Completed quick task 260906-hjj: Profile logout button restyled primary + loading spinner (matches login CTA pattern)
 
 Progress: [██████████] 100%
 
@@ -108,6 +108,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260819-me4 | Fix Android FCM never registering a token — add android-enable-push state, register on session hydrate, prune dead tokens server-side instead of deleting other devices | 2026-08-19 | 48051b7 | [260819-me4-fix-android-fcm-never-registering-a-devi](./quick/260819-me4-fix-android-fcm-never-registering-a-devi/) |
 | 260819-mpc | Record real device platform (ios/android/web) in device_tokens instead of hardcoded 'web' | 2026-08-19 | d9a4666 | [260819-mpc-record-real-device-platform-ios-android-](./quick/260819-mpc-record-real-device-platform-ios-android-/) |
 | 260906-fid | Lower PhoneEntry 'Send code' enable threshold from 9 digits to 7 (Myanmar numbers may be 7 digits and need not start with 9) | 2026-09-06 | 6f5e42d | [260906-fid-lower-phone-entry-send-code-threshold-to-7](./quick/260906-fid-lower-phone-entry-send-code-threshold-to-7/) |
+| 260906-hjj | Profile logout button: primary color + loading spinner while handleLogout runs (matches OTP Verify/login CTA pattern) | 2026-09-06 | c3d6ab4 | [260906-hjj-logout-button-primary-color-with-loading-spinner](./quick/260906-hjj-logout-button-primary-color-with-loading-spinner/) |
 
 ## Deferred Items
 
