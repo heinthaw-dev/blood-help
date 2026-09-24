@@ -733,6 +733,9 @@ function App() {
             {
                 id: uid,
                 name: profile.name,
+                // The form blocks anything under MIN_DONOR_AGE; the DB re-checks it
+                // via profiles_date_of_birth_age_check.
+                date_of_birth: profile.dateOfBirth,
                 phone: normalizePhone(profile.phone),
                 language: lang,
                 updated_at: new Date().toISOString(),

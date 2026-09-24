@@ -3,17 +3,21 @@ import { useState } from "react";
 import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import { BloodTypeSelector } from "../components/BloodTypeSelector";
+import { DateOfBirthPicker } from "../components/DateOfBirthPicker";
 import { Switch } from "../components/Switch";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { LanguageToggle } from "../components/LanguageToggle";
 import { AlertDialog } from "../components/AlertDialog";
 import { getCurrentPosition, coarsenCoordinates } from "../geolocation";
+import { calculateAge, MIN_DONOR_AGE } from "../age";
 import type { BloodType } from "../blood";
 import type { Lang } from "../i18n";
 
 /** The donor profile the user sets up. */
 export interface DonorProfile {
     name: string;
+    /** ISO `YYYY-MM-DD`. The form only submits a date that clears MIN_DONOR_AGE. */
+    dateOfBirth: string;
     bloodType: BloodType;
     phone: string;
     showNumber: boolean;
@@ -43,6 +47,7 @@ export function DonorProfileSetup({
     onSave,
 }: DonorProfileSetupProps) {
     const [name, setName] = useState("");
+    const [dateOfBirth, setDateOfBirth] = useState<string | null>(null);
     const [bloodType, setBloodType] = useState<BloodType | null>(null);
     const [phone, setPhone] = useState(defaultPhone);
     const [showNumber, setShowNumber] = useState(false);
@@ -52,8 +57,15 @@ export function DonorProfileSetup({
     const isMy = lang === "my";
     const bodyFont = isMy ? "var(--font-burmese)" : "var(--font-sans)";
     const lh = isMy ? 1.75 : 1.5;
+    // Age is only known once all three parts of the date are chosen.
+    const age = dateOfBirth ? calculateAge(dateOfBirth) : null;
+    const tooYoung = age !== null && age < MIN_DONOR_AGE;
     const saveDisabled =
-        !name.trim() || !bloodType || phone.replace(/\D/g, "").length === 0;
+        !name.trim() ||
+        !dateOfBirth ||
+        tooYoung ||
+        !bloodType ||
+        phone.replace(/\D/g, "").length === 0;
 
     const strings = {
         my: {
@@ -63,6 +75,10 @@ export function DonorProfileSetup({
             nameLabel: "သင့်အမည်",
             namePlaceholder: "ဥပမာ — မောင်မောင်",
             nameHint: "နာမည်အရင်းကို ရိုက်ထည့်ပေးစေလိုပါသည်။",
+            dobLabel: "မွေးသက္ကရာဇ်",
+            dobHint: "အသက် ၁၈ နှစ်ပြည့်ပြီးသူများသာ သွေးလှူနိုင်ပါသည်။",
+            dobTooYoung:
+                "အသက် ၁၈ နှစ် မပြည့်သေးပါ။ ပြည့်ပြီးမှ သွေးလှူရှင်အဖြစ် စာရင်းသွင်းနိုင်ပါသည်။",
             bloodTypeLabel: "သင့်သွေးအုပ်စု",
             phoneLabel: "ဆက်သွယ်ရန် ဖုန်းနံပါတ်",
             phoneHint:
@@ -92,6 +108,10 @@ export function DonorProfileSetup({
             nameLabel: "Your name",
             namePlaceholder: "e.g. Aung Ko",
             nameHint: "This is what people you help will see.",
+            dobLabel: "Date of birth",
+            dobHint: "You need to be 18 or older to donate blood.",
+            dobTooYoung:
+                "You need to be at least 18 to register as a donor.",
             bloodTypeLabel: "Your blood type",
             phoneLabel: "Contact number",
             phoneHint: "Used to sign you in and send you alerts.",
@@ -116,8 +136,7 @@ export function DonorProfileSetup({
 
     /** Open the pre-permission AlertDialog. Actual GPS request happens after user confirms. */
     const handleSave = () => {
-        if (!bloodType || !name.trim() || phone.replace(/\D/g, "").length === 0)
-            return;
+        if (saveDisabled) return;
         setGeoPhase("prealert");
     };
 
@@ -125,11 +144,12 @@ export function DonorProfileSetup({
     const requestLocationAndSave = async () => {
         setGeoPhase("requesting");
         const res = await getCurrentPosition();
-        if (res.ok && bloodType) {
+        if (res.ok && bloodType && dateOfBirth) {
             setGeoPhase("idle");
             const { lat, lng } = coarsenCoordinates(res.lat, res.lng);
             onSave({
                 name: name.trim(),
+                dateOfBirth,
                 bloodType,
                 phone,
                 showNumber,
@@ -159,6 +179,12 @@ export function DonorProfileSetup({
         fontWeight: 400,
         lineHeight: lh,
         color: "var(--text-hint)",
+    };
+    /** Same hint slot, turned red when the donor is under the age minimum. */
+    const errorHintStyle: CSSProperties = {
+        ...hintStyle,
+        color: "var(--color-primary)",
+        fontWeight: 500,
     };
 
     return (
@@ -209,6 +235,24 @@ export function DonorProfileSetup({
                             />
                         </div>
                         <p style={hintStyle}>{copy.nameHint}</p>
+                    </div>
+
+                    {/* Date of birth */}
+                    <div style={{ marginTop: 24 }}>
+                        <p style={fieldLabelStyle}>{copy.dobLabel}</p>
+                        <div style={{ marginTop: 10 }}>
+                            <DateOfBirthPicker
+                                value={dateOfBirth}
+                                onChange={setDateOfBirth}
+                                lang={lang}
+                            />
+                        </div>
+                        <p
+                            style={tooYoung ? errorHintStyle : hintStyle}
+                            role={tooYoung ? "alert" : undefined}
+                        >
+                            {tooYoung ? copy.dobTooYoung : copy.dobHint}
+                        </p>
                     </div>
 
                     {/* Blood type */}
