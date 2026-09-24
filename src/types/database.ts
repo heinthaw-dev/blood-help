@@ -27,7 +27,10 @@ export type Database = {
           id: string
           lat: number | null
           lng: number | null
+          radius_cap_notified: boolean
+          radius_last_expanded_at: string | null
           requester_id: string
+          search_radius_km: number
           status: Database["public"]["Enums"]["request_status"] | null
           units_collected: number
           units_needed: number
@@ -45,7 +48,10 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          radius_cap_notified?: boolean
+          radius_last_expanded_at?: string | null
           requester_id: string
+          search_radius_km?: number
           status?: Database["public"]["Enums"]["request_status"] | null
           units_collected?: number
           units_needed?: number
@@ -63,7 +69,10 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          radius_cap_notified?: boolean
+          radius_last_expanded_at?: string | null
           requester_id?: string
+          search_radius_km?: number
           status?: Database["public"]["Enums"]["request_status"] | null
           units_collected?: number
           units_needed?: number
@@ -313,6 +322,23 @@ export type Database = {
         Args: { p_donor_code: string; p_request_id: string; p_via: string }
         Returns: Json
       }
+      donors_in_ring: {
+        Args: {
+          p_inner_km: number
+          p_lat: number
+          p_lng: number
+          p_outer_km: number
+        }
+        Returns: {
+          blood_type: Database["public"]["Enums"]["blood_type"]
+          dist_meters: number
+          donation_count: number
+          id: string
+          lat: number
+          lng: number
+          profile_id: string
+        }[]
+      }
       donors_within_radius: {
         Args: { lat: number; lng: number; radius_km: number }
         Returns: {
@@ -335,6 +361,24 @@ export type Database = {
           donation_count: number
           rank: number
           total_donations: number
+        }[]
+      }
+      requests_for_donor: {
+        Args: { p_lat: number; p_lng: number }
+        Returns: {
+          blood_type: Database["public"]["Enums"]["blood_type"]
+          contact_phone: string
+          created_at: string
+          current_address: string
+          dist_meters: number
+          expires_at: string
+          id: string
+          requester_id: string
+          search_radius_km: number
+          status: Database["public"]["Enums"]["request_status"]
+          units_collected: number
+          units_needed: number
+          urgency: Database["public"]["Enums"]["urgency"]
         }[]
       }
       requests_within_radius: {
