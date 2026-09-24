@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9 (last roadmapped) — complete
 Plan: 09-03 complete — all plans done
 Status: v2.0 milestone complete — all phases shipped & verified; iOS PWA onboarding feature in progress (quick tasks)
-Last activity: 2026-09-24 -- Completed quick task 260925-0e1: Date of birth on donor profile setup (3-dropdown picker, 18+ gate) + profiles.date_of_birth
+Last activity: 2026-09-25 -- Completed quick task 260925-31f: Search-radius range rings on RequestLive (reach driven by search_radius_km; D-09 count no longer pinned to 10 km)
 
 Progress: [██████████] 100%
 
@@ -110,6 +110,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260906-fid | Lower PhoneEntry 'Send code' enable threshold from 9 digits to 7 (Myanmar numbers may be 7 digits and need not start with 9) | 2026-09-06 | 6f5e42d | [260906-fid-lower-phone-entry-send-code-threshold-to-7](./quick/260906-fid-lower-phone-entry-send-code-threshold-to-7/) |
 | 260906-hjj | Profile logout button: primary color + loading spinner while handleLogout runs (matches OTP Verify/login CTA pattern) | 2026-09-06 | c3d6ab4 | [260906-hjj-logout-button-primary-color-with-loading-spinner](./quick/260906-hjj-logout-button-primary-color-with-loading-spinner/) |
 | 260925-0e1 | Add date of birth to donor profile setup + profiles.date_of_birth | 2026-09-24 | 1ab8849 | [260925-0e1-add-date-of-birth-to-donor-profile-setup](./quick/260925-0e1-add-date-of-birth-to-donor-profile-setup/) |
+| 260925-31f | Search-radius range rings on RequestLive (real search_radius_km, one-shot ring pulse per widening, no radar sweep); fixes D-09 count pinned to hardcoded 10 km | 2026-09-25 | d610704 | [260925-31f-add-expanding-search-radius-range-rings](./quick/260925-31f-add-expanding-search-radius-range-rings/) |
 
 ## Deferred Items
 
