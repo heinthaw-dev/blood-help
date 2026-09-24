@@ -1043,6 +1043,7 @@ function App() {
                 <RequestLive
                     lang={lang}
                     bloodType={requestDraft?.bloodType}
+                    township={requestDraft?.address}
                     unitsNeeded={requestDraft?.units}
                     unitsCollected={activeRequestUnitsCollected}
                     requestId={activeRequestId}

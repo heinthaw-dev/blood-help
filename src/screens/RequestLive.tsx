@@ -146,6 +146,8 @@ const RADIUS_POLL_MS = 30_000;
 export interface RequestLiveProps {
     lang: Lang;
     bloodType?: string;
+    /** The address the requester typed on CreateRequest (blood_requests.current_address).
+     *  Undefined/blank hides the location row — never substitute a placeholder location. */
     township?: string;
     alerting?: boolean;
     alertedCount?: number;
@@ -191,7 +193,7 @@ export interface RequestLiveProps {
 export function RequestLive({
     lang,
     bloodType = "B+",
-    township = "ရန်ကုန် ဆေးရုံကြီး",
+    township,
     alerting = false,
     alertedCount = 0,
     unitsNeeded = 2,
@@ -604,6 +606,9 @@ export function RequestLive({
 
     const confirmReady = code.trim().length === 5;
     const alertingDone = !alerting;
+    // Blank or whitespace-only address renders nothing: an emergency screen must not
+    // show a location the requester never entered.
+    const locationLabel = township?.trim();
     const showProgress = unitsNeeded > 1;
 
     // De-duplicate callable donors against Will-Help responders:
@@ -706,33 +711,44 @@ export function RequestLive({
                         }}
                     >
                         <Badge size="lg">{bloodType}</Badge>
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 5,
-                                fontSize: 14,
-                                color: "var(--text-secondary)",
-                            }}
-                        >
-                            <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="var(--text-hint)"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                style={{ display: "block", flexShrink: 0 }}
+                        {locationLabel && (
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 5,
+                                    fontSize: 14,
+                                    color: "var(--text-secondary)",
+                                    minWidth: 0,
+                                }}
                             >
-                                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
-                                <circle cx="12" cy="10" r="3" />
-                            </svg>
-                            <span style={{ fontFamily: "var(--font-burmese)" }}>
-                                {township}
-                            </span>
-                        </div>
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="var(--text-hint)"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    style={{ display: "block", flexShrink: 0 }}
+                                >
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
+                                    <circle cx="12" cy="10" r="3" />
+                                </svg>
+                                <span
+                                    style={{
+                                        fontFamily: "var(--font-burmese)",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                    title={locationLabel}
+                                >
+                                    {locationLabel}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
