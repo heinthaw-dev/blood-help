@@ -403,7 +403,17 @@ export function RequestLive({
                 .select("search_radius_km")
                 .eq("id", requestId as string)
                 .maybeSingle();
-            if (error || cancelled || !data) return;
+            // Same reasoning as the D-09 count below: a failed read leaves the rings
+            // sitting at 10 km with nothing on screen to say the reach is stale.
+            if (error) {
+                console.error(
+                    "[search_radius_km] read error:",
+                    error.code,
+                    error.message,
+                );
+                return;
+            }
+            if (cancelled || !data) return;
             setSearchRadiusKm(data.search_radius_km ?? RADIUS_START_KM);
         }
 
@@ -426,7 +436,7 @@ export function RequestLive({
         let cancelled = false;
 
         async function fetchCompatibleCount() {
-            const { data } = await supabase.rpc("donors_within_radius", {
+            const { data, error } = await supabase.rpc("donors_within_radius", {
                 lat: lat as number,
                 lng: lng as number,
                 // The request's own reach, not a constant — a widened request covers
@@ -434,6 +444,18 @@ export function RequestLive({
                 // it for the rest of the session.
                 radius_km: searchRadiusKm,
             });
+            // console.error, not a DEV-gated log: this number and the rings are what a
+            // waiting requester reads as "help is coming". A failure here shows an
+            // understated count with no other symptom, and vite.config.ts strips
+            // console.log/debug/info from the production bundle.
+            if (error) {
+                console.error(
+                    "[donors_within_radius] RPC error:",
+                    error.code,
+                    error.message,
+                );
+                return;
+            }
             if (cancelled || !data) return;
             const count = data.filter((d) =>
                 COMPATIBLE_REQUEST_TYPES[d.blood_type as BloodType]?.includes(
