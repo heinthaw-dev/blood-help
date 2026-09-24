@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9 (last roadmapped) — complete
 Plan: 09-03 complete — all plans done
 Status: v2.0 milestone complete — all phases shipped & verified; iOS PWA onboarding feature in progress (quick tasks)
-Last activity: 2026-09-25 -- SearchRadiusRings enlarged to 100x100 with a continuous reach ping (stops on first response and under reduced motion); follows the live end-to-end pass of the radius expansion
+Last activity: 2026-09-25 -- SearchRadiusRings now plots each found donor as a dot on their band, angle hashed from the donor id; completes the radius-UI work
 
 Progress: [██████████] 100%
 
@@ -95,6 +95,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260925-6qa | Fix donors_within_radius and requests_within_radius ignoring their radius (lat/lng params captured by the queried table's own columns) | 2026-09-25 | 773eaab | [260925-6qa-fix-radius-param-shadowing](./quick/260925-6qa-fix-radius-param-shadowing/) |
 | fast | expand_request_radius: truncate radius_last_expanded_at to the minute so cron jitter cannot delay a widening by a full tick | 2026-09-25 | 0cf4738 | — (gsd:fast, no task dir) |
 | fast | SearchRadiusRings: 100x100, wider ring spacing, continuous outward ping whose travel distance is the current reach | 2026-09-25 | d29d8b1 | — (gsd:fast, no task dir) |
+| fast | SearchRadiusRings: one dot per found donor on the band that reached them, angle hashed from the donor id (stable, carries no bearing) | 2026-09-25 | 234802e | — (gsd:fast, no task dir) |
 | 260626-r5y | Redesign donor FCM alert modal to "Incoming Request Alert" (centered two-state modal, gated phone reveal) | 2026-06-26 | beb448b | [260626-r5y-redesign-donor-fcm-alert-modal-to-incomi](./quick/260626-r5y-redesign-donor-fcm-alert-modal-to-incomi/) |
 | 260627-0lt | Extract shared ScreenHeader + LanguageToggle; route all 9 screens (behavior-preserving; resolves ui-consistency-report §1, §6) | 2026-06-27 | a49379a | [260627-0lt-extract-shared-screenheader-and-language](./quick/260627-0lt-extract-shared-screenheader-and-language/) |
 | 260627-7gx | Add Notifications screen + shared header bell on Home/Leaderboard/Profile | 2026-06-27 | 3d14dc1 | [260627-7gx-add-notifications-screen-and-shared-head](./quick/260627-7gx-add-notifications-screen-and-shared-head/) |
