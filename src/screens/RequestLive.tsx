@@ -5,6 +5,7 @@ import { CallButton } from "../components/CallButton";
 import { Card } from "../components/Card";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { SearchRadiusRings } from "../components/SearchRadiusRings";
+import type { ReachedDonor } from "../components/SearchRadiusRings";
 import { AlertDialog } from "../components/AlertDialog";
 import type { Lang } from "../i18n";
 import { formatNumber } from "../i18n";
@@ -150,7 +151,6 @@ export interface RequestLiveProps {
      *  Undefined/blank hides the location row — never substitute a placeholder location. */
     township?: string;
     alerting?: boolean;
-    alertedCount?: number;
     unitsNeeded?: number;
     unitsCollected?: number;
     /** UUID of the active blood_requests row — used for RPC fetch + realtime subscription. */
@@ -195,7 +195,6 @@ export function RequestLive({
     bloodType = "B+",
     township,
     alerting = false,
-    alertedCount = 0,
     unitsNeeded = 2,
     unitsCollected: initCollected = 0,
     requestId,
@@ -238,9 +237,11 @@ export function RequestLive({
     const [callableDonors, setCallableDonors] = useState<CallableDonorRow[]>(
         [],
     );
-    /** Truthful count of compatible donors within radius who can see the request (D-09). */
-    const [compatibleCount, setCompatibleCount] =
-        useState<number>(alertedCount);
+    /** Compatible donors within the current reach who can see the request (D-09).
+     *  Held as a list rather than a bare count so the rings can place one dot each;
+     *  the count the copy reports is this list's length, so the two cannot disagree. */
+    const [compatibleDonors, setCompatibleDonors] = useState<ReachedDonor[]>([]);
+    const compatibleCount = compatibleDonors.length;
     /** Current reach of the request in km — drives both the rings and the count above. */
     const [searchRadiusKm, setSearchRadiusKm] =
         useState<number>(RADIUS_START_KM);
@@ -459,12 +460,21 @@ export function RequestLive({
                 return;
             }
             if (cancelled || !data) return;
-            const count = data.filter((d) =>
-                COMPATIBLE_REQUEST_TYPES[d.blood_type as BloodType]?.includes(
-                    bloodType as BloodType,
-                ),
-            ).length;
-            setCompatibleCount(count);
+            // Only the id and the distance cross into the UI. donors_within_radius also
+            // returns each donor's lat/lng, which the rings must never see — they plot
+            // how far somebody is, never where.
+            setCompatibleDonors(
+                data
+                    .filter((d) =>
+                        COMPATIBLE_REQUEST_TYPES[
+                            d.blood_type as BloodType
+                        ]?.includes(bloodType as BloodType),
+                    )
+                    .map((d) => ({
+                        id: d.id as string,
+                        distanceKm: (d.dist_meters as number) / 1000,
+                    })),
+            );
         }
 
         void fetchCompatibleCount();
@@ -897,7 +907,7 @@ export function RequestLive({
                             <SearchRadiusRings
                                 lang={lang}
                                 radiusKm={searchRadiusKm}
-                                donorCount={compatibleCount}
+                                donors={compatibleDonors}
                                 // Same rule the widening job follows: once somebody has
                                 // answered, the search is no longer going outward.
                                 searching={responders.length === 0}

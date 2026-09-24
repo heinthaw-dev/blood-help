@@ -70,12 +70,59 @@ const REACH_SUBLINES: Record<
   },
 }
 
+/** Radius of a donor dot, in SVG user units. Deliberately smaller than R_DOT: the
+ *  centre is the request, the small marks are people who can answer it. */
+const R_DONOR_DOT = 2.5
+
+/** A compatible donor the current reach covers.
+ *
+ *  Distance and an opaque id, never coordinates. The rings plot how FAR somebody is,
+ *  never which way — see the angle note on angleForDonor. */
+export interface ReachedDonor {
+  /** donors.id — used only to pick a stable angle, never displayed. */
+  id: string
+  distanceKm: number
+}
+
+/**
+ * A stable angle in [0, 2π) for a donor dot.
+ *
+ * Stable, because Math.random() would re-roll on every render and the dots would
+ * twitch around the graphic once a second. Hashing the id pins each donor to one
+ * spot for as long as the screen is open.
+ *
+ * Pseudo-random, because the angle must carry no information. A donor's real bearing
+ * is never sent to this component and must never be inferable from it: the dot says
+ * "somebody is about this far away", and the direction is meaningless by construction.
+ *
+ * FNV-1a — small, dependency-free, and well spread for short string keys like a UUID.
+ */
+function angleForDonor(id: string): number {
+  let h = 2166136261
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return ((h >>> 0) / 4294967296) * Math.PI * 2
+}
+
+/** The ring a donor sits on: the first radius step that reaches them. A donor at 13 km
+ *  is drawn on the 15 km ring, which is the band the widening job would have alerted
+ *  them in. Snapping to the band rather than interpolating the true distance is also
+ *  the more private of the two — the graphic states a band, not a measurement. */
+function bandIndexFor(distanceKm: number): number {
+  const i = RADIUS_STEPS.findIndex((km) => km >= distanceKm)
+  return i === -1 ? RADIUS_STEPS.length - 1 : i
+}
+
 export interface SearchRadiusRingsProps {
   lang: Lang
   /** Current reach of the request in km, from blood_requests.search_radius_km. */
   radiusKm: number
-  /** Compatible donors the current radius covers — the same truthful count as the D-09 line. */
-  donorCount: number
+  /** Compatible donors the current radius covers — the same set the D-09 count reports.
+   *  One dot is drawn per entry; the count in the subline is this array's length, so the
+   *  picture and the sentence cannot disagree. */
+  donors: ReachedDonor[]
   /** Whether the request is still looking. False once somebody has answered: a wave
    *  still going out while a donor is on their way says the wrong thing. Defaults to
    *  true so a caller that does not track responders still animates. */
@@ -112,7 +159,7 @@ export interface SearchRadiusRingsProps {
  * Privacy: rings and a centre dot only. No donor markers, no coordinates, nothing
  * derived from a donor's position.
  */
-export function SearchRadiusRings({ lang, radiusKm, donorCount, searching = true }: SearchRadiusRingsProps) {
+export function SearchRadiusRings({ lang, radiusKm, donors, searching = true }: SearchRadiusRingsProps) {
   const activeIndex = RADIUS_STEPS.findIndex((km) => km >= radiusKm)
   // A radius past the last step (shouldn't happen — the DB caps at 30) still fills every ring.
   const reachedIndex = activeIndex === -1 ? RADIUS_STEPS.length - 1 : activeIndex
@@ -121,11 +168,11 @@ export function SearchRadiusRings({ lang, radiusKm, donorCount, searching = true
   const reachStatus: ReachStatus = atCap ? 'capped' : widened ? 'widened' : 'initial'
 
   const radiusDisplay = formatNumber(radiusKm, lang)
-  const countDisplay = formatNumber(donorCount, lang)
+  const countDisplay = formatNumber(donors.length, lang)
 
   const headline = REACH_HEADLINES[reachStatus][lang](radiusDisplay)
 
-  const subline = REACH_SUBLINES[donorCount > 0 ? 'some' : 'none'][lang](
+  const subline = REACH_SUBLINES[donors.length > 0 ? 'some' : 'none'][lang](
     radiusDisplay,
     countDisplay,
   )
@@ -197,6 +244,26 @@ export function SearchRadiusRings({ lang, radiusKm, donorCount, searching = true
             />
           )
         })}
+        {/* One dot per compatible donor the reach has found, sitting on the ring for
+            the band they fall in. The angle is a hash of the donor's id: stable so the
+            dot stays put across renders, and meaningless so the picture never implies
+            a direction. Drawn after the rings so a dot is never hidden under one, and
+            keyed on the id so bh-ring-grow plays once, as the donor is found. */}
+        {donors.map((d) => {
+          const a = angleForDonor(d.id)
+          const r = ringRadius(bandIndexFor(d.distanceKm))
+          return (
+            <circle
+              key={`donor-${d.id}`}
+              className="bh-ring-grow"
+              cx={CENTER + r * Math.cos(a)}
+              cy={CENTER + r * Math.sin(a)}
+              r={R_DONOR_DOT}
+              fill="var(--color-primary)"
+            />
+          )
+        })}
+
         {/* The request itself. Static — the ping and the rings carry the motion, not this. */}
         <circle cx={CENTER} cy={CENTER} r={R_DOT} fill="var(--color-primary)" />
       </svg>
