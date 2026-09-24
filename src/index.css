@@ -199,8 +199,36 @@
 .bh-fade       { animation: bh-fade 180ms ease; }
 .bh-toast-anim { animation: bh-toast-up 220ms ease; }
 .bh-scroll::-webkit-scrollbar { width: 0; height: 0; }
+/* ----------------------------------------------------------------------------
+   Search-reach ping — the wave that says the request is still travelling.
+   A circle is born at the requester dot and expands to the ring for the request's
+   CURRENT reach, dissolving as it arrives. The distance it covers is therefore
+   search_radius_km itself: at 10 km the wave dies close in, at 30 km it crosses
+   the whole graphic. The motion encodes the state rather than decorating it.
+   3s, slower than bh-ring-pulse's 2.2s, because this runs for the half hour a
+   request stays open rather than for the few seconds a modal is up.
+   Only transform and opacity animate, so the browser composites and never
+   relayouts or repaints across those thirty minutes.
+   ---------------------------------------------------------------------------- */
+@keyframes bh-reach-ping {
+  0%   { transform: scale(0.08); opacity: 0; }
+  14%  { opacity: 0.30; }
+  100% { transform: scale(1);    opacity: 0; }
+}
+.bh-reach-ping {
+  transform-box: view-box;
+  transform-origin: 60px 60px;
+  animation: bh-reach-ping 3s cubic-bezier(.22, .8, .3, 1) infinite;
+}
+/* Half a cycle behind the first, so a wave is always in flight without two ever
+   crowding the same band. */
+.bh-reach-ping--trailing { animation-delay: 1.5s; }
+
 @media (prefers-reduced-motion: reduce) {
   .bh-pulse-dot, .bh-spinner, .bh-sheet-up, .bh-fade, .bh-toast-anim, .bh-ring-grow { animation: none !important; }
+  /* The rings still state the reach on their own, so removing the wave costs
+     nothing but the motion. */
+  .bh-reach-ping { animation: none !important; opacity: 0 !important; }
 }
 
 /* ============================================================================

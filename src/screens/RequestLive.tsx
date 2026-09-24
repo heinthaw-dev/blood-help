@@ -898,6 +898,9 @@ export function RequestLive({
                                 lang={lang}
                                 radiusKm={searchRadiusKm}
                                 donorCount={compatibleCount}
+                                // Same rule the widening job follows: once somebody has
+                                // answered, the search is no longer going outward.
+                                searching={responders.length === 0}
                             />
                             <div
                                 style={{

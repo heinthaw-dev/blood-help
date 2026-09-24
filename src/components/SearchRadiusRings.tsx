@@ -8,10 +8,18 @@ import { formatNumber } from '../i18n'
 const RADIUS_STEPS = [10, 15, 20, 25, 30] as const
 
 /** Smallest and largest ring radii in SVG user units. The viewBox is 120×120 with the
- *  request at its centre, so 58 leaves a 2-unit margin for the outer ring's stroke. */
-const R_INNER = 18
-const R_OUTER = 58
+ *  request at its centre, so 56 leaves room for the outer ring's stroke.
+ *  R_INNER is pulled well inside the first ring rather than sitting just outside the
+ *  dot: it widens the gap between every pair of rings, and it gives the reach ping a
+ *  visible distance to travel before it meets the innermost ring. */
+const R_INNER = 14
+const R_OUTER = 56
 const CENTER = 60
+/** The request itself. Small on purpose — it marks a point, it is not a third ring. */
+const R_DOT = 4
+/** Rendered size in CSS pixels. The viewBox stays 120 so every radius above is
+ *  resolution-independent; only this number changes to resize the graphic. */
+const RENDER_PX = 100
 
 /** SVG radius for the ring at RADIUS_STEPS[i] — evenly spaced, not to scale.
  *  Real-distance scaling would crowd the inner rings together and read as noise;
@@ -68,25 +76,43 @@ export interface SearchRadiusRingsProps {
   radiusKm: number
   /** Compatible donors the current radius covers — the same truthful count as the D-09 line. */
   donorCount: number
+  /** Whether the request is still looking. False once somebody has answered: a wave
+   *  still going out while a donor is on their way says the wrong thing. Defaults to
+   *  true so a caller that does not track responders still animates. */
+  searching?: boolean
 }
 
 /**
  * SearchRadiusRings — the requester's picture of how far their request has travelled.
  *
  * Every ring is a real radius step, so the graphic states the request's reach rather
- * than implying activity. It is deliberately NOT a radar sweep: a sweep would suggest
- * the app is scanning people's positions (it never shows donor locations) and would
- * animate forever on a screen that stays open for half an hour, which the design
- * system's emergency-calm rule rules out.
+ * than implying activity. It is deliberately NOT a radar sweep: a sweep has a bearing,
+ * which would suggest the app is scanning people's positions — it never shows donor
+ * locations, and it must not imply that it does.
  *
- * Motion happens once per real widening. The caller keys the newest ring on radiusKm,
- * so React remounts it and the bh-ring-grow keyframe replays exactly once — no
- * interval, no infinite animation, nothing running while the reach is unchanged.
+ * Two kinds of motion, for two different facts:
+ *
+ *   The ping (continuous) says the request is still travelling outward. It expands
+ *   from the dot to the ring for the CURRENT reach, so the distance it covers is
+ *   search_radius_km itself — at 10 km the wave dies close in, at 30 km it crosses the
+ *   whole graphic. It keeps going at the cap, because the request is still live and
+ *   donors can still answer; a still graphic on an open request reads as "gave up".
+ *   It stops when somebody has answered, and under prefers-reduced-motion.
+ *
+ *   The grow (once per widening) says the reach just got bigger. The caller keys the
+ *   newest ring on radiusKm, so React remounts it and bh-ring-grow replays exactly
+ *   once.
+ *
+ * An earlier cut had no continuous motion at all, on the grounds that infinite
+ * animation is not emergency-calm. That held while the radius was a constant and
+ * the graphic genuinely had nothing to report between widenings. Now that the radius
+ * really moves, three silent minutes between steps read as frozen rather than calm,
+ * so the ping carries "still searching" and the slow 3s cadence carries the calm.
  *
  * Privacy: rings and a centre dot only. No donor markers, no coordinates, nothing
  * derived from a donor's position.
  */
-export function SearchRadiusRings({ lang, radiusKm, donorCount }: SearchRadiusRingsProps) {
+export function SearchRadiusRings({ lang, radiusKm, donorCount, searching = true }: SearchRadiusRingsProps) {
   const activeIndex = RADIUS_STEPS.findIndex((km) => km >= radiusKm)
   // A radius past the last step (shouldn't happen — the DB caps at 30) still fills every ring.
   const reachedIndex = activeIndex === -1 ? RADIUS_STEPS.length - 1 : activeIndex
@@ -115,8 +141,8 @@ export function SearchRadiusRings({ lang, radiusKm, donorCount }: SearchRadiusRi
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
       <svg
-        width="72"
-        height="72"
+        width={RENDER_PX}
+        height={RENDER_PX}
         viewBox="0 0 120 120"
         role="img"
         aria-label={`${headline}. ${subline}.`}
@@ -129,6 +155,30 @@ export function SearchRadiusRings({ lang, radiusKm, donorCount }: SearchRadiusRi
           r={ringRadius(reachedIndex)}
           fill="rgba(209, 62, 47, 0.05)"
         />
+
+        {/* Reach ping — see the note above the component. Each wave is a circle the
+            size of the current reach, scaled up from the dot and faded out by CSS, so
+            the animation's travel distance is the request's actual reach.
+            Keyed on radiusKm: a widening changes r, and remounting restarts the wave
+            cleanly instead of letting an in-flight one jump to the new size.
+            vector-effect keeps the stroke one width throughout — a wave that thickened
+            as it faded would be telling two stories at once. */}
+        {searching &&
+          [0, 1].map((i) => (
+            <circle
+              key={`ping-${i}-${radiusKm}`}
+              className={
+                i === 0 ? 'bh-reach-ping' : 'bh-reach-ping bh-reach-ping--trailing'
+              }
+              cx={CENTER}
+              cy={CENTER}
+              r={ringRadius(reachedIndex)}
+              fill="none"
+              stroke="var(--color-primary)"
+              strokeWidth={2}
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
         {RADIUS_STEPS.map((_step, i) => {
           const reached = i <= reachedIndex
           const isNewest = i === reachedIndex
@@ -147,8 +197,8 @@ export function SearchRadiusRings({ lang, radiusKm, donorCount }: SearchRadiusRi
             />
           )
         })}
-        {/* The request itself. Static — the rings carry the change, not this. */}
-        <circle cx={CENTER} cy={CENTER} r={5} fill="var(--color-primary)" />
+        {/* The request itself. Static — the ping and the rings carry the motion, not this. */}
+        <circle cx={CENTER} cy={CENTER} r={R_DOT} fill="var(--color-primary)" />
       </svg>
 
       <div style={{ minWidth: 0 }}>
