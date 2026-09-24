@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9 (last roadmapped) — complete
 Plan: 09-03 complete — all plans done
 Status: v2.0 milestone complete — all phases shipped & verified; iOS PWA onboarding feature in progress (quick tasks)
-Last activity: 2026-09-25 -- Completed quick task 260925-535: RequestLive shows the requester's own address (was a hardcoded placeholder); location row hidden when blank
+Last activity: 2026-09-25 -- Completed quick task 260925-5gb: search radius now actually widens (5 km every 3 min to a 30 km cap) via pg_cron; ring alerts delivered by the new expand-radius worker with retry
 
 Progress: [██████████] 100%
 
@@ -89,6 +89,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260625-vps | Add vercel.json — SPA fallback, service-worker no-cache, security headers (Part C of Vercel/FCM deploy) | 2026-06-25 | a8090ba | [260625-vps-add-vercel-json-spa-rewrites-service-wor](./quick/260625-vps-add-vercel-json-spa-rewrites-service-wor/) |
 | 260626-igc | Rebuild Leaderboard screen v2 with real Supabase data (leaderboard_top_donors SECURITY DEFINER RPC) | 2026-06-26 | 84be1d3 | [260626-igc-rebuild-leaderboard-screen-v2-with-real-](./quick/260626-igc-rebuild-leaderboard-screen-v2-with-real-/) |
 | 260925-535 | Show requester's own address on RequestLive instead of hardcoded placeholder | 2026-09-25 | 208c0f6 | [260925-535-show-requester-s-own-address-on-requestl](./quick/260925-535-show-requester-s-own-address-on-requestl/) |
+| 260925-5gb | Build the missing auto-expanding search radius job — pg_cron tick, SQL state machine, durable ring queue, expand-radius delivery worker | 2026-09-25 | 9ffddb8 | [260925-5gb-auto-expanding-search-radius-job](./quick/260925-5gb-auto-expanding-search-radius-job/) |
 | 260626-r5y | Redesign donor FCM alert modal to "Incoming Request Alert" (centered two-state modal, gated phone reveal) | 2026-06-26 | beb448b | [260626-r5y-redesign-donor-fcm-alert-modal-to-incomi](./quick/260626-r5y-redesign-donor-fcm-alert-modal-to-incomi/) |
 | 260627-0lt | Extract shared ScreenHeader + LanguageToggle; route all 9 screens (behavior-preserving; resolves ui-consistency-report §1, §6) | 2026-06-27 | a49379a | [260627-0lt-extract-shared-screenheader-and-language](./quick/260627-0lt-extract-shared-screenheader-and-language/) |
 | 260627-7gx | Add Notifications screen + shared header bell on Home/Leaderboard/Profile | 2026-06-27 | 3d14dc1 | [260627-7gx-add-notifications-screen-and-shared-head](./quick/260627-7gx-add-notifications-screen-and-shared-head/) |
