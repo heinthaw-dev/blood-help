@@ -352,9 +352,9 @@ export function Home({
             const { data, error } = await supabase.rpc(
                 "requests_within_radius",
                 {
-                    lat: donorLat as number,
-                    lng: donorLng as number,
-                    radius_km: DISPLAY_RADIUS_KM,
+                    p_lat: donorLat as number,
+                    p_lng: donorLng as number,
+                    p_radius_km: DISPLAY_RADIUS_KM,
                 },
             );
             if (error || !data || cancelled) return;

@@ -93,9 +93,9 @@ serve(async (req) => {
 
     // donors_within_radius already filters is_available=true; returns profile_id + blood_type
     const { data: nearbyDonors } = await supabase.rpc('donors_within_radius', {
-      lat,
-      lng,
-      radius_km: 10,
+      p_lat: lat,
+      p_lng: lng,
+      p_radius_km: 10,
     })
     console.log('[notify-donors] nearby donors:', nearbyDonors?.length ?? 0)
 

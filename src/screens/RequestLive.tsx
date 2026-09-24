@@ -439,12 +439,12 @@ export function RequestLive({
 
         async function fetchCompatibleCount() {
             const { data, error } = await supabase.rpc("donors_within_radius", {
-                lat: lat as number,
-                lng: lng as number,
+                p_lat: lat as number,
+                p_lng: lng as number,
                 // The request's own reach, not a constant — a widened request covers
                 // more donors, and a count frozen at the 10 km figure would understate
                 // it for the rest of the session.
-                radius_km: searchRadiusKm,
+                p_radius_km: searchRadiusKm,
             });
             // console.error, not a DEV-gated log: this number and the rings are what a
             // waiting requester reads as "help is coming". A failure here shows an

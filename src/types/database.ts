@@ -340,7 +340,7 @@ export type Database = {
         }[]
       }
       donors_within_radius: {
-        Args: { lat: number; lng: number; radius_km: number }
+        Args: { p_lat: number; p_lng: number; p_radius_km: number }
         Returns: {
           blood_type: Database["public"]["Enums"]["blood_type"]
           dist_meters: number
@@ -382,7 +382,7 @@ export type Database = {
         }[]
       }
       requests_within_radius: {
-        Args: { lat: number; lng: number; radius_km: number }
+        Args: { p_lat: number; p_lng: number; p_radius_km: number }
         Returns: {
           blood_type: Database["public"]["Enums"]["blood_type"]
           contact_phone: string
