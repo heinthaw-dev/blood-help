@@ -5,18 +5,7 @@ import { getMessaging } from 'npm:firebase-admin/messaging'
 import { getCorsHeaders } from '../_shared/cors.ts'
 import { isValidUuid, isValidBloodType, isValidUrgency, sanitizeLength } from '../_shared/validate.ts'
 import { pruneDeadTokens } from '../_shared/prune.ts'
-
-/** Which donor blood types can donate TO a given requester blood type (inverse of COMPATIBLE_REQUEST_TYPES). */
-const COMPATIBLE_DONOR_TYPES: Record<string, string[]> = {
-  'O-':  ['O-'],
-  'O+':  ['O-', 'O+'],
-  'A-':  ['O-', 'A-'],
-  'A+':  ['O-', 'O+', 'A-', 'A+'],
-  'B-':  ['O-', 'B-'],
-  'B+':  ['O-', 'O+', 'B-', 'B+'],
-  'AB-': ['O-', 'A-', 'B-', 'AB-'],
-  'AB+': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'],
-}
+import { COMPATIBLE_DONOR_TYPES } from '../_shared/compatibility.ts'
 
 serve(async (req) => {
   const CORS_HEADERS = getCorsHeaders(req.headers.get('Origin'))
