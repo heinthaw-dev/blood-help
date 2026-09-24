@@ -41,6 +41,27 @@ const REACH_HEADLINES: Record<ReachStatus, Record<Lang, (radiusDisplay: string) 
   },
 }
 
+/** Whether the current reach has turned anybody up. */
+type DonorPresence = 'some' | 'none'
+
+/** Localized subline per presence, keyed like REACH_HEADLINES above.
+ *  An empty reach gets direction, not a dead end: "ရှာမတွေ့သေးပါ" carries "not yet",
+ *  which is the truth — the radius is still widening. The line it replaces,
+ *  "reaching 0 donors", read as a final answer. */
+const REACH_SUBLINES: Record<
+  DonorPresence,
+  Record<Lang, (radiusDisplay: string, countDisplay: string) => string>
+> = {
+  some: {
+    my: (_km, count) => `သွေးလှူနိုင်သူ ${count} ဦးထံ ရောက်ရှိပြီး`,
+    en: (_km, count) => `Reaching ${count} compatible donors`,
+  },
+  none: {
+    my: (km) => `${km} km အတွင်း သွေးလှူနိုင်သူ ရှာမတွေ့သေးပါ`,
+    en: (km) => `No compatible donors found within ${km} km yet`,
+  },
+}
+
 export interface SearchRadiusRingsProps {
   lang: Lang
   /** Current reach of the request in km, from blood_requests.search_radius_km. */
@@ -78,10 +99,10 @@ export function SearchRadiusRings({ lang, radiusKm, donorCount }: SearchRadiusRi
 
   const headline = REACH_HEADLINES[reachStatus][lang](radiusDisplay)
 
-  const subline =
-    lang === 'my'
-      ? `သွေးလှူနိုင်သူ ${countDisplay} ဦးထံ ရောက်ရှိပြီး`
-      : `Reaching ${countDisplay} compatible donors`
+  const subline = REACH_SUBLINES[donorCount > 0 ? 'some' : 'none'][lang](
+    radiusDisplay,
+    countDisplay,
+  )
 
   const labelStyle: CSSProperties = {
     fontFamily: 'var(--font-burmese)',
