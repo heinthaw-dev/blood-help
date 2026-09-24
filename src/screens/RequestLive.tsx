@@ -617,13 +617,25 @@ export function RequestLive({
         (d) => !responders.find((r) => r.donor_id === d.donor_id),
     );
 
-    // D-09: truthful transparency line — "[X] nearby compatible donors can see your request"
-    // Never claims donors were "alerted" (no push this phase).
+    // D-09: truthful transparency line — "[X] nearby compatible donors can see your
+    // request". Says who can see it, never that anyone was "alerted".
+    //
+    // Two sentences, not one, because only the first depends on the count. At zero it
+    // is dropped rather than rendered with a zero in it: "sent to 0 donors" reads as a
+    // dead end on a screen someone is waiting at, and the rings above already say the
+    // search is still widening. What remains is true either way — what happens when
+    // somebody does answer.
     const countDisplay = formatNumber(compatibleCount, lang);
-    const transparencyLine =
+    const reachSentence =
         lang === "my"
-            ? `အနီးနားရှိ သွေးလှူနိုင်သူ ${countDisplay} ဦးထံ သင့်တောင်းခံချက်ကို ပေးပို့ပြီးပါပြီ။ အကူအညီပေးမည့်သူများက သွေးလှုရှင် နေရာတွင် ဖုန်းခေါ်ရန်ခလုတ်နှင့်အတူ ပေါ်လာပါမည်။`
-            : `${countDisplay} nearby compatible donors can see your request. Anyone who taps "I'll help" will appear here with a call button.`;
+            ? `အနီးနားရှိ သွေးလှူနိုင်သူ ${countDisplay} ဦးထံ သင့်တောင်းခံချက်ကို ပေးပို့ပြီးပါပြီ။ `
+            : `${countDisplay} nearby compatible donors can see your request. `;
+    const callbackSentence =
+        lang === "my"
+            ? `အကူအညီပေးမည့်သူများက သွေးလှုရှင် နေရာတွင် ဖုန်းခေါ်ရန်ခလုတ်နှင့်အတူ ပေါ်လာပါမည်။`
+            : `Anyone who taps "I'll help" will appear here with a call button.`;
+    const transparencyLine =
+        compatibleCount > 0 ? reachSentence + callbackSentence : callbackSentence;
 
     // D-03: honest closed copy — drops the false "personal data purged" claims.
     // D-01: outside → fulfilled semantics (user got blood, regardless of app path).
