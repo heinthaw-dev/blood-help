@@ -21,6 +21,26 @@ function ringRadius(i: number): number {
   return R_INNER + i * step
 }
 
+/** The three states the headline describes, in the order a request moves through them. */
+type ReachStatus = 'initial' | 'widened' | 'capped'
+
+/** Localized headline per reach status, keyed the same way as the app's other
+ *  Record<Lang, ...> copy tables. Module-level so the lookup isn't rebuilt every render. */
+const REACH_HEADLINES: Record<ReachStatus, Record<Lang, (radiusDisplay: string) => string>> = {
+  initial: {
+    my: (km) => `${km} km အတွင်း ရှာနေပါသည်`,
+    en: (km) => `Searching within ${km} km`,
+  },
+  widened: {
+    my: (km) => `${km} km အထိ တိုးရှာနေပါသည်`,
+    en: (km) => `Widened the search to ${km} km`,
+  },
+  capped: {
+    my: (km) => `အများဆုံး ${km} km အထိ ရှာပြီးပါပြီ`,
+    en: (km) => `Searched the full ${km} km`,
+  },
+}
+
 export interface SearchRadiusRingsProps {
   lang: Lang
   /** Current reach of the request in km, from blood_requests.search_radius_km. */
@@ -51,21 +71,12 @@ export function SearchRadiusRings({ lang, radiusKm, donorCount }: SearchRadiusRi
   const reachedIndex = activeIndex === -1 ? RADIUS_STEPS.length - 1 : activeIndex
   const atCap = radiusKm >= RADIUS_STEPS[RADIUS_STEPS.length - 1]
   const widened = radiusKm > RADIUS_STEPS[0]
+  const reachStatus: ReachStatus = atCap ? 'capped' : widened ? 'widened' : 'initial'
 
   const radiusDisplay = formatNumber(radiusKm, lang)
   const countDisplay = formatNumber(donorCount, lang)
 
-  const headline = atCap
-    ? lang === 'my'
-      ? `အများဆုံး ${radiusDisplay} km အထိ ရှာပြီးပါပြီ`
-      : `Searched the full ${radiusDisplay} km`
-    : widened
-      ? lang === 'my'
-        ? `${radiusDisplay} km အထိ တိုးရှာနေပါသည်`
-        : `Widened the search to ${radiusDisplay} km`
-      : lang === 'my'
-        ? `${radiusDisplay} km အတွင်း ရှာနေပါသည်`
-        : `Searching within ${radiusDisplay} km`
+  const headline = REACH_HEADLINES[reachStatus][lang](radiusDisplay)
 
   const subline =
     lang === 'my'
