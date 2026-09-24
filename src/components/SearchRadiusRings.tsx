@@ -97,7 +97,7 @@ export function SearchRadiusRings({ lang, radiusKm, donorCount }: SearchRadiusRi
           r={ringRadius(reachedIndex)}
           fill="rgba(209, 62, 47, 0.05)"
         />
-        {RADIUS_STEPS.map((km, i) => {
+        {RADIUS_STEPS.map((_step, i) => {
           const reached = i <= reachedIndex
           const isNewest = i === reachedIndex
           return (
