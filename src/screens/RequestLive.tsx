@@ -4,6 +4,7 @@ import { Button } from "../components/Button";
 import { CallButton } from "../components/CallButton";
 import { Card } from "../components/Card";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { SearchRadiusRings } from "../components/SearchRadiusRings";
 import { AlertDialog } from "../components/AlertDialog";
 import type { Lang } from "../i18n";
 import { formatNumber } from "../i18n";
@@ -125,6 +126,21 @@ const WRITE_ERROR_STRINGS = {
     },
 };
 
+/** Reach every request starts at, in km — the default on blood_requests.search_radius_km. */
+const RADIUS_START_KM = 10;
+/** Reach the widening job stops at. Past this the request has gone as far as it goes. */
+const RADIUS_CAP_KM = 30;
+/**
+ * How often an open RequestLive re-reads the request's reach.
+ *
+ * Polled rather than subscribed on purpose: blood_requests is not in the
+ * supabase_realtime publication (only request_responses and donations are), so a
+ * postgres_changes subscription here would deliver nothing and fail silently. The poll
+ * stops itself — the widening job only runs while a request has zero responders, and
+ * never past the cap — so a request that has been answered makes no further requests.
+ */
+const RADIUS_POLL_MS = 30_000;
+
 // ---- props ----
 
 export interface RequestLiveProps {
@@ -223,6 +239,9 @@ export function RequestLive({
     /** Truthful count of compatible donors within radius who can see the request (D-09). */
     const [compatibleCount, setCompatibleCount] =
         useState<number>(alertedCount);
+    /** Current reach of the request in km — drives both the rings and the count above. */
+    const [searchRadiusKm, setSearchRadiusKm] =
+        useState<number>(RADIUS_START_KM);
     /** Distance in metres from the FCM responder to this request — computed client-side. */
     const [fcmDistance, setFcmDistance] = useState<number | null>(null);
     const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -366,6 +385,36 @@ export function RequestLive({
         };
     }, [requestId, currentUserId]);
 
+    // ---- Current search reach (blood_requests.search_radius_km) ----
+    //
+    // The requester never picks a radius: it starts at 10 km and the widening job grows
+    // it while nobody has responded. See RADIUS_POLL_MS for why this polls instead of
+    // subscribing. Both exit conditions below mirror the job's own stop rules, so the
+    // screen stops asking at exactly the point the number stops moving.
+    useEffect(() => {
+        if (!requestId) return;
+        if (responders.length > 0) return; // widening stops at the first response
+        if (searchRadiusKm >= RADIUS_CAP_KM) return; // and at the cap
+        let cancelled = false;
+
+        async function readRadius() {
+            const { data, error } = await supabase
+                .from("blood_requests")
+                .select("search_radius_km")
+                .eq("id", requestId as string)
+                .maybeSingle();
+            if (error || cancelled || !data) return;
+            setSearchRadiusKm(data.search_radius_km ?? RADIUS_START_KM);
+        }
+
+        void readRadius();
+        const timer = setInterval(() => void readRadius(), RADIUS_POLL_MS);
+        return () => {
+            cancelled = true;
+            clearInterval(timer);
+        };
+    }, [requestId, responders.length, searchRadiusKm]);
+
     // ---- Truthful "can see your request" count (D-09) ----
     //
     // Fetch donors_within_radius and filter by directional blood compatibility
@@ -380,7 +429,10 @@ export function RequestLive({
             const { data } = await supabase.rpc("donors_within_radius", {
                 lat: lat as number,
                 lng: lng as number,
-                radius_km: 10,
+                // The request's own reach, not a constant — a widened request covers
+                // more donors, and a count frozen at the 10 km figure would understate
+                // it for the rest of the session.
+                radius_km: searchRadiusKm,
             });
             if (cancelled || !data) return;
             const count = data.filter((d) =>
@@ -395,7 +447,7 @@ export function RequestLive({
         return () => {
             cancelled = true;
         };
-    }, [lat, lng, bloodType]);
+    }, [lat, lng, bloodType, searchRadiusKm]);
 
     // ---- FCM responder distance (client-side Haversine) ----
     //
@@ -787,9 +839,23 @@ export function RequestLive({
                         </div>
                     )}
 
-                    {/* Transparency card (D-09) — truthful "can see your request" count, never "alerted" */}
+                    {/* Transparency card (D-09) — truthful "can see your request" count, never "alerted".
+              The rings sit in this same card rather than a second one: reach and count are
+              one fact, and the screen's job is the donor list below. */}
                     {alertingDone && (
                         <Card padding="sm">
+                            <SearchRadiusRings
+                                lang={lang}
+                                radiusKm={searchRadiusKm}
+                                donorCount={compatibleCount}
+                            />
+                            <div
+                                style={{
+                                    height: 1,
+                                    background: "var(--border-card)",
+                                    margin: "12px 0",
+                                }}
+                            />
                             <p
                                 style={{
                                     margin: 0,
