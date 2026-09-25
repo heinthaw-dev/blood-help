@@ -171,16 +171,26 @@ export function DonorProfileSetup({
         // made a successful save look like nothing had happened.
         setGeoPhase("saving");
         const { lat, lng } = coarsenCoordinates(res.lat, res.lng);
-        const saved = await onSave({
-            name: name.trim(),
-            dateOfBirth,
-            bloodType,
-            phone,
-            showNumber,
-            available,
-            lat,
-            lng,
-        });
+
+        // `Promise<boolean>` does not forbid rejection, and a rejection here would
+        // strand the overlay on "saving" forever — no dialog, no enabled CTA, no way
+        // out but a reload. Today handleSaveDonor catches everything, so this is a
+        // guard against a future onSave, not live behaviour.
+        let saved: boolean;
+        try {
+            saved = await onSave({
+                name: name.trim(),
+                dateOfBirth,
+                bloodType,
+                phone,
+                showNumber,
+                available,
+                lat,
+                lng,
+            });
+        } catch {
+            saved = false;
+        }
 
         // On success the caller navigates away and this screen unmounts, so the
         // overlay never flickers off. Only a failure hands control back.

@@ -104,6 +104,31 @@ const WRITE_ERROR_STRINGS = {
     },
 };
 
+/**
+ * Generic (non-duplicate) write-error dialog payload, with a retry that
+ * re-runs the failed write. Shared by handleSaveDonor and handlePosted —
+ * the two write paths where a transient failure should let the user retry
+ * the exact same call.
+ */
+function genericWriteError(
+    lang: Lang,
+    retry: () => void,
+): { title: string; message: string; retry: () => void } {
+    const { genericTitle, genericMsg } = WRITE_ERROR_STRINGS[lang];
+    return { title: genericTitle, message: genericMsg, retry };
+}
+
+/**
+ * Log-safe description of a thrown value: name and message only. Never the whole
+ * error — a PostgREST failure carries the offending row value in `details`, and
+ * these logs ship in the production PWA build. The name matters: the failure this
+ * guards against reads `TypeError: Load failed`, and "Load failed" alone does not
+ * say which layer died.
+ */
+function describeThrown(err: unknown): string {
+    return err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+}
+
 /** 4-hour window before expiry at which the extend banner appears (D-17). */
 const EXTEND_WARN_MS = 4 * 60 * 60 * 1000;
 
@@ -629,8 +654,9 @@ function App() {
                 expires_at: expiresAt,
             }));
         } catch (err) {
-            console.error("blood request insert threw:", err);
-            error = { message: err instanceof Error ? err.message : String(err) };
+            const message = describeThrown(err);
+            console.error("blood request insert threw:", message);
+            error = { message };
         }
 
         if (error) {
@@ -644,13 +670,7 @@ function App() {
             } else {
                 // Generic write failure (D-18)
                 console.error("blood request insert error:", error.message);
-                setWriteError({
-                    title: errStrings.genericTitle,
-                    message: errStrings.genericMsg,
-                    retry: () => {
-                        void handlePosted(draft);
-                    },
-                });
+                setWriteError(genericWriteError(lang, () => void handlePosted(draft)));
             }
             return;
         }
@@ -756,15 +776,8 @@ function App() {
         const uid = user.supabaseId;
         if (!uid) return false; // should never happen post-auth
 
-        const errStrings = WRITE_ERROR_STRINGS[lang];
         const fail = () => {
-            setWriteError({
-                title: errStrings.genericTitle,
-                message: errStrings.genericMsg,
-                retry: () => {
-                    void handleSaveDonor(profile);
-                },
-            });
+            setWriteError(genericWriteError(lang, () => void handleSaveDonor(profile)));
             return false;
         };
 
@@ -838,7 +851,7 @@ function App() {
             setScreen("donor-thankyou");
             return true;
         } catch (err) {
-            console.error("donor profile save threw:", err);
+            console.error("donor profile save threw:", describeThrown(err));
             return fail();
         }
     };
