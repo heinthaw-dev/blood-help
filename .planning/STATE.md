@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9 (last roadmapped) — complete
 Plan: 09-03 complete — all plans done
 Status: v2.0 milestone complete — all phases shipped & verified; iOS PWA onboarding feature in progress (quick tasks)
-Last activity: 2026-09-25 -- Donor-setup saves no longer fail silently: the write-error dialog is mounted above every screen (it lived only in the home/profile branches), the form holds a saving phase through the awaited write, and Retry actually retries
+Last activity: 2026-09-25 -- Donor-setup saves no longer fail silently: the write-error dialog is mounted above every screen (it lived only in the home/profile branches), the form holds a saving phase through the awaited write, and Retry actually retries. Follow-up pass converged all eight write-error sites on genericWriteError and made the logging rule uniform (console.error never DEV-guarded)
 
 Progress: [██████████] 100%
 
@@ -121,7 +121,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260906-hjj | Profile logout button: primary color + loading spinner while handleLogout runs (matches OTP Verify/login CTA pattern) | 2026-09-06 | c3d6ab4 | [260906-hjj-logout-button-primary-color-with-loading-spinner](./quick/260906-hjj-logout-button-primary-color-with-loading-spinner/) |
 | 260925-0e1 | Add date of birth to donor profile setup + profiles.date_of_birth | 2026-09-24 | 1ab8849 | [260925-0e1-add-date-of-birth-to-donor-profile-setup](./quick/260925-0e1-add-date-of-birth-to-donor-profile-setup/) |
 | 260925-31f | Search-radius range rings on RequestLive (real search_radius_km, one-shot ring pulse per widening, no radar sweep); fixes D-09 count pinned to hardcoded 10 km | 2026-09-25 | d610704 | [260925-31f-add-expanding-search-radius-range-rings](./quick/260925-31f-add-expanding-search-radius-range-rings/) |
-| 260925-m9b | Fix donor-setup save failing silently — mount write-error dialog above every screen (was home/profile only), hold a 'saving' phase through the awaited write, make Retry actually retry, try/catch thrown fetch errors, unguard write-failure logs | 2026-09-25 | dc43fe9 | [260925-m9b-fix-donor-setup-save-failure-ux](./quick/260925-m9b-fix-donor-setup-save-failure-ux/) |
+| 260925-m9b | Fix donor-setup save failing silently — mount write-error dialog above every screen (was home/profile only), hold a 'saving' phase through the awaited write, make Retry actually retry, try/catch thrown fetch errors, unguard write-failure logs; + quality pass converging all 8 write-error sites on genericWriteError | 2026-09-25 | dc43fe9, fedd22d, a856908 | [260925-m9b-fix-donor-setup-save-failure-ux](./quick/260925-m9b-fix-donor-setup-save-failure-ux/) |
 
 ## Deferred Items
 

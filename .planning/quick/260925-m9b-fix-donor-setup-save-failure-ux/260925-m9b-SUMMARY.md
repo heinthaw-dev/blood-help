@@ -5,6 +5,7 @@ mode: quick
 date: 2026-09-25
 status: complete
 commit: dc43fe9
+follow_up_commits: [fedd22d, a856908]
 ---
 
 # Quick Task 260925-m9b: Fix donor-setup save failure UX — Summary
@@ -54,6 +55,41 @@ commit: dc43fe9
   This matches what the home/profile dialogs already did — not a regression,
   and irrelevant on the mobile PWA target.
 
+## Follow-up quality pass (fedd22d, a856908)
+
+Ran the `code-quality-refactor` agent over the diff, then extended its findings.
+
+**fedd22d — shared payload + log hygiene**
+
+- `genericWriteError(lang, retry)` replaces the identical dialog-payload literal
+  that `handleSaveDonor` and `handlePosted` each built inline.
+- `describeThrown(err)` normalises what the two new catch blocks log. They were
+  printing the raw thrown value, breaking this file's convention of logging only
+  `error.message` — PostgREST puts the offending row value in `details`, and
+  these logs now ship in the production PWA build. The error *name* is kept:
+  `"Load failed"` alone does not say which layer died.
+- `DonorProfileSetup` guards the awaited `onSave` with try/catch. `Promise<boolean>`
+  does not forbid rejection, and a rejection would strand the saving overlay with
+  no dialog and no enabled CTA. Dead code today.
+
+**a856908 — full convergence**
+
+- `genericWriteError`'s `retry` is now optional. All eight `setWriteError` sites
+  go through it except the duplicate-request branch, whose copy differs.
+- Retry added where re-running the same call is safe and sufficient:
+  `handleVerified` (both auth-failure paths), `handleRespond`, `handleExtend`.
+- Retry deliberately withheld from `handleResolveClosed` — its returned boolean
+  drives RequestLive's navigation home, which a dialog-driven re-run cannot
+  reproduce. Single dismiss button; the user retries from the screen's own button.
+- `handleExtend` is safe to retry because its rollback restores the original
+  expiry first, so a re-run recomputes +12h from the same base, not compounding.
+- Logging rule made uniform: `console.error` is never DEV-guarded, `console.log`
+  chatter stays DEV-only. Unguards the hydrate-user, verify-time profile create,
+  availability and emergency-callable failures, plus the two FCM notify warnings.
+- The two brace-less `if (error) if (DEV) ...` statements now have braces.
+- `handleVerified` gained an explicit `Promise<void>` return type — it now
+  references itself in a retry closure, which would otherwise be circular.
+
 ## Not done
 
 - The underlying transport failure was not reproduced on-device. Supabase edge
@@ -64,3 +100,9 @@ commit: dc43fe9
   than preventing it. Proving it needs `/gsd:debug` with a device console.
 - `CreateRequest` still has no screen-side saving state of its own; only the
   App-side handler was touched there.
+- `handleAvailableChange` and `handleEmergencyChange` still swallow write
+  failures: they flip local state optimistically, never roll back, and never
+  raise the dialog. They now log unconditionally, so the failure is at least
+  visible in a device console — but a donor can still believe they are marked
+  unavailable while the DB says otherwise. Needs its own decision (roll back?
+  dialog? both?), so it was left out rather than folded into a quality pass.
