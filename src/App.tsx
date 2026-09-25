@@ -105,15 +105,15 @@ const WRITE_ERROR_STRINGS = {
 };
 
 /**
- * Generic (non-duplicate) write-error dialog payload, with a retry that
- * re-runs the failed write. Shared by handleSaveDonor and handlePosted —
- * the two write paths where a transient failure should let the user retry
- * the exact same call.
+ * Generic (non-duplicate) write-error dialog payload. Pass `retry` when re-running
+ * the exact same call is safe and sufficient; omit it when the caller's own result
+ * drives something the dialog cannot reproduce (navigation, a returned boolean),
+ * and the dialog falls back to a single dismiss button.
  */
 function genericWriteError(
     lang: Lang,
-    retry: () => void,
-): { title: string; message: string; retry: () => void } {
+    retry?: () => void,
+): { title: string; message: string; retry?: () => void } {
     const { genericTitle, genericMsg } = WRITE_ERROR_STRINGS[lang];
     return { title: genericTitle, message: genericMsg, retry };
 }
@@ -258,7 +258,7 @@ function App() {
             });
 
             if (error) {
-                if (import.meta.env.DEV) console.error('[hydrate-user] edge function error:', error.message);
+                console.error('[hydrate-user] edge function error:', error.message);
                 return false;
             }
 
@@ -549,13 +549,12 @@ function App() {
 
     if (sessionLoading) return null;
 
-    const handleVerified = async () => {
+    const handleVerified = async (): Promise<void> => {
         setVerifying(true);
         try {
         const e164 = normalizePhone(phone);
         const email = phoneToEmail(e164);
         const password = await derivePassword(e164);
-        const errStrings = WRITE_ERROR_STRINGS[lang];
 
         // Establish a STABLE phone-keyed session: sign in if the account exists, else sign up.
         // Either way the same phone yields the same auth.uid() on every device, so RLS
@@ -579,21 +578,15 @@ function App() {
                 uid = signUp.data.user.id;
             } else if (signUp.error) {
                 // Both signIn and signUp failed — real error (network, Supabase outage, etc.)
-                if (import.meta.env.DEV) console.error("phone auth failed:", signUp.error.message);
-                setWriteError({
-                    title: errStrings.genericTitle,
-                    message: errStrings.genericMsg,
-                });
+                console.error("phone auth failed:", signUp.error.message);
+                setWriteError(genericWriteError(lang, () => void handleVerified()));
                 return;
             }
             // Edge case: signUp returned no error but also no user (email confirmation required).
             // Treat as failure since we can't proceed without a uid.
             if (!uid) {
-                if (import.meta.env.DEV) console.error("phone auth: signUp returned no user and no error");
-                setWriteError({
-                    title: errStrings.genericTitle,
-                    message: errStrings.genericMsg,
-                });
+                console.error("phone auth: signUp returned no user and no error");
+                setWriteError(genericWriteError(lang, () => void handleVerified()));
                 return;
             }
         }
@@ -617,7 +610,7 @@ function App() {
                 { onConflict: "id" },
             );
             if (error)
-                if (import.meta.env.DEV) console.error("profile create on verify failed:", error.message);
+                console.error("profile create on verify failed:", error.message);
             setScreen("intent");
         }
         } finally {
@@ -704,7 +697,10 @@ function App() {
             void supabase.functions.invoke("notify-donors", {
                 body: notifyPayload,
             }).then(({ error }) => {
-                if (error && import.meta.env.DEV) console.warn('[FCM] notify-donors error:', error.message);
+                // Unguarded: a silently dead notify path is the exact failure this
+                // project has already shipped twice. The '[FCM] invoking' log above
+                // stays DEV-only — that one really is chatter.
+                if (error) console.warn('[FCM] notify-donors error:', error.message);
             });
         }
 
@@ -727,7 +723,6 @@ function App() {
         // Optimistic flip (D-03)
         setRespondedIds((s) => new Set(s).add(reqId));
 
-        const errStrings = WRITE_ERROR_STRINGS[lang];
         const { error } = await supabase.from("request_responses").insert({
             request_id: reqId,
             donor_id: uid,
@@ -745,10 +740,7 @@ function App() {
                     next.delete(reqId);
                     return next;
                 });
-                setWriteError({
-                    title: errStrings.genericTitle,
-                    message: errStrings.genericMsg,
-                });
+                setWriteError(genericWriteError(lang, () => void handleRespond(reqId)));
             }
         } else {
             // Successful new response — Edge Function handles "first-only" check before sending FCM
@@ -756,7 +748,7 @@ function App() {
             void supabase.functions.invoke("notify-requester", {
                 body: { requestId: reqId, responderId: uid },
             }).then(({ error: fnErr }) => {
-                if (fnErr && import.meta.env.DEV) console.warn('[FCM] notify-requester error:', fnErr.message);
+                if (fnErr) console.warn('[FCM] notify-requester error:', fnErr.message);
             });
         }
     };
@@ -875,7 +867,9 @@ function App() {
             .from("donors")
             .update({ is_available: v, updated_at: new Date().toISOString() })
             .eq("profile_id", user.supabaseId);
-        if (error) if (import.meta.env.DEV) console.error("availability update failed:", error.message);
+        if (error) {
+            console.error("availability update failed:", error.message);
+        }
     };
 
     const handleEmergencyChange = async (v: boolean) => {
@@ -888,8 +882,9 @@ function App() {
                 updated_at: new Date().toISOString(),
             })
             .eq("profile_id", user.supabaseId);
-        if (error)
-            if (import.meta.env.DEV) console.error("emergency callable update failed:", error.message);
+        if (error) {
+            console.error("emergency callable update failed:", error.message);
+        }
     };
 
     /** Show push permission pre-dialog if permission not yet granted; silently re-register if already granted. */
@@ -923,7 +918,6 @@ function App() {
     const handleResolveClosed = async (reason: "outside" | "canceled"): Promise<boolean> => {
         const uid = user.supabaseId;
         if (!uid || !activeRequestId) return false;
-        const errStrings = WRITE_ERROR_STRINGS[lang];
         // D-01 status map: outside→fulfilled, canceled→cancelled
         const status = reason === "canceled" ? "cancelled" : "fulfilled";
 
@@ -934,7 +928,11 @@ function App() {
             .eq("requester_id", uid);
 
         if (error) {
-            setWriteError({ title: errStrings.genericTitle, message: errStrings.genericMsg });
+            console.error("request close failed:", error.message);
+            // No retry: the caller's boolean drives RequestLive's navigation home,
+            // which a dialog-driven re-run cannot reproduce. The user retries from
+            // the screen's own button so the whole flow stays intact.
+            setWriteError(genericWriteError(lang));
             return false;
         }
 
@@ -951,7 +949,6 @@ function App() {
     const handleExtend = async () => {
         const uid = user.supabaseId;
         if (!uid || !activeRequestId || !activeRequestExpiresAt) return;
-        const errStrings = WRITE_ERROR_STRINGS[lang];
 
         const newExpiry = new Date(
             new Date(activeRequestExpiresAt).getTime() + 12 * 60 * 60 * 1000,
@@ -972,7 +969,10 @@ function App() {
             // Roll back optimistic update on failure
             setActiveRequestExtended(false);
             setActiveRequestExpiresAt(activeRequestExpiresAt);
-            setWriteError({ title: errStrings.genericTitle, message: errStrings.genericMsg });
+            console.error("request extend failed:", error.message);
+            // Safe to retry: the rollback above restored the original expiry, so a
+            // re-run recomputes +12h from the same base rather than compounding.
+            setWriteError(genericWriteError(lang, () => void handleExtend()));
         }
     };
 
