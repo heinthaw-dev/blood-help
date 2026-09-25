@@ -106,6 +106,11 @@ function angleForDonor(id: string): number {
   return ((h >>> 0) / 4294967296) * Math.PI * 2
 }
 
+/** Most dots drawn on any one ring. Past four a ring reads as a crowd rather than as
+ *  people, which is the opposite of what the graphic is for. The subline always reports
+ *  the real total, so the larger number is never lost — only the drawing is capped. */
+const MAX_DOTS_PER_BAND = 4
+
 /** The ring a donor sits on: the first radius step that reaches them. A donor at 13 km
  *  is drawn on the 15 km ring, which is the band the widening job would have alerted
  *  them in. Snapping to the band rather than interpolating the true distance is also
@@ -115,13 +120,38 @@ function bandIndexFor(distanceKm: number): number {
   return i === -1 ? RADIUS_STEPS.length - 1 : i
 }
 
+/**
+ * Which donors get a dot, and on which ring.
+ *
+ * At most MAX_DOTS_PER_BAND per ring, nearest first. The sort is by distance and then
+ * by id rather than by distance alone: the count is re-fetched every 30 seconds, and
+ * ties broken arbitrarily would swap which four dots are on screen each time. A stable
+ * order means an overflowing ring keeps showing the same four.
+ */
+function dotsToDraw(donors: ReachedDonor[]): { donor: ReachedDonor; band: number }[] {
+  const perBand = new Map<number, ReachedDonor[]>()
+  const ordered = [...donors].sort(
+    (a, b) => a.distanceKm - b.distanceKm || a.id.localeCompare(b.id),
+  )
+  for (const donor of ordered) {
+    const band = bandIndexFor(donor.distanceKm)
+    const bucket = perBand.get(band)
+    if (!bucket) perBand.set(band, [donor])
+    else if (bucket.length < MAX_DOTS_PER_BAND) bucket.push(donor)
+  }
+  return [...perBand.entries()].flatMap(([band, bucket]) =>
+    bucket.map((donor) => ({ donor, band })),
+  )
+}
+
 export interface SearchRadiusRingsProps {
   lang: Lang
   /** Current reach of the request in km, from blood_requests.search_radius_km. */
   radiusKm: number
   /** Compatible donors the current radius covers — the same set the D-09 count reports.
-   *  One dot is drawn per entry; the count in the subline is this array's length, so the
-   *  picture and the sentence cannot disagree. */
+   *  The subline always reports this array's full length. The drawing is capped at
+   *  MAX_DOTS_PER_BAND per ring, so a crowded ring shows fewer dots than the number in
+   *  the sentence; the sentence is the truthful one and the dots are the impression. */
   donors: ReachedDonor[]
   /** Whether the request is still looking. False once somebody has answered: a wave
    *  still going out while a donor is on their way says the wrong thing. Defaults to
@@ -249,12 +279,12 @@ export function SearchRadiusRings({ lang, radiusKm, donors, searching = true }: 
             dot stays put across renders, and meaningless so the picture never implies
             a direction. Drawn after the rings so a dot is never hidden under one, and
             keyed on the id so bh-ring-grow plays once, as the donor is found. */}
-        {donors.map((d) => {
-          const a = angleForDonor(d.id)
-          const r = ringRadius(bandIndexFor(d.distanceKm))
+        {dotsToDraw(donors).map(({ donor, band }) => {
+          const a = angleForDonor(donor.id)
+          const r = ringRadius(band)
           return (
             <circle
-              key={`donor-${d.id}`}
+              key={`donor-${donor.id}`}
               className="bh-ring-grow"
               cx={CENTER + r * Math.cos(a)}
               cy={CENTER + r * Math.sin(a)}
