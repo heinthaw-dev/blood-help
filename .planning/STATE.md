@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9 (last roadmapped) — complete
 Plan: 09-03 complete — all plans done
 Status: v2.0 milestone complete — all phases shipped & verified; iOS PWA onboarding feature in progress (quick tasks)
-Last activity: 2026-09-25 -- Push loop repaired: notify-requester queried a column that does not exist, and the CORS allowlist never included the live Vercel origin, so both notify functions were dead in production
+Last activity: 2026-09-25 -- Donor-setup saves no longer fail silently: the write-error dialog is mounted above every screen (it lived only in the home/profile branches), the form holds a saving phase through the awaited write, and Retry actually retries
 
 Progress: [██████████] 100%
 
@@ -121,6 +121,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | 260906-hjj | Profile logout button: primary color + loading spinner while handleLogout runs (matches OTP Verify/login CTA pattern) | 2026-09-06 | c3d6ab4 | [260906-hjj-logout-button-primary-color-with-loading-spinner](./quick/260906-hjj-logout-button-primary-color-with-loading-spinner/) |
 | 260925-0e1 | Add date of birth to donor profile setup + profiles.date_of_birth | 2026-09-24 | 1ab8849 | [260925-0e1-add-date-of-birth-to-donor-profile-setup](./quick/260925-0e1-add-date-of-birth-to-donor-profile-setup/) |
 | 260925-31f | Search-radius range rings on RequestLive (real search_radius_km, one-shot ring pulse per widening, no radar sweep); fixes D-09 count pinned to hardcoded 10 km | 2026-09-25 | d610704 | [260925-31f-add-expanding-search-radius-range-rings](./quick/260925-31f-add-expanding-search-radius-range-rings/) |
+| 260925-m9b | Fix donor-setup save failing silently — mount write-error dialog above every screen (was home/profile only), hold a 'saving' phase through the awaited write, make Retry actually retry, try/catch thrown fetch errors, unguard write-failure logs | 2026-09-25 | dc43fe9 | [260925-m9b-fix-donor-setup-save-failure-ux](./quick/260925-m9b-fix-donor-setup-save-failure-ux/) |
 
 ## Deferred Items
 
@@ -136,5 +137,5 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 ## Session Continuity
 
 Last session: 2026-06-27T00:00:00.000Z
-Stopped at: Quick task 260627-p07 complete — Donor Thank You screen rebuilt with push opt-in states (build + lint green)
-Resume with: Manually test the three thank-you push states (enable / iOS-install / already-enabled); then run code-quality-refactor agent (standing preference)
+Stopped at: Quick task 260925-m9b complete — donor-setup save failures are now visible and retryable (build + lint green)
+Resume with: On a real iOS/Android PWA, save a donor profile and confirm the spinner holds to the Thank You screen with no second tap; if a failure dialog appears, capture the console error it now logs (that is the transport failure this task made visible, not yet fixed). Then run code-quality-refactor agent (standing preference)
