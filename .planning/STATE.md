@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: 9 (last roadmapped) — complete
 Plan: 09-03 complete — all plans done
 Status: v2.0 milestone complete — all phases shipped & verified; iOS PWA onboarding feature in progress (quick tasks)
-Last activity: 2026-09-25 -- SearchRadiusRings now plots each found donor as a dot on their band, angle hashed from the donor id; completes the radius-UI work
+Last activity: 2026-09-25 -- Radius UI complete: 100x100 graphic, reach ping, donor dots per band capped at 4 per ring
 
 Progress: [██████████] 100%
 
@@ -96,6 +96,7 @@ None active — Phase 9 complete. E2E loop verified (request → donor alerted �
 | fast | expand_request_radius: truncate radius_last_expanded_at to the minute so cron jitter cannot delay a widening by a full tick | 2026-09-25 | 0cf4738 | — (gsd:fast, no task dir) |
 | fast | SearchRadiusRings: 100x100, wider ring spacing, continuous outward ping whose travel distance is the current reach | 2026-09-25 | d29d8b1 | — (gsd:fast, no task dir) |
 | fast | SearchRadiusRings: one dot per found donor on the band that reached them, angle hashed from the donor id (stable, carries no bearing) | 2026-09-25 | 234802e | — (gsd:fast, no task dir) |
+| fast | SearchRadiusRings: cap donor dots at 4 per ring (nearest first, stable pick); subline still reports the true total | 2026-09-25 | 4f0ddbd | — (gsd:fast, no task dir) |
 | 260626-r5y | Redesign donor FCM alert modal to "Incoming Request Alert" (centered two-state modal, gated phone reveal) | 2026-06-26 | beb448b | [260626-r5y-redesign-donor-fcm-alert-modal-to-incomi](./quick/260626-r5y-redesign-donor-fcm-alert-modal-to-incomi/) |
 | 260627-0lt | Extract shared ScreenHeader + LanguageToggle; route all 9 screens (behavior-preserving; resolves ui-consistency-report §1, §6) | 2026-06-27 | a49379a | [260627-0lt-extract-shared-screenheader-and-language](./quick/260627-0lt-extract-shared-screenheader-and-language/) |
 | 260627-7gx | Add Notifications screen + shared header bell on Home/Leaderboard/Profile | 2026-06-27 | 3d14dc1 | [260627-7gx-add-notifications-screen-and-shared-head](./quick/260627-7gx-add-notifications-screen-and-shared-head/) |
