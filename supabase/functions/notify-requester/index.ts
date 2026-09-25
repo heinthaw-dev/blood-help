@@ -68,11 +68,16 @@ serve(async (req) => {
     }
 
     // Verify a legitimate request_responses row exists linking this responder to this request.
+    // The column is donor_id. An earlier cut filtered on responder_id, which does not exist
+    // on the table — PostgREST returned an error rather than a row, this guard read that as
+    // "no matching response", and every requester notification 404'd before it was ever sent.
+    // The request body keeps calling it responderId because that is what it means here: the
+    // person answering. Only the column name was wrong.
     const { data: responseRow } = await supabase
       .from('request_responses')
       .select('id')
       .eq('request_id', String(requestId))
-      .eq('responder_id', String(responderId))
+      .eq('donor_id', String(responderId))
       .eq('status', 'responding')
       .maybeSingle()
     if (!responseRow) {
