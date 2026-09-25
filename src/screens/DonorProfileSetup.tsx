@@ -34,10 +34,21 @@ interface DonorProfileSetupProps {
     onBack: () => void;
     /** Default contact number to prefill (the user's login phone). */
     defaultPhone?: string;
-    onSave: (profile: DonorProfile) => void;
+    /**
+     * Persists the profile. Must resolve false when the write failed, so the form
+     * can re-enable itself; on true the caller navigates away and this screen
+     * unmounts with its saving overlay still up.
+     */
+    onSave: (profile: DonorProfile) => Promise<boolean>;
 }
 
-type GeoPhase = "idle" | "prealert" | "requesting" | "denied";
+/**
+ * 'requesting' = waiting on the browser geolocation prompt.
+ * 'saving'     = coordinates in hand, the DB write is in flight.
+ * Both keep the overlay up and the CTA disabled — collapsing them into one phase
+ * is what let the user re-tap Save mid-write and fire a second save.
+ */
+type GeoPhase = "idle" | "prealert" | "requesting" | "saving" | "denied";
 
 export function DonorProfileSetup({
     lang,
@@ -53,6 +64,9 @@ export function DonorProfileSetup({
     const [showNumber, setShowNumber] = useState(false);
     const [available, setAvailable] = useState(true);
     const [geoPhase, setGeoPhase] = useState<GeoPhase>("idle");
+
+    /** Blocking phases: overlay is up and the CTA is disabled. */
+    const busy = geoPhase === "requesting" || geoPhase === "saving";
 
     const isMy = lang === "my";
     const bodyFont = isMy ? "var(--font-burmese)" : "var(--font-sans)";
@@ -96,6 +110,7 @@ export function DonorProfileSetup({
             geoConfirm: "ဆက်လုပ်ရန်",
             geoCancel: "မလုပ်တော့ပါ",
             geoLoading: "သင့်တည်နေရာကို ရှာဖွေနေသည်...",
+            saveLoading: "သင့်အချက်အလက်များကို သိမ်းဆည်းနေသည်...",
             deniedTitle: "တည်နေရာ ပိတ်ထားသည်",
             deniedMsg:
                 "တည်နေရာ ခွင့်ပြုချက် မရှိဘဲ သင့်အချက်အလက်များကို သိမ်းဆည်း၍ မရပါ။ ဘရောက်ဇာ ဆက်တင်တွင် တည်နေရာကို ဖွင့်ပြီး ထပ်ကြိုးစားပါ။",
@@ -126,6 +141,7 @@ export function DonorProfileSetup({
             geoConfirm: "Continue",
             geoCancel: "Not now",
             geoLoading: "Getting your location…",
+            saveLoading: "Saving your profile…",
             deniedTitle: "Location is off",
             deniedMsg:
                 "We can't save the profile without location permission. Enable location in your browser settings and try again.",
@@ -144,23 +160,31 @@ export function DonorProfileSetup({
     const requestLocationAndSave = async () => {
         setGeoPhase("requesting");
         const res = await getCurrentPosition();
-        if (res.ok && bloodType && dateOfBirth) {
-            setGeoPhase("idle");
-            const { lat, lng } = coarsenCoordinates(res.lat, res.lng);
-            onSave({
-                name: name.trim(),
-                dateOfBirth,
-                bloodType,
-                phone,
-                showNumber,
-                available,
-                lat,
-                lng,
-            });
-        } else {
+        if (!res.ok || !bloodType || !dateOfBirth) {
             // GPS denied or unavailable — show denied dialog, do NOT call onSave (D-12)
             setGeoPhase("denied");
+            return;
         }
+
+        // Stay in a blocking phase for the whole write. Awaiting onSave is what
+        // keeps the overlay up; returning to 'idle' before it resolved is what
+        // made a successful save look like nothing had happened.
+        setGeoPhase("saving");
+        const { lat, lng } = coarsenCoordinates(res.lat, res.lng);
+        const saved = await onSave({
+            name: name.trim(),
+            dateOfBirth,
+            bloodType,
+            phone,
+            showNumber,
+            available,
+            lat,
+            lng,
+        });
+
+        // On success the caller navigates away and this screen unmounts, so the
+        // overlay never flickers off. Only a failure hands control back.
+        if (!saved) setGeoPhase("idle");
     };
 
     const fieldLabelStyle: CSSProperties = {
@@ -353,16 +377,17 @@ export function DonorProfileSetup({
                     <Button
                         fullWidth
                         height={54}
-                        disabled={saveDisabled || geoPhase === "requesting"}
+                        disabled={saveDisabled || busy}
                         onClick={handleSave}
                     >
                         {copy.cta}
                     </Button>
                 </div>
 
-                {/* Loading overlay while GPS is pending — gives feedback during 'requesting'
-            and has no button, so it cannot be double-tapped (preserves CR-03 intent) */}
-                {geoPhase === "requesting" && (
+                {/* Loading overlay for the whole blocking stretch — GPS lookup then DB
+            write. It has no button and covers the CTA, so neither phase can be
+            double-tapped (preserves CR-03 intent) */}
+                {busy && (
                     <div
                         role="status"
                         aria-live="polite"
@@ -390,7 +415,9 @@ export function DonorProfileSetup({
                                 textAlign: "center",
                             }}
                         >
-                            {copy.geoLoading}
+                            {geoPhase === "saving"
+                                ? copy.saveLoading
+                                : copy.geoLoading}
                         </p>
                     </div>
                 )}

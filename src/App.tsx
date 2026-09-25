@@ -190,9 +190,15 @@ function App() {
     const [verifying, setVerifying] = useState(false);
     /** While true, the logout button shows a spinner and is disabled — set around handleLogout. */
     const [loggingOut, setLoggingOut] = useState(false);
+    /**
+     * Surfaced by the global write-error dialog. `retry` re-runs the action that
+     * failed — omit it for failures that cannot be retried (e.g. the duplicate
+     * open-request backstop), and the dialog drops to a single Dismiss button.
+     */
     const [writeError, setWriteError] = useState<{
         title: string;
         message: string;
+        retry?: () => void;
     } | null>(null);
     /** Set of request IDs the current donor has responded to (status='responding'). */
     const [respondedIds, setRespondedIds] = useState<Set<string>>(new Set());
@@ -606,31 +612,44 @@ function App() {
         const errStrings = WRITE_ERROR_STRINGS[lang];
 
         // Bare .insert() without chaining .select() or .single() (Pitfall 1)
-        const { error } = await supabase.from("blood_requests").insert({
-            requester_id: uid,
-            blood_type: draft.bloodType,
-            current_address: draft.address,
-            lat: draft.lat,
-            lng: draft.lng,
-            contact_phone: normalizePhone(draft.phone),
-            units_needed: draft.units,
-            urgency: draft.urgency,
-            status: "active",
-            expires_at: expiresAt,
-        });
+        // Wrapped in try/catch: supabase-js reports HTTP errors through `{ error }`
+        // but lets transport failures throw (see handleSaveDonor for the detail).
+        let error: { code?: string; message: string } | null;
+        try {
+            ({ error } = await supabase.from("blood_requests").insert({
+                requester_id: uid,
+                blood_type: draft.bloodType,
+                current_address: draft.address,
+                lat: draft.lat,
+                lng: draft.lng,
+                contact_phone: normalizePhone(draft.phone),
+                units_needed: draft.units,
+                urgency: draft.urgency,
+                status: "active",
+                expires_at: expiresAt,
+            }));
+        } catch (err) {
+            console.error("blood request insert threw:", err);
+            error = { message: err instanceof Error ? err.message : String(err) };
+        }
 
         if (error) {
             if (error.code === "23505") {
-                // one_open_request_per_user unique-index violation backstop (D-17)
+                // one_open_request_per_user unique-index violation backstop (D-17).
+                // No retry — repeating the insert would hit the same index.
                 setWriteError({
                     title: errStrings.duplicateTitle,
                     message: errStrings.duplicateMsg,
                 });
             } else {
                 // Generic write failure (D-18)
+                console.error("blood request insert error:", error.message);
                 setWriteError({
                     title: errStrings.genericTitle,
                     message: errStrings.genericMsg,
+                    retry: () => {
+                        void handlePosted(draft);
+                    },
                 });
             }
             return;
@@ -722,85 +741,106 @@ function App() {
         }
     };
 
-    const handleSaveDonor = async (profile: DonorProfile) => {
+    /**
+     * Persists the donor profile. Returns true only when both upserts landed and
+     * the screen advanced, so DonorProfileSetup can keep its saving overlay up
+     * until navigation happens and re-enable the CTA only on failure.
+     *
+     * The whole body is wrapped in try/catch because supabase-js surfaces HTTP
+     * errors through `{ error }` but lets transport failures throw — a mobile
+     * browser resuming from the native location prompt commonly kills the first
+     * request on the stale connection with `TypeError: Load failed`, which
+     * previously rejected this promise and left the user on a silent form.
+     */
+    const handleSaveDonor = async (profile: DonorProfile): Promise<boolean> => {
         const uid = user.supabaseId;
-        if (!uid) return; // should never happen post-auth
+        if (!uid) return false; // should never happen post-auth
 
         const errStrings = WRITE_ERROR_STRINGS[lang];
-
-        // Step 1: upsert profiles (identity row) keyed by id (D-15)
-        const { error: profileErr } = await supabase.from("profiles").upsert(
-            {
-                id: uid,
-                name: profile.name,
-                // The form blocks anything under MIN_DONOR_AGE; the DB re-checks it
-                // via profiles_date_of_birth_age_check.
-                date_of_birth: profile.dateOfBirth,
-                phone: normalizePhone(profile.phone),
-                language: lang,
-                updated_at: new Date().toISOString(),
-            },
-            { onConflict: "id" },
-        );
-
-        if (profileErr) {
-            if (import.meta.env.DEV) console.error("profile upsert error:", profileErr.message);
+        const fail = () => {
             setWriteError({
                 title: errStrings.genericTitle,
                 message: errStrings.genericMsg,
+                retry: () => {
+                    void handleSaveDonor(profile);
+                },
             });
-            return;
-        }
+            return false;
+        };
 
-        // Step 2: upsert donors row keyed by profile_id (D-15)
-        // NEVER include donor_code — trigger assigns it on INSERT (Pitfall 3)
-        const { error: donorErr } = await supabase.from("donors").upsert(
-            {
-                profile_id: uid,
-                blood_type: profile.bloodType,
-                emergency_callable: profile.showNumber,
-                is_available: profile.available,
+        try {
+            // Step 1: upsert profiles (identity row) keyed by id (D-15)
+            const { error: profileErr } = await supabase.from("profiles").upsert(
+                {
+                    id: uid,
+                    name: profile.name,
+                    // The form blocks anything under MIN_DONOR_AGE; the DB re-checks it
+                    // via profiles_date_of_birth_age_check.
+                    date_of_birth: profile.dateOfBirth,
+                    phone: normalizePhone(profile.phone),
+                    language: lang,
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: "id" },
+            );
+
+            if (profileErr) {
+                // Logged unconditionally: production is the PWA build, which is
+                // exactly where these failures happen and where no devtools exist.
+                console.error("profile upsert error:", profileErr.message);
+                return fail();
+            }
+
+            // Step 2: upsert donors row keyed by profile_id (D-15)
+            // NEVER include donor_code — trigger assigns it on INSERT (Pitfall 3)
+            const { error: donorErr } = await supabase.from("donors").upsert(
+                {
+                    profile_id: uid,
+                    blood_type: profile.bloodType,
+                    emergency_callable: profile.showNumber,
+                    is_available: profile.available,
+                    lat: profile.lat,
+                    lng: profile.lng,
+                    location_updated_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: "profile_id" },
+            );
+
+            if (donorErr) {
+                console.error("donor upsert error:", donorErr.message);
+                return fail();
+            }
+
+            // Read back the DB-assigned donor_code — the trigger sets it on INSERT so the
+            // in-memory state must come from the DB, not a local guess.
+            const { data: savedDonor } = await supabase
+                .from("donors")
+                .select("donor_code")
+                .eq("profile_id", uid)
+                .maybeSingle();
+
+            // Update local state with hydrated values + navigate
+            setUser((u) => ({
+                ...u,
+                name: profile.name,
+                bloodType: profile.bloodType,
+                available: profile.available,
+                emergencyCallable: profile.showNumber,
+                showNumber: profile.showNumber,
+                donorSetupComplete: true,
+                donorCode: savedDonor?.donor_code ?? u.donorCode,
                 lat: profile.lat,
                 lng: profile.lng,
-                location_updated_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            },
-            { onConflict: "profile_id" },
-        );
-
-        if (donorErr) {
-            if (import.meta.env.DEV) console.error("donor upsert error:", donorErr.message);
-            setWriteError({
-                title: errStrings.genericTitle,
-                message: errStrings.genericMsg,
-            });
-            return;
+            }));
+            // The Donor Thank You screen now owns the push opt-in (tap-to-enable),
+            // so we no longer pre-prompt here — avoids double-prompting the donor.
+            setScreen("donor-thankyou");
+            return true;
+        } catch (err) {
+            console.error("donor profile save threw:", err);
+            return fail();
         }
-
-        // Read back the DB-assigned donor_code — the trigger sets it on INSERT so the
-        // in-memory state must come from the DB, not a local guess.
-        const { data: savedDonor } = await supabase
-            .from("donors")
-            .select("donor_code")
-            .eq("profile_id", uid)
-            .maybeSingle();
-
-        // Update local state with hydrated values + navigate
-        setUser((u) => ({
-            ...u,
-            name: profile.name,
-            bloodType: profile.bloodType,
-            available: profile.available,
-            emergencyCallable: profile.showNumber,
-            showNumber: profile.showNumber,
-            donorSetupComplete: true,
-            donorCode: savedDonor?.donor_code ?? u.donorCode,
-            lat: profile.lat,
-            lng: profile.lng,
-        }));
-        // The Donor Thank You screen now owns the push opt-in (tap-to-enable),
-        // so we no longer pre-prompt here — avoids double-prompting the donor.
-        setScreen("donor-thankyou");
     };
 
     const handleNavigate = (tab: Tab) => {
@@ -967,79 +1007,86 @@ function App() {
         }
     };
 
-    if (screen === "otp") {
-        return (
-            <OtpVerification
-                phoneDisplay={formatDialDisplay(phone)}
-                lang={lang}
-                onLangChange={setLang}
-                onBack={() => setScreen("phone")}
-                onVerified={handleVerified}
-                verifying={verifying}
-            />
-        );
-    }
+    /**
+     * Renders the screen selected by `screen`. Extracted from the component body
+     * so the global overlays below can sit above every screen: the write-error and
+     * push pre-permission dialogs previously existed only inside the home/profile
+     * branches, so a failure on donor-setup, create-request or request-live set the
+     * state with no dialog mounted and resurfaced later on an unrelated screen.
+     */
+    const renderScreen = () => {
+        if (screen === "otp") {
+            return (
+                <OtpVerification
+                    phoneDisplay={formatDialDisplay(phone)}
+                    lang={lang}
+                    onLangChange={setLang}
+                    onBack={() => setScreen("phone")}
+                    onVerified={handleVerified}
+                    verifying={verifying}
+                />
+            );
+        }
 
-    if (screen === "intent") {
-        return (
-            <IntentChoice
-                lang={lang}
-                onLangChange={setLang}
-                onChoose={handleChooseIntent}
-            />
-        );
-    }
+        if (screen === "intent") {
+            return (
+                <IntentChoice
+                    lang={lang}
+                    onLangChange={setLang}
+                    onChoose={handleChooseIntent}
+                />
+            );
+        }
 
-    if (screen === "create-request") {
-        return (
-            <CreateRequest
-                lang={lang}
-                onLangChange={setLang}
-                onBack={() => setScreen("intent")}
-                defaultPhone={phone}
-                onPosted={handlePosted}
-            />
-        );
-    }
+        if (screen === "create-request") {
+            return (
+                <CreateRequest
+                    lang={lang}
+                    onLangChange={setLang}
+                    onBack={() => setScreen("intent")}
+                    defaultPhone={phone}
+                    onPosted={handlePosted}
+                />
+            );
+        }
 
-    if (screen === "donor-setup") {
-        return (
-            <DonorProfileSetup
-                lang={lang}
-                onLangChange={setLang}
-                onBack={() => setScreen("intent")}
-                defaultPhone={phone}
-                onSave={handleSaveDonor}
-            />
-        );
-    }
+        if (screen === "donor-setup") {
+            return (
+                <DonorProfileSetup
+                    lang={lang}
+                    onLangChange={setLang}
+                    onBack={() => setScreen("intent")}
+                    defaultPhone={phone}
+                    onSave={handleSaveDonor}
+                />
+            );
+        }
 
-    if (screen === "donor-thankyou") {
-        return (
-            <DonorThankYou
-                lang={lang}
-                onLangChange={setLang}
-                bloodType={user.bloodType}
-                supabaseId={user.supabaseId}
-                onContinue={() => setScreen("home")}
-            />
-        );
-    }
+        if (screen === "donor-thankyou") {
+            return (
+                <DonorThankYou
+                    lang={lang}
+                    onLangChange={setLang}
+                    bloodType={user.bloodType}
+                    supabaseId={user.supabaseId}
+                    onContinue={() => setScreen("home")}
+                />
+            );
+        }
 
-    if (screen === "donor-congrats") {
-        return (
-            <DonorCongrats
-                lang={lang}
-                donationCount={user.donationCount}
-                onDone={() => setScreen("profile")}
-                onLeaderboard={() => setScreen("leaderboard")}
-            />
-        );
-    }
+        if (screen === "donor-congrats") {
+            return (
+                <DonorCongrats
+                    lang={lang}
+                    donationCount={user.donationCount}
+                    onDone={() => setScreen("profile")}
+                    onLeaderboard={() => setScreen("leaderboard")}
+                />
+            );
+        }
 
-    if (screen === "request-live") {
-        return (
-            <>
+        if (screen === "request-live") {
+            return (
                 <RequestLive
                     lang={lang}
                     bloodType={requestDraft?.bloodType}
@@ -1062,28 +1109,11 @@ function App() {
                     fcmRequesterAlert={fcmRequesterAlert}
                     onDismissFcmRequesterAlert={() => setFcmRequesterAlert(null)}
                 />
-                {/* Push notification pre-permission dialog */}
-                <AlertDialog
-                    open={pushDialogOpen}
-                    title={lang === "my" ? "သတိပေးချက် ခွင့်ပြုမည်လား?" : "Enable notifications?"}
-                    message={lang === "my"
-                        ? "သွေးလှူရှင်များ တုံ့ပြန်မှုများကို ချက်ချင်း သိနိုင်ရန် push notification ခွင့်ပြုပါ။"
-                        : "Allow push notifications to get instant alerts when donors respond."}
-                    confirmLabel={lang === "my" ? "ခွင့်ပြုမည်" : "Allow"}
-                    cancelLabel={lang === "my" ? "နောက်မှ" : "Not now"}
-                    onConfirm={() => {
-                        setPushDialogOpen(false);
-                        if (pendingPushProfileId) void enablePush(pendingPushProfileId);
-                    }}
-                    onCancel={() => setPushDialogOpen(false)}
-                />
-            </>
-        );
-    }
+            );
+        }
 
-    if (screen === "home") {
-        return (
-            <>
+        if (screen === "home") {
+            return (
                 <Home
                     lang={lang}
                     donorReady={user.donorSetupComplete}
@@ -1108,38 +1138,11 @@ function App() {
                     fcmDonorAlert={fcmDonorAlert}
                     onDismissFcmDonorAlert={() => setFcmDonorAlert(null)}
                 />
-                {/* Write-error dialog for handlePosted and handleSaveDonor failures */}
-                <AlertDialog
-                    open={writeError !== null}
-                    title={writeError?.title ?? ""}
-                    message={writeError?.message ?? ""}
-                    confirmLabel={WRITE_ERROR_STRINGS[lang].retry}
-                    cancelLabel={WRITE_ERROR_STRINGS[lang].dismiss}
-                    onConfirm={() => setWriteError(null)}
-                    onCancel={() => setWriteError(null)}
-                />
-                {/* Push notification pre-permission dialog */}
-                <AlertDialog
-                    open={pushDialogOpen}
-                    title={lang === "my" ? "သတိပေးချက် ခွင့်ပြုမည်လား?" : "Enable notifications?"}
-                    message={lang === "my"
-                        ? "သွေးလှူရှင်များ တုံ့ပြန်မှုများနှင့် အနီးနားရှိ တောင်းခံချက်များကို ချက်ချင်း သိနိုင်ရန် push notification ခွင့်ပြုပါ။"
-                        : "Allow push notifications to get instant alerts when donors respond or blood is needed nearby."}
-                    confirmLabel={lang === "my" ? "ခွင့်ပြုမည်" : "Allow"}
-                    cancelLabel={lang === "my" ? "နောက်မှ" : "Not now"}
-                    onConfirm={() => {
-                        setPushDialogOpen(false);
-                        if (pendingPushProfileId) void enablePush(pendingPushProfileId);
-                    }}
-                    onCancel={() => setPushDialogOpen(false)}
-                />
-            </>
-        );
-    }
+            );
+        }
 
-    if (screen === "profile") {
-        return (
-            <>
+        if (screen === "profile") {
+            return (
                 <Profile
                     lang={lang}
                     onLangChange={setLang}
@@ -1162,49 +1165,78 @@ function App() {
                     onNavigate={handleNavigate}
                     onOpenNotifications={handleOpenNotifications}
                 />
-                {/* Write-error dialog also accessible from profile screen */}
-                <AlertDialog
-                    open={writeError !== null}
-                    title={writeError?.title ?? ""}
-                    message={writeError?.message ?? ""}
-                    confirmLabel={WRITE_ERROR_STRINGS[lang].retry}
-                    cancelLabel={WRITE_ERROR_STRINGS[lang].dismiss}
-                    onConfirm={() => setWriteError(null)}
-                    onCancel={() => setWriteError(null)}
+            );
+        }
+
+        if (screen === "leaderboard") {
+            return (
+                <Leaderboard
+                    lang={lang}
+                    onNavigate={handleNavigate}
+                    currentUserId={user.supabaseId}
+                    onOpenNotifications={handleOpenNotifications}
                 />
-            </>
-        );
-    }
+            );
+        }
 
-    if (screen === "leaderboard") {
+        if (screen === "notifications") {
+            return (
+                <Notifications
+                    lang={lang}
+                    onBack={() => setScreen(notificationsReturn)}
+                />
+            );
+        }
+
         return (
-            <Leaderboard
+            <PhoneEntry
                 lang={lang}
-                onNavigate={handleNavigate}
-                currentUserId={user.supabaseId}
-                onOpenNotifications={handleOpenNotifications}
+                onLangChange={setLang}
+                onSend={(digits) => {
+                    setPhone(digits);
+                    setScreen("otp");
+                }}
             />
         );
-    }
+    };
 
-    if (screen === "notifications") {
-        return (
-            <Notifications
-                lang={lang}
-                onBack={() => setScreen(notificationsReturn)}
-            />
-        );
-    }
+    const writeErrStrings = WRITE_ERROR_STRINGS[lang];
+    const retryWrite = writeError?.retry;
 
     return (
-        <PhoneEntry
-            lang={lang}
-            onLangChange={setLang}
-            onSend={(digits) => {
-                setPhone(digits);
-                setScreen("otp");
-            }}
-        />
+        <>
+            {renderScreen()}
+            {/* Write-error dialog — one instance for the whole app. Confirm re-runs
+                the failed action when it is retryable; when it is not (the duplicate
+                open-request backstop) the dialog drops to a single dismiss button. */}
+            <AlertDialog
+                open={writeError !== null}
+                title={writeError?.title ?? ""}
+                message={writeError?.message ?? ""}
+                confirmLabel={retryWrite ? writeErrStrings.retry : writeErrStrings.dismiss}
+                cancelLabel={retryWrite ? writeErrStrings.dismiss : undefined}
+                onConfirm={() => {
+                    setWriteError(null);
+                    retryWrite?.();
+                }}
+                onCancel={() => setWriteError(null)}
+            />
+            {/* Push notification pre-permission dialog */}
+            <AlertDialog
+                open={pushDialogOpen}
+                title={lang === "my" ? "သတိပေးချက် ခွင့်ပြုမည်လား?" : "Enable notifications?"}
+                message={lang === "my"
+                    ? "သွေးလှူရှင်များ တုံ့ပြန်မှုများနှင့် အနီးနားရှိ တောင်းခံချက်များကို ချက်ချင်း သိနိုင်ရန် push notification ခွင့်ပြုပါ။"
+                    : "Allow push notifications to get instant alerts when donors respond or blood is needed nearby."}
+                confirmLabel={lang === "my" ? "ခွင့်ပြုမည်" : "Allow"}
+                cancelLabel={lang === "my" ? "နောက်မှ" : "Not now"}
+                onConfirm={() => {
+                    setPushDialogOpen(false);
+                    if (pendingPushProfileId) void enablePush(pendingPushProfileId);
+                }}
+                onCancel={() => setPushDialogOpen(false)}
+            />
+        </>
     );
 }
 
